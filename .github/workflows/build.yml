@@ -1,0 +1,139 @@
+name: 构建
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 装 JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Gradle 缓存
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - run: chmod +x gradlew
+
+      # ---------------- 版本号：从 tag 推导，非 tag 构建用 0.0.<run> ----------------
+      - name: 定版本号
+        id: ver
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            NAME="${GITHUB_REF#refs/tags/v}"
+          else
+            NAME="0.0.${GITHUB_RUN_NUMBER}"
+          fi
+          # versionCode 必须单调递增：major*10000 + minor*100 + patch
+          IFS='.' read -r MA MI PA <<< "${NAME}"
+          CODE=$(( ${MA:-0} * 10000 + ${MI:-0} * 100 + ${PA:-0} ))
+          echo "name=${NAME}" >> "$GITHUB_OUTPUT"
+          echo "code=${CODE}" >> "$GITHUB_OUTPUT"
+          echo "版本 ${NAME} (versionCode ${CODE})"
+
+      # ---------------- 非 tag：只出 debug 包 ----------------
+      - name: 构建 debug
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          VERSION_NAME: ${{ steps.ver.outputs.name }}
+          VERSION_CODE: ${{ steps.ver.outputs.code }}
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: 上传 debug 产物
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+
+      # ---------------- 打 tag：出签名 release 包并发 Release ----------------
+      - name: 还原签名密钥
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "${{ secrets.KEYSTORE_B64 }}" | base64 -d > "${RUNNER_TEMP}/release.jks"
+          # 只校验文件非空，不打印任何密钥内容
+          test -s "${RUNNER_TEMP}/release.jks" || { echo "keystore 解码失败"; exit 1; }
+
+      - name: 构建 release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          VERSION_NAME: ${{ steps.ver.outputs.name }}
+          VERSION_CODE: ${{ steps.ver.outputs.code }}
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: 打包产物与 manifest
+        if: startsWith(github.ref, 'refs/tags/v')
+        id: pack
+        run: |
+          mkdir -p dist
+          SRC=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+          APK="gongkao-checkin-v${{ steps.ver.outputs.name }}.apk"
+          cp "$SRC" "dist/${APK}"
+
+          SIZE=$(stat -c%s "dist/${APK}")
+          SHA=$(sha256sum "dist/${APK}" | cut -d' ' -f1)
+
+          # 应用内更新（GitHub 与局域网两条通道）都读这个 manifest
+          cat > dist/manifest.json <<JSON
+          {
+            "versionCode": ${{ steps.ver.outputs.code }},
+            "versionName": "${{ steps.ver.outputs.name }}",
+            "apkName": "${APK}",
+            "size": ${SIZE},
+            "sha256": "${SHA}",
+            "notes": ${{ toJSON(github.event.head_commit.message || '') }},
+            "publishedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          JSON
+
+          echo "apk=${APK}" >> "$GITHUB_OUTPUT"
+          echo "大小 ${SIZE} 字节 / sha256 ${SHA}"
+          cat dist/manifest.json
+
+      - name: 校验签名不是 debug key
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          BT=$(ls -d "${ANDROID_HOME}"/build-tools/* | sort -V | tail -1)
+          OUT=$("${BT}/apksigner" verify --print-certs "dist/${{ steps.pack.outputs.apk }}")
+          echo "${OUT}"
+          # debug key 的 DN 固定是 CN=Android Debug，出现即失败
+          if echo "${OUT}" | grep -q "CN=Android Debug"; then
+            echo "::error::产物用的是 debug 签名，无法用于线上更新"
+            exit 1
+          fi
+
+      - name: 发 Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF#refs/tags/}" \
+            "dist/${{ steps.pack.outputs.apk }}" \
+            "dist/manifest.json" \
+            --title "v${{ steps.ver.outputs.name }}" \
+            --notes "版本 ${{ steps.ver.outputs.name }}（versionCode ${{ steps.ver.outputs.code }}）
+
+          在 app 内「设置 → 检查更新」可以直接升级，也可以下载下面的 APK 手动安装。" \
+            --repo "${GITHUB_REPOSITORY}"
