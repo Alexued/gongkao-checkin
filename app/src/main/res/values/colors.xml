@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#F4F6FB</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_alt">#EEF1F8</color>
+    <color name="ink">#0E1526</color>
+    <color name="ink_sub">#5C6780</color>
+    <color name="ink_dim">#8C97AF</color>
+    <color name="divider">#E4E8F1</color>
+
+    <color name="accent">#6C8CFF</color>
+    <color name="accent_deep">#4A63D8</color>
+    <color name="teal">#35D0BA</color>
+    <color name="amber">#FFB24D</color>
+    <color name="rose">#FF6B8B</color>
+    <color name="violet">#C08BFF</color>
+
+    <color name="carry_bg">#FFF3E2</color>
+    <color name="carry_ink">#C8791A</color>
+
+    <color name="transparent">#00000000</color>
+    <color name="scrim">#66000000</color>
+
+    <color name="task_0">#6C8CFF</color>
+    <color name="task_1">#35D0BA</color>
+    <color name="task_2">#FFB24D</color>
+    <color name="task_3">#FF6B8B</color>
+    <color name="task_4">#C08BFF</color>
+    <color name="task_5">#4AC0F0</color>
+</resources>

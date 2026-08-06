@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg">
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- 底部标签栏：外层竖向，容纳指示条 + 四个标签 -->
+    <LinearLayout
+        android:id="@+id/tabBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/surface"
+        android:elevation="12dp"
+        android:orientation="vertical">
+
+        <!-- 跟手移动的指示条，宽度在代码里按屏宽 /4 设置 -->
+        <View
+            android:id="@+id/tabIndicator"
+            android:layout_width="0dp"
+            android:layout_height="3dp"
+            android:background="@drawable/bg_tab_indicator" />
+
+        <LinearLayout
+            android:id="@+id/tabRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="8dp">
+
+        <LinearLayout
+            android:id="@+id/tab0"
+            style="@style/TabItem">
+            <ImageView
+                android:id="@+id/tab0Icon"
+                style="@style/TabIcon"
+                android:src="@drawable/ic_today" />
+            <TextView
+                android:id="@+id/tab0Text"
+                style="@style/TabLabel"
+                android:text="@string/tab_today" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tab1"
+            style="@style/TabItem">
+            <ImageView
+                android:id="@+id/tab1Icon"
+                style="@style/TabIcon"
+                android:src="@drawable/ic_timer" />
+            <TextView
+                android:id="@+id/tab1Text"
+                style="@style/TabLabel"
+                android:text="@string/tab_timer" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tab2"
+            style="@style/TabItem">
+            <ImageView
+                android:id="@+id/tab2Icon"
+                style="@style/TabIcon"
+                android:src="@drawable/ic_recite" />
+            <TextView
+                android:id="@+id/tab2Text"
+                style="@style/TabLabel"
+                android:text="@string/tab_recite" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/tab3"
+            style="@style/TabItem">
+            <ImageView
+                android:id="@+id/tab3Icon"
+                style="@style/TabIcon"
+                android:src="@drawable/ic_stats" />
+            <TextView
+                android:id="@+id/tab3Text"
+                style="@style/TabLabel"
+                android:text="@string/tab_stats" />
+        </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 全屏庆祝层，不拦截触摸 -->
+    <com.gongkao.checkin.view.CelebrationView
+        android:id="@+id/celebration"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="24dp" />
+
+    <TextView
+        android:id="@+id/celebrateText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:alpha="0"
+        android:background="@drawable/bg_glass"
+        android:elevation="26dp"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:paddingHorizontal="26dp"
+        android:paddingVertical="18dp"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        tools:ignore="MissingDefaultResource"
+        xmlns:tools="http://schemas.android.com/tools" />
+</FrameLayout>

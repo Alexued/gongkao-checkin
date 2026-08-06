@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 破坏性操作按钮（删除 / 退出不保存） -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#33FFFFFF">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <gradient
+                android:angle="315"
+                android:endColor="#F1567A"
+                android:startColor="#FF7C97" />
+        </shape>
+    </item>
+</ripple>

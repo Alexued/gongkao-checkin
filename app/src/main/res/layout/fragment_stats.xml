@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:paddingBottom="86dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="18dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="@string/stats_title"
+            android:textColor="@color/ink"
+            android:textSize="22sp" />
+
+        <!-- 四个数字 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_card"
+            android:orientation="horizontal"
+            android:paddingVertical="18dp">
+
+            <LinearLayout style="@style/StatCell">
+                <TextView
+                    android:id="@+id/statStreak"
+                    style="@style/StatNum" />
+                <TextView style="@style/StatLabel" android:text="@string/stat_streak" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/StatCell">
+                <TextView
+                    android:id="@+id/statDone"
+                    style="@style/StatNum" />
+                <TextView style="@style/StatLabel" android:text="@string/stat_done_days" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/StatCell">
+                <TextView
+                    android:id="@+id/statRate"
+                    style="@style/StatNum" />
+                <TextView style="@style/StatLabel" android:text="@string/stat_rate" />
+            </LinearLayout>
+
+            <LinearLayout style="@style/StatCell">
+                <TextView
+                    android:id="@+id/statLeft"
+                    style="@style/StatNum" />
+                <TextView style="@style/StatLabel" android:text="@string/stat_left" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- 热力图 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                style="@style/SectionTitle"
+                android:text="@string/stat_heatmap" />
+
+            <TextView
+                style="@style/TextDim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="@string/stat_heatmap_hint" />
+
+            <com.gongkao.checkin.view.CalendarView
+                android:id="@+id/heatmap"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp" />
+        </LinearLayout>
+
+        <!-- 每日完成率 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                style="@style/SectionTitle"
+                android:text="@string/stat_recent_rate" />
+
+            <com.gongkao.checkin.view.BarChartView
+                android:id="@+id/chartRate"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:layout_marginTop="12dp" />
+        </LinearLayout>
+
+        <!-- 做题用时对比 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/SectionTitle"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/stat_timer_compare" />
+
+                <TextView
+                    android:id="@+id/timerCompareSub"
+                    style="@style/TextDim"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <com.gongkao.checkin.view.BarChartView
+                android:id="@+id/chartTimer"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:layout_marginTop="12dp" />
+
+            <TextView
+                android:id="@+id/timerEmpty"
+                style="@style/TextDim"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="@string/no_record"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- 最近的日子 -->
+        <TextView
+            style="@style/SectionTitle"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="20dp"
+            android:text="@string/stat_days" />
+
+        <LinearLayout
+            android:id="@+id/dayList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

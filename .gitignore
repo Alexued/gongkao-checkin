@@ -1,0 +1,29 @@
+# Gradle / Android 构建产物
+.gradle/
+build/
+app/build/
+captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# 本地环境（含 SDK 路径，机器相关）
+local.properties
+
+# 签名密钥：绝对不能进仓库
+*.jks
+*.keystore
+keystore.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Rust / Tauri（电脑端）
+target/
+node_modules/
+
+# 验证过程中的临时文件
+*.log

@@ -1,0 +1,9 @@
+# 仓库内统一 LF，检出时按平台处理，避免 Windows/CI 之间来回抖动
+* text=auto eol=lf
+
+*.jar binary
+*.png binary
+*.jks binary
+*.apk binary
+gradlew text eol=lf
+gradlew.bat text eol=crlf

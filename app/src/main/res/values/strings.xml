@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">考公打卡</string>
+
+    <string name="tab_today">打卡</string>
+    <string name="tab_timer">计时</string>
+    <string name="tab_recite">背诵</string>
+    <string name="tab_stats">统计</string>
+
+    <string name="add_task">新建任务</string>
+    <string name="edit_task">编辑任务</string>
+    <string name="task_title_hint">任务名称，例如「资料分析 20 题」</string>
+    <string name="repeat_daily">每天都要</string>
+    <string name="repeat_until">截止到某天</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="delete">删除</string>
+
+    <string name="timer_start">开始</string>
+    <string name="timer_pause">暂停</string>
+    <string name="timer_resume">继续</string>
+    <string name="timer_lap">打点</string>
+    <string name="timer_finish">结束</string>
+    <string name="timer_history">历史记录</string>
+
+    <string name="percent_title">百化分背诵</string>
+    <string name="formula_title">资料分析公式</string>
+    <string name="mode_full">完整背诵</string>
+    <string name="mode_random">随机抽取</string>
+    <string name="exit">退出</string>
+    <string name="records">记录</string>
+
+    <string name="back">返回</string>
+    <string name="settings">设置</string>
+    <string name="today_empty">今天没有任务，先新建一个吧</string>
+    <string name="manage_tasks">管理任务</string>
+    <string name="task_target_hint">数量</string>
+    <string name="task_unit_hint">单位（题/篇，可空）</string>
+    <string name="stats_title">统计</string>
+    <string name="day_detail_title">当日记录</string>
+    <string name="no_record">暂无记录</string>
+    <string name="timer_lap_hint">开始后点「打点」记录每道题用时</string>
+    <string name="percent_desc">给出百分数，写出对应分数。等值写法自动判对。</string>
+    <string name="formula_desc">按分类背诵资料分析公式，先想再翻。</string>
+    <string name="percent_records">百化分记录</string>
+    <string name="formula_records">公式背诵记录</string>
+
+    <string name="stat_streak">连续全勤</string>
+    <string name="stat_done_days">全勤天数</string>
+    <string name="stat_rate">平均完成</string>
+    <string name="stat_left">剩余天数</string>
+    <string name="stat_heatmap">打卡热力图</string>
+    <string name="stat_heatmap_hint">左右滑动换月，点某一天看当天记录</string>
+    <string name="stat_recent_rate">近两周完成率</string>
+    <string name="stat_timer_compare">做题用时对比</string>
+    <string name="stat_days">按天查看</string>
+
+    <string name="percent_ask">写出下面百分数对应的分数</string>
+    <string name="key_swap">↑↓</string>
+    <string name="key_del">删除</string>
+    <string name="key_confirm">确认</string>
+    <string name="percent_right">答对了</string>
+    <string name="percent_wrong">应为 %1$s</string>
+    <string name="round_done">本轮完成</string>
+
+    <string name="formula_ask">求：</string>
+    <string name="formula_reveal">显示公式</string>
+    <string name="formula_known">记住了</string>
+    <string name="formula_vague">还模糊</string>
+    <string name="formula_symbols">符号约定</string>
+    <string name="formula_answer">公式</string>
+    <string name="formula_reveal_hint">先在心里默写，再点开对照</string>
+    <string name="formula_symbols_prefix">符号：</string>
+
+    <string name="setting_end_date">总结束日</string>
+    <string name="setting_end_date_sub">用于倒计时，之后不再生成任务</string>
+    <string name="setting_not_set">未设置</string>
+    <string name="setting_clear">清除</string>
+    <string name="sync_title">局域网网页同步</string>
+    <string name="sync_sub">电脑与手机连同一个 Wi-Fi，浏览器打开下面地址即可</string>
+    <string name="sync_port">端口</string>
+    <string name="sync_pin">访问码</string>
+    <string name="sync_warn">开启后同一局域网内的设备都能访问，务必保留访问码。</string>
+    <string name="copy">复制</string>
+    <string name="copied">已复制</string>
+
+    <string name="detail_tasks">任务打卡</string>
+    <string name="detail_timer">做题计时</string>
+    <string name="detail_percent">百化分背诵</string>
+    <string name="detail_formula">公式背诵</string>
+
+    <string name="summary_total">总时长</string>
+    <string name="summary_laps">打点数</string>
+    <string name="summary_avg">平均</string>
+    <string name="summary_fastest">最快</string>
+    <string name="summary_slowest">最慢</string>
+
+    <string name="countdown_none">还没设置结束日，点右上角设置</string>
+    <string name="countdown_left">距结束还有 %1$d 天</string>
+    <string name="countdown_today">今天就是结束日，冲</string>
+    <string name="countdown_past">已过结束日</string>
+    <string name="today_progress">今日完成 %1$d / %2$d</string>
+    <string name="today_debt">补做欠账 %1$d 项</string>
+    <string name="today_streak">已连续全勤 %1$d 天</string>
+    <string name="tag_carry">欠了 %1$d 天</string>
+    <string name="tag_orphan">任务已删除</string>
+    <string name="tag_done_at">%1$s 完成</string>
+
+    <string name="timer_idle">准备开始</string>
+    <string name="timer_started_at">%1$s 开始</string>
+    <string name="timer_last_split">本段 %1$s</string>
+    <string name="timer_session_label">%1$s 的一组</string>
+    <string name="timer_saved">已记录 %1$s，共 %2$d 段</string>
+    <string name="lap_index">#%1$d</string>
+    <string name="badge_fast">最快</string>
+    <string name="badge_slow">最慢</string>
+
+    <string name="recite_stat">%1$d 组 · 正确率 %2$d%%</string>
+    <string name="recite_stat_none">还没练过</string>
+    <string name="day_sub_tasks">打卡 %1$d/%2$d</string>
+    <string name="day_sub_timer">计时 %1$d 组</string>
+    <string name="day_sub_percent">百化分 %1$d 次</string>
+    <string name="day_sub_formula">公式 %1$d 次</string>
+    <string name="day_sub_none">当天没有记录</string>
+    <string name="badge_full">全勤</string>
+    <string name="timer_compare_sub">最近 %1$d 组</string>
+    <string name="stat_percent">%1$d%%</string>
+    <string name="pick_until_date">选择截止日期</string>
+
+    <string name="timer_session_sub">%1$d 段 · %2$s</string>
+    <string name="confirm_delete">删掉这条记录？</string>
+    <string name="deleted">已删除</string>
+    <string name="percent_session_sub">%1$s · %2$d/%3$d 对</string>
+    <string name="formula_session_sub">%1$s · %2$d/%3$d 记住</string>
+    <string name="mode_full_short">完整</string>
+    <string name="mode_random_short">随机</string>
+    <string name="percent_avg_sub">平均每题 %1$s</string>
+    <string name="quit_confirm">现在退出，这一组不会被记录，确定？</string>
+    <string name="quit">退出</string>
+    <string name="keep_going">继续练</string>
+    <string name="progress_of">%1$d / %2$d</string>
+    <string name="round_result">%1$d / %2$d 正确 · 用时 %3$s</string>
+    <string name="round_result_formula">%1$d / %2$d 记住 · 用时 %3$s</string>
+    <string name="again">再来一组</string>
+    <string name="back_home">返回</string>
+    <string name="percent_answer_of">%1$s = %2$s</string>
+    <string name="timer_detail_title">计时详情</string>
+    <string name="summary_start">开始于</string>
+    <string name="detail_undone">未完成</string>
+    <string name="sync_on">已开启</string>
+    <string name="sync_off">已关闭</string>
+    <string name="sync_url">网页地址</string>
+    <string name="sync_copied">地址已复制</string>
+    <string name="sync_no_wifi">没连上 Wi-Fi，先连局域网</string>
+    <string name="sync_pin_new">换一个</string>
+    <string name="setting_about">关于</string>
+    <string name="setting_version">版本</string>
+    <string name="setting_data">数据</string>
+    <string name="setting_counts">%1$d 个任务 · %2$d 天记录</string>
+
+    <string-array name="encourage">
+        <item>今天全部完成，明天继续保持</item>
+        <item>又是全勤的一天，稳住节奏</item>
+        <item>清空了，休息一下再看两页</item>
+        <item>连着做完不容易，值得记一笔</item>
+        <item>坚持到这一步，上岸更近一点</item>
+        <item>状态很好，明天照这个来</item>
+    </string-array>
+
+    <!-- 应用内弹层 -->
+    <string name="got_it">知道了</string>
+    <string name="open_detail">查看详情</string>
+    <string name="long_press_hint">长按任务可以直接改</string>
+
+    <!-- 日历 -->
+    <string name="weekday_mon">一</string>
+    <string name="weekday_tue">二</string>
+    <string name="weekday_wed">三</string>
+    <string name="weekday_thu">四</string>
+    <string name="weekday_fri">五</string>
+    <string name="weekday_sat">六</string>
+    <string name="weekday_sun">日</string>
+    <string name="calendar_month">%1$d年%2$d月</string>
+    <string name="calendar_hint">左右滑动换月，点某天看当天记录</string>
+    <string name="pick_date">选择日期</string>
+    <string name="clear_date">清除</string>
+</resources>

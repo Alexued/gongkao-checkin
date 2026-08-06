@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="86dp">
+
+    <!-- 顶栏：标题 + 历史记录入口（二级菜单） -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="18dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
+            android:text="@string/tab_timer"
+            android:textColor="@color/ink"
+            android:textSize="22sp" />
+
+        <LinearLayout
+            android:id="@+id/btnHistory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_pill_soft"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="8dp">
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_marginEnd="5dp"
+                android:src="@drawable/ic_history"
+                app:tint="@color/ink_sub" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/timer_history"
+                android:textColor="@color/ink_sub"
+                android:textSize="13sp" />
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="2dp"
+                android:src="@drawable/ic_chevron"
+                app:tint="@color/ink_dim" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 放大的计时区域 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/labelText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/bg_pill_soft"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="7dp"
+            android:textColor="@color/ink_sub"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/timeText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:letterSpacing="-0.02"
+            android:text="00:00.00"
+            android:textColor="@color/ink"
+            android:textSize="66sp" />
+
+        <TextView
+            android:id="@+id/splitText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="@color/accent"
+            android:textSize="17sp" />
+
+        <!-- 本次打点 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lapHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/timer_lap_hint"
+                android:textColor="@color/ink_dim"
+                android:textSize="13sp" />
+
+            <ScrollView
+                android:id="@+id/lapScroll"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingHorizontal="20dp">
+
+                <LinearLayout
+                    android:id="@+id/lapList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </ScrollView>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 中下方的大圆按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="18dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btnLap"
+            android:layout_width="86dp"
+            android:layout_height="86dp"
+            android:background="@drawable/bg_btn_lap"
+            android:gravity="center"
+            android:text="@string/timer_lap"
+            android:textColor="@color/ink_sub"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/btnStart"
+            android:layout_width="124dp"
+            android:layout_height="124dp"
+            android:layout_marginHorizontal="20dp"
+            android:background="@drawable/bg_btn_start"
+            android:elevation="6dp"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:text="@string/timer_start"
+            android:textColor="#FFFFFF"
+            android:textSize="25sp" />
+
+        <TextView
+            android:id="@+id/btnFinish"
+            android:layout_width="86dp"
+            android:layout_height="86dp"
+            android:background="@drawable/bg_btn_lap"
+            android:gravity="center"
+            android:text="@string/timer_finish"
+            android:textColor="@color/rose"
+            android:textSize="17sp" />
+    </LinearLayout>
+</LinearLayout>

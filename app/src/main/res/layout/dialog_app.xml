@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  统一确认弹层。外层是遮罩（AppDialog 负责淡入），内层卡片从中心或指定锚点缩放展开。
+  按钮竖排，主按钮在上，与结果弹层保持同一套观感。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialogScrim"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/dialogCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="28dp"
+        android:layout_marginEnd="28dp"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="20dp">
+
+        <TextView
+            android:id="@+id/dialogTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:textColor="@color/ink"
+            android:textSize="19sp" />
+
+        <TextView
+            android:id="@+id/dialogMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:textColor="@color/ink_sub"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/dialogPositive"
+            style="@style/BtnPrimary"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:id="@+id/dialogNegative"
+            style="@style/BtnGhost"
+            android:layout_marginTop="10dp" />
+    </LinearLayout>
+</FrameLayout>
