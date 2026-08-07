@@ -40,12 +40,17 @@ object Updater {
         val root = JsonParser.parseString(body).asJsonObject
         val assets = root.getAsJsonArray("assets") ?: return CheckResult.Failed("这个版本没有附件")
 
+        /*
+         * 用 assets[].url（api.github.com 域）而不是 browser_download_url
+         * （github.com 域）—— 后者在部分网络环境下连不上，而 API 域是通的。
+         * 取原文件要带 Accept: application/octet-stream，否则返回的是 asset 元数据 JSON。
+         */
         var manifestUrl: String? = null
         var apkUrl: String? = null
         for (e in assets) {
             val o = e.asJsonObject
             val name = o.get("name")?.asString ?: continue
-            val url = o.get("browser_download_url")?.asString ?: continue
+            val url = o.get("url")?.asString ?: continue
             if (name == "manifest.json") manifestUrl = url
             if (name.endsWith(".apk")) apkUrl = url
         }
@@ -53,7 +58,8 @@ object Updater {
             return CheckResult.Failed("发布里缺 manifest 或 APK")
         }
 
-        val mf = fetchText(manifestUrl) ?: return CheckResult.Failed("读不到版本信息")
+        val mf = fetchText(manifestUrl, accept = OCTET)
+            ?: return CheckResult.Failed("读不到版本信息")
         val info = parseManifest(mf, apkUrl) ?: return CheckResult.Failed("版本信息格式不对")
         if (info.versionCode <= currentCode) CheckResult.UpToDate else CheckResult.Found(info)
     }.getOrElse { CheckResult.Failed(it.message ?: "检查失败") }
@@ -201,16 +207,20 @@ object Updater {
             )
         }.getOrNull()
 
+    /** 取 Release 附件原文件要用这个 Accept，不然拿到的是 asset 元数据。 */
+    private const val OCTET = "application/octet-stream"
+
     private fun fetchText(
         url: String,
         connectMs: Int = TIMEOUT,
-        readMs: Int = TIMEOUT
+        readMs: Int = TIMEOUT,
+        accept: String = "application/json"
     ): String? = runCatching {
         val conn = (URL(url).openConnection() as HttpURLConnection).apply {
             connectTimeout = connectMs
             readTimeout = readMs
             instanceFollowRedirects = true
-            setRequestProperty("Accept", "application/json")
+            setRequestProperty("Accept", accept)
             setRequestProperty("User-Agent", "gongkao-checkin")
         }
         try {
