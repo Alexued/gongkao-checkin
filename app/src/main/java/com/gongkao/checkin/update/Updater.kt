@@ -70,7 +70,7 @@ object Updater {
      * 扫同网段找版本更高的设备。
      *
      * 只扫自己所在的 /24，端口固定用本机同步端口 —— 同一套 app 默认端口一致。
-     * 并发 24 条，单个 600ms 超时，整体控制在两秒出头。
+     * 并发 [SCAN_THREADS] 条，连接超时 [PROBE_MS]ms，整体由 [SWEEP_S] 秒兜底。
      */
     fun checkLan(selfIp: String, port: Int): CheckResult {
         val prefix = selfIp.substringBeforeLast('.', "")
