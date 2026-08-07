@@ -21,7 +21,24 @@ class SettingsActivity : ListScreen() {
     override fun build() {
         endDateSection()
         syncSection()
+        updateSection()
         aboutSection()
+    }
+
+    // ------------------------------------------------------------ 更新
+
+    private fun updateSection() {
+        section(getString(R.string.update_title))
+        row(
+            title = getString(R.string.update_github),
+            sub = getString(R.string.update_github_sub),
+            chevron = true
+        ) { com.gongkao.checkin.update.UpdateDialog.start(this, lan = false) }
+        row(
+            title = getString(R.string.update_lan),
+            sub = getString(R.string.update_lan_sub),
+            chevron = true
+        ) { com.gongkao.checkin.update.UpdateDialog.start(this, lan = true) }
     }
 
     // ------------------------------------------------------------ 结束日

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  更新弹层。三个阶段（检查中 / 发现新版本 / 下载中）复用同一张卡片，
+  由 UpdateDialog 切换各块的可见性，避免连弹三次窗口。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialogScrim"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/dialogCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="28dp"
+        android:layout_marginEnd="28dp"
+        android:background="@drawable/bg_card"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="20dp">
+
+        <TextView
+            android:id="@+id/updTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:textColor="@color/ink"
+            android:textSize="19sp" />
+
+        <TextView
+            android:id="@+id/updSub"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:textColor="@color/ink_sub"
+            android:textSize="14sp" />
+
+        <!-- 下载阶段才显示：圆环 + 居中百分数 -->
+        <FrameLayout
+            android:id="@+id/updRingBox"
+            android:layout_width="104dp"
+            android:layout_height="104dp"
+            android:layout_marginTop="18dp"
+            android:visibility="gone">
+
+            <com.gongkao.checkin.view.RingProgressView
+                android:id="@+id/updRing"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <TextView
+                android:id="@+id/updPercent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="sans-serif-medium"
+                android:textColor="@color/ink"
+                android:textSize="22sp" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/updBytes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/ink_dim"
+            android:textSize="12.5sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/updPositive"
+            style="@style/BtnPrimary"
+            android:layout_marginTop="20dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/updNegative"
+            style="@style/BtnGhost"
+            android:layout_marginTop="10dp" />
+    </LinearLayout>
+</FrameLayout>

@@ -184,4 +184,26 @@
     <string name="calendar_hint">左右滑动换月，点某天看当天记录</string>
     <string name="pick_date">选择日期</string>
     <string name="clear_date">清除</string>
+    <string name="update_title">软件更新</string>
+    <string name="update_github">从 GitHub 更新</string>
+    <string name="update_github_sub">联网检查最新发布版本</string>
+    <string name="update_lan">局域网更新</string>
+    <string name="update_lan_sub">从同一 Wi-Fi 下版本更高的设备获取</string>
+    <string name="update_no_wifi">没连上 Wi-Fi，局域网更新用不了</string>
+    <string name="update_scanning">正在扫描同一 Wi-Fi 下的设备…</string>
+    <string name="update_connecting">正在连接 GitHub…</string>
+    <string name="update_latest">已经是最新版本 v%1$s</string>
+    <string name="update_found">发现新版本 v%1$s</string>
+    <string name="update_current">当前 v%1$s</string>
+    <string name="update_from_peer">来自局域网设备 %1$s</string>
+    <string name="update_from_github">来自 GitHub</string>
+    <string name="update_download">下载并安装</string>
+    <string name="update_downloading">正在下载 v%1$s</string>
+    <string name="update_bytes_start">0.0 / %1$s</string>
+    <string name="update_failed">下载失败</string>
+    <string name="update_failed_sub">网络中断或校验不通过，稍后再试</string>
+    <string name="update_done">下载完成</string>
+    <string name="update_done_sub">校验通过，即将调起安装</string>
+    <string name="update_install">立即安装</string>
+    <string name="close">关闭</string>
 </resources>

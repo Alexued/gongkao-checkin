@@ -31,6 +31,10 @@ class WebServer(private val ctx: Context, port: Int) : NanoHTTPD("0.0.0.0", port
             when {
                 uri == "/" || uri == "/index.html" -> html(WebAssets.page())
                 uri == "/api/ping" -> json("""{"ok":true,"revision":${Repo.revision}}""")
+                // 局域网更新用：报版本 + 供包。不加 PIN —— 只是自己的安装包，
+                // 而且对端要靠这两个接口发现「谁的版本更新」。
+                uri == "/api/version" -> json(ApkServe.versionJson(ctx))
+                uri == "/api/apk" -> ApkServe.serve(ctx)
                 uri == "/api/state" -> guarded(session) { json(StateJson.build()) }
                 uri == "/api/day" -> guarded(session) {
                     val d = session.parameters["date"]?.firstOrNull() ?: DateUtil.todayStr()

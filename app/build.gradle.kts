@@ -14,9 +14,20 @@ android {
         applicationId = "com.gongkao.checkin"
         minSdk = 26
         targetSdk = 36
-        // CI 打 tag 时用环境变量覆盖，避免手工改漏
-        versionCode = (System.getenv("VERSION_CODE") ?: "2").toInt()
-        versionName = System.getenv("VERSION_NAME") ?: "1.1.0"
+        /*
+         * 版本号只有一个来源：versionName。versionCode 一律由它推导，
+         * 公式与 CI（.github/workflows/build.yml）里的完全一致：
+         *   major*10000 + minor*100 + patch
+         * 否则本地 1.1.0 算出 2、CI 的 1.1.0 算出 10100，
+         * 更新弹层就会出现「发现新版本 v1.1.0 / 当前 v1.1.0」这种自相矛盾的提示。
+         */
+        val vName = System.getenv("VERSION_NAME") ?: "1.1.0"
+        val parts = vName.split('.').map { it.toIntOrNull() ?: 0 }
+        versionName = vName
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull()
+            ?: (parts.getOrElse(0) { 0 } * 10000 +
+                parts.getOrElse(1) { 0 } * 100 +
+                parts.getOrElse(2) { 0 })
     }
 
     /*
