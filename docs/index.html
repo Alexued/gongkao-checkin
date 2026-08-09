@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>考公打卡 · 专注考公备考的打卡工具</title>
+<meta name="description" content="考公打卡：每日打卡、计时器、百化分与资料分析公式背诵、统计热力图、局域网同步。">
+<style>
+/* ========== 共享基础 ========== */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#0d0f12}
+a{text-decoration:none}
+img{max-width:100%}
+
+/* ========== 风格切换器 ========== */
+.switcher{position:fixed;z-index:99;left:50%;transform:translateX(-50%);bottom:16px;
+  display:flex;gap:4px;padding:6px;border-radius:999px;
+  background:rgba(18,20,25,.86);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 8px 32px rgba(0,0,0,.5);
+  max-width:calc(100vw - 24px);overflow-x:auto;scrollbar-width:none}
+.switcher::-webkit-scrollbar{display:none}
+.switcher button{flex:0 0 auto;width:32px;height:32px;border:0;border-radius:999px;cursor:pointer;
+  background:transparent;color:#8b95a5;font:600 13px/1 inherit;transition:.18s}
+.switcher button:hover{background:rgba(255,255,255,.1);color:#e6ebf2}
+.switcher button[aria-selected="true"]{background:#e6ebf2;color:#12141a}
+.switcher button:focus-visible{outline:2px solid #6ea8ff;outline-offset:2px}
+
+/* 舞台：每套风格一屏，互斥显示。
+   隐藏规则要带 !important —— 有些风格在 #sN 里自己设了 display（grid 等），
+   ID 特异性会压过 .stage 的 class 选择器，不加就会一直占着文档流。 */
+.stage{min-height:100vh;padding-bottom:76px}
+.stage:not(.on){display:none!important}
+.stage.on{display:block}
+@media (prefers-reduced-motion:no-preference){
+  .stage.on{animation:fade .45s ease both}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* ========== 10 · 插画童趣 ========== */
+#s10{background:#fff8ec;color:#3d2f24;padding:clamp(40px,7vw,80px) clamp(18px,4vw,40px) 120px;
+  position:relative;overflow:hidden}
+#s10 .sky{position:absolute;inset:0 0 auto;height:280px;z-index:0;
+  background:linear-gradient(#cbeaff,#fff8ec)}
+#s10 .cloud{position:absolute;background:#fff;border-radius:999px;opacity:.9;z-index:0}
+#s10 .c1{width:120px;height:38px;top:44px;left:8%}
+#s10 .c1::before{content:"";position:absolute;width:56px;height:56px;background:#fff;border-radius:50%;top:-24px;left:24px}
+#s10 .c2{width:88px;height:30px;top:96px;right:12%}
+#s10 .c2::before{content:"";position:absolute;width:42px;height:42px;background:#fff;border-radius:50%;top:-19px;left:18px}
+#s10 .in{position:relative;z-index:1;max-width:820px;margin:0 auto;text-align:center}
+#s10 .mascot{width:104px;height:104px;margin:0 auto 22px;border-radius:34px;background:#ffd166;
+  border:4px solid #3d2f24;position:relative;box-shadow:7px 7px 0 #3d2f2422}
+#s10 .mascot::before,#s10 .mascot::after{content:"";position:absolute;width:13px;height:19px;
+  border-radius:8px;background:#3d2f24;top:34px}
+#s10 .mascot::before{left:24px}#s10 .mascot::after{right:24px}
+#s10 .mouth{position:absolute;width:34px;height:17px;border:4px solid #3d2f24;border-top:0;
+  border-radius:0 0 34px 34px;bottom:23px;left:50%;transform:translateX(-50%)}
+#s10 .t{display:block;font-size:clamp(33px,7.4vw,58px);font-weight:800;letter-spacing:-.02em;
+  line-height:1.14;text-shadow:3px 3px 0 #ffd166}
+#s10 .lead{margin:16px auto 0;max-width:30ch;font-size:16px;line-height:1.76;color:#6b5a4a}
+#s10 .go{display:inline-block;margin:30px 0 0;padding:16px 38px;border-radius:999px;
+  background:#ff7a5c;color:#fff;font-weight:800;font-size:16.5px;border:4px solid #3d2f24;
+  box-shadow:5px 5px 0 #3d2f24;transition:.14s}
+#s10 .go:hover{transform:translate(2px,2px);box-shadow:3px 3px 0 #3d2f24}
+#s10 .go:active{transform:translate(5px,5px);box-shadow:0 0 0 #3d2f24}
+#s10 .cards{margin:56px 0 0;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  text-align:left}
+#s10 .cards>div{padding:20px;border-radius:22px;background:#fff;border:3.5px solid #3d2f24;
+  box-shadow:5px 5px 0 #3d2f2418;transition:.18s}
+#s10 .cards>div:hover{transform:translateY(-4px);box-shadow:5px 9px 0 #3d2f2422}
+#s10 .cards .em{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;
+  font-size:23px;margin-bottom:13px;border:3px solid #3d2f24}
+#s10 .cards>div:nth-child(1) .em{background:#a8e6a3}
+#s10 .cards>div:nth-child(2) .em{background:#9fd8f5}
+#s10 .cards>div:nth-child(3) .em{background:#ffb3c6}
+#s10 .cards>div:nth-child(4) .em{background:#ffd166}
+#s10 .cards>div:nth-child(5) .em{background:#c9b6f7}
+#s10 .cards>div:nth-child(6) .em{background:#ffc09f}
+#s10 .cards .ct{display:block;font-size:17px;font-weight:800;margin-bottom:7px}
+#s10 .cards p{margin:0;font-size:13.5px;line-height:1.68;color:#6b5a4a}
+#s10 .foot{margin:44px 0 0;font-size:13px;color:#9b8877}
+
+/* ========== 9 · 数据仪表盘 ========== */
+#s9{background:#0a0c10;color:#dbe3ee;padding:clamp(20px,3.4vw,34px) clamp(14px,3vw,30px) 110px;
+  font-variant-numeric:tabular-nums}
+#s9 .in{max-width:1180px;margin:0 auto}
+#s9 .hd{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding-bottom:16px;border-bottom:1px solid #1a2130;margin-bottom:18px}
+#s9 .hd .t{font-size:17px;font-weight:700;letter-spacing:-.01em}
+#s9 .dot{width:7px;height:7px;border-radius:50%;background:#2ee6a8;box-shadow:0 0 10px #2ee6a8}
+#s9 .hd .s{font-size:11.5px;color:#66748c;letter-spacing:.08em;text-transform:uppercase}
+#s9 .hd .go{margin-left:auto;padding:10px 20px;border-radius:7px;background:#2ee6a8;color:#04241a;
+  font:700 13px/1 inherit;transition:.18s}
+#s9 .hd .go:hover{background:#5cf0bd}
+#s9 .kpi{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));margin-bottom:11px}
+#s9 .kpi>div{padding:16px 17px;border-radius:11px;background:#0f131b;border:1px solid #1a2130}
+#s9 .kpi .lb{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:#5d6b83}
+#s9 .kpi .vl{margin:9px 0 0;font-size:29px;font-weight:700;letter-spacing:-.028em;line-height:1}
+#s9 .kpi .dt{margin:7px 0 0;font-size:11.5px;color:#4d5a70}
+#s9 .up{color:#2ee6a8}#s9 .pk{color:#ff6b9d}#s9 .bl{color:#6ea8ff}#s9 .yl{color:#ffc857}
+#s9 .split{display:grid;gap:11px;grid-template-columns:1.55fr 1fr}
+#s9 .panel{padding:18px;border-radius:11px;background:#0f131b;border:1px solid #1a2130}
+#s9 .panel .pt{font-size:12.5px;font-weight:700;color:#93a1b8;letter-spacing:.05em;margin-bottom:15px}
+#s9 .hm{display:grid;grid-template-columns:repeat(14,1fr);gap:4px}
+#s9 .hm b{aspect-ratio:1;border-radius:2.5px;background:#151b26}
+#s9 .hm b.l1{background:#1c4a3a}#s9 .hm b.l2{background:#22795c}
+#s9 .hm b.l3{background:#28b37f}#s9 .hm b.l4{background:#2ee6a8}
+#s9 .lg{display:flex;align-items:center;gap:6px;margin-top:13px;font-size:10.5px;color:#4d5a70}
+#s9 .lg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+#s9 .bars{display:flex;flex-direction:column;gap:12px}
+#s9 .bar .bt{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;color:#93a1b8}
+#s9 .bar .bt b{color:#dbe3ee;font-weight:600}
+#s9 .tr{height:6px;border-radius:999px;background:#151b26;overflow:hidden}
+#s9 .tr i{display:block;height:100%;border-radius:999px}
+@media(max-width:820px){#s9 .split{grid-template-columns:1fr}#s9 .hm{grid-template-columns:repeat(10,1fr)}}
+
+/* ========== 8 · 时间线叙事 ========== */
+#s8{background:#fffdf9;color:#20242b;padding:clamp(56px,9vw,104px) clamp(18px,4vw,40px) 120px}
+#s8 .in{max-width:720px;margin:0 auto}
+#s8 .top{text-align:center;margin-bottom:clamp(46px,8vw,78px)}
+#s8 .top .t{display:block;font-size:clamp(30px,6.6vw,50px);font-weight:800;letter-spacing:-.028em;
+  line-height:1.12}
+#s8 .top p{margin:15px auto 0;max-width:32ch;font-size:15.5px;line-height:1.72;color:#666d78}
+#s8 ol{list-style:none;margin:0;padding:0 0 0 clamp(30px,7vw,46px);position:relative}
+#s8 ol::before{content:"";position:absolute;left:clamp(9px,2.2vw,15px);top:8px;bottom:34px;width:2px;
+  background:linear-gradient(#f0b429 0%,#e07a3e 34%,#c2528a 68%,#6a5acd 100%);border-radius:2px}
+#s8 li{position:relative;padding:0 0 clamp(32px,5.5vw,44px)}
+#s8 li::before{content:"";position:absolute;left:calc(clamp(9px,2.2vw,15px) - clamp(30px,7vw,46px) - 5px);
+  top:6px;width:14px;height:14px;border-radius:50%;background:#fffdf9;border:3px solid #e07a3e;
+  box-shadow:0 0 0 4px #fffdf9}
+#s8 li:nth-child(1)::before{border-color:#f0b429}
+#s8 li:nth-child(3)::before{border-color:#c2528a}
+#s8 li:nth-child(4)::before{border-color:#8a5cd6}
+#s8 li:nth-child(5)::before{border-color:#6a5acd}
+#s8 .when{font:700 11px/1 inherit;letter-spacing:.16em;text-transform:uppercase;color:#a0a7b3}
+#s8 li .h{display:block;margin:9px 0 0;font-size:19.5px;font-weight:700;letter-spacing:-.012em}
+#s8 li p{margin:9px 0 0;font-size:14.5px;line-height:1.76;color:#5b626d;max-width:46ch}
+#s8 .box{margin:13px 0 0;padding:14px 16px;border-radius:11px;background:#fdf6e9;
+  border:1px solid #f3e4c6;font-size:13px;line-height:1.66;color:#7a6438}
+#s8 .end{margin:6px 0 0;padding:clamp(24px,4.4vw,34px);border-radius:16px;
+  background:linear-gradient(120deg,#20242b,#3a3050);color:#fff;text-align:center}
+#s8 .end .h{display:block;font-size:21px;font-weight:700;margin-bottom:8px}
+#s8 .end p{margin:0 auto 20px;font-size:14px;line-height:1.7;color:#ffffffbd;max-width:34ch}
+#s8 .go{display:inline-block;padding:14px 32px;border-radius:999px;background:#f0b429;color:#20242b;
+  font-weight:700;font-size:15px;transition:.2s}
+#s8 .go:hover{background:#f7c948;transform:translateY(-2px)}
+
+/* ========== 7 · 玻璃态 ========== */
+#s7{position:relative;isolation:isolate;overflow:hidden;color:#fff;
+  background:#161029;padding:clamp(56px,9vw,110px) clamp(18px,4vw,44px) 120px}
+#s7 .blob{position:absolute;z-index:-1;border-radius:50%;filter:blur(72px);opacity:.68}
+#s7 .b1{width:46vw;height:46vw;min-width:300px;min-height:300px;background:#ff4d94;top:-9%;left:-7%}
+#s7 .b2{width:40vw;height:40vw;min-width:260px;min-height:260px;background:#4d7cff;top:24%;right:-9%}
+#s7 .b3{width:36vw;height:36vw;min-width:240px;min-height:240px;background:#00d4b8;bottom:-12%;left:26%}
+#s7 .in{max-width:920px;margin:0 auto}
+#s7 h7,#s7 .t{display:block;margin:0;font-size:clamp(36px,8.4vw,74px);line-height:1.06;
+  font-weight:800;letter-spacing:-.03em;text-shadow:0 4px 30px #0004}
+#s7 .lead{margin:20px 0 0;font-size:clamp(15px,3.4vw,19px);line-height:1.7;max-width:36ch;
+  color:#ffffffcf}
+#s7 .glass{background:#ffffff1c;border:1px solid #ffffff2e;border-radius:20px;
+  backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);
+  box-shadow:0 8px 34px -12px #0007,inset 0 1px 0 #ffffff30}
+#s7 .cta{margin:38px 0 0;display:flex;gap:12px;flex-wrap:wrap}
+#s7 .go{padding:15px 30px;border-radius:14px;font-weight:700;font-size:15.5px;color:#2a1040;
+  background:#ffffffee;box-shadow:0 10px 28px -10px #0006;transition:.2s}
+#s7 .go:hover{transform:translateY(-2px);background:#fff}
+#s7 .go2{padding:15px 28px;border-radius:14px;font-weight:600;font-size:15.5px;color:#fff;
+  background:#ffffff1c;border:1px solid #ffffff33;backdrop-filter:blur(14px);transition:.2s}
+#s7 .go2:hover{background:#ffffff2b}
+#s7 .cards{margin:54px 0 0;display:grid;gap:15px;grid-template-columns:repeat(auto-fit,minmax(232px,1fr))}
+#s7 .cards>div{padding:22px}
+#s7 .cards h8,#s7 .cards .ct{display:block;margin:0 0 8px;font-size:16px;font-weight:700}
+#s7 .cards p{margin:0;font-size:13.5px;line-height:1.68;color:#ffffffbb}
+#s7 .cards .em{font-size:22px;display:block;margin-bottom:11px}
+
+/* ========== 6 · 杂志排版 ========== */
+#s6{background:#f7f5f0;color:#131313;padding:clamp(26px,4vw,52px) clamp(18px,4vw,60px) 120px;
+  font-family:Georgia,"Songti SC","Noto Serif SC",serif}
+#s6 .rule{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:3px solid #131313;padding-bottom:9px;font-family:inherit}
+#s6 .rule b{font-size:12px;letter-spacing:.3em;text-transform:uppercase;font-weight:700}
+#s6 .rule span{font-size:11px;letter-spacing:.16em;color:#6b6b6b}
+#s6 .hero{margin:0;padding:clamp(26px,5vw,54px) 0 0;font-size:clamp(54px,15vw,168px);
+  line-height:.86;letter-spacing:-.045em;font-weight:700}
+#s6 .hero em{font-style:italic;color:#a8341f}
+#s6 .meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin:26px 0 0;padding:13px 0;
+  border-top:1px solid #cfcac0;border-bottom:1px solid #cfcac0;
+  font-family:-apple-system,"PingFang SC",sans-serif;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:#5e5e5e}
+#s6 .cols{margin:34px 0 0;column-count:3;column-gap:34px;column-rule:1px solid #ddd8ce;
+  font-size:14.5px;line-height:1.82;text-align:justify;hyphens:auto}
+#s6 .cols p{margin:0 0 1.05em}
+#s6 .cols p:first-child::first-letter{float:left;font-size:4.1em;line-height:.82;
+  padding:.05em .1em 0 0;font-weight:700;color:#a8341f}
+#s6 .cols h6{margin:1.5em 0 .3em;font-family:-apple-system,"PingFang SC",sans-serif;
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a8341f;break-after:avoid}
+#s6 .pull{margin:38px 0;padding:26px 0;border-top:3px solid #131313;border-bottom:3px solid #131313;
+  font-size:clamp(20px,3.6vw,32px);line-height:1.36;font-style:italic;letter-spacing:-.01em}
+#s6 .go{display:inline-block;margin:8px 0 0;padding:15px 34px;background:#131313;color:#f7f5f0;
+  font-family:-apple-system,"PingFang SC",sans-serif;font-size:12.5px;letter-spacing:.2em;
+  font-weight:600;text-transform:uppercase;transition:.2s}
+#s6 .go:hover{background:#a8341f}
+@media(max-width:900px){#s6 .cols{column-count:2}}
+@media(max-width:620px){#s6 .cols{column-count:1;column-rule:0}}
+
+/* ========== 5 · Material Design ========== */
+#s5{background:#eef0f5;color:#1b1c1f;padding:0 0 110px}
+#s5 .app{background:#3f51b5;color:#fff;padding:14px clamp(16px,4vw,28px);display:flex;
+  align-items:center;gap:14px;box-shadow:0 2px 5px #0003}
+#s5 .app b{font:500 19px/1 inherit;letter-spacing:.01em}
+#s5 .app .sp{margin-left:auto;font-size:13px;opacity:.82}
+#s5 .band{background:#3f51b5;color:#fff;padding:26px clamp(16px,4vw,28px) 78px}
+#s5 .band h5{margin:0;font-size:clamp(25px,5.4vw,38px);font-weight:400;line-height:1.25}
+#s5 .band p{margin:12px 0 0;font-size:15px;line-height:1.7;opacity:.86;max-width:42ch}
+#s5 .grid{max-width:1080px;margin:-56px auto 0;padding:0 clamp(16px,4vw,28px);
+  display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(248px,1fr))}
+#s5 .card{background:#fff;border-radius:12px;padding:22px;
+  box-shadow:0 1px 3px #0000001f,0 1px 2px #0000000f;transition:.22s}
+#s5 .card:hover{box-shadow:0 8px 18px #00000024,0 3px 6px #0000001a;transform:translateY(-3px)}
+#s5 .ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;
+  font-size:20px;margin-bottom:15px;background:#e8eaf6;color:#3f51b5}
+#s5 .card:nth-child(2) .ic{background:#e0f2f1;color:#00897b}
+#s5 .card:nth-child(3) .ic{background:#fff3e0;color:#ef6c00}
+#s5 .card:nth-child(4) .ic{background:#fce4ec;color:#c2185b}
+#s5 .card:nth-child(5) .ic{background:#f3e5f5;color:#7b1fa2}
+#s5 .card:nth-child(6) .ic{background:#e3f2fd;color:#1565c0}
+#s5 .card h6{margin:0;font:500 16.5px/1.35 inherit}
+#s5 .card p{margin:8px 0 0;font-size:13.5px;line-height:1.68;color:#5f6368}
+#s5 .fabwrap{max-width:1080px;margin:32px auto 0;padding:0 clamp(16px,4vw,28px)}
+#s5 .fab{display:inline-flex;align-items:center;gap:11px;padding:16px 26px;border-radius:16px;
+  background:#ff5722;color:#fff;font:500 15px/1 inherit;letter-spacing:.02em;
+  box-shadow:0 4px 10px #ff572250,0 2px 4px #0002;transition:.2s;text-transform:uppercase}
+#s5 .fab:hover{background:#f4511e;box-shadow:0 8px 20px #ff572266,0 3px 6px #0003}
+#s5 .chips{margin:26px 0 0;display:flex;gap:8px;flex-wrap:wrap}
+#s5 .chips span{padding:7px 14px;border-radius:999px;background:#fff;border:1px solid #dadce0;
+  font-size:13px;color:#3c4043}
+
+/* ========== 4 · 日式极简 ========== */
+#s4{background:#fdfcfa;color:#2b2926;padding:clamp(72px,13vw,168px) clamp(24px,7vw,96px) 120px}
+#s4 .wrap{max-width:660px;margin:0 auto}
+#s4 .mark{width:34px;height:1px;background:#c9c3ba;margin:0 0 60px}
+#s4 h4{margin:0;font-size:clamp(20px,4vw,27px);font-weight:400;letter-spacing:.16em;line-height:2.1}
+#s4 .en{margin:16px 0 0;font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:#a8a29a}
+#s4 .lead{margin:56px 0 0;font-size:14px;line-height:2.5;color:#5c5852;letter-spacing:.05em;
+  max-width:44ch}
+#s4 ul{margin:64px 0 0;padding:0;list-style:none;display:grid;gap:0}
+#s4 li{display:grid;grid-template-columns:3.2em 1fr;gap:20px;padding:22px 2px;
+  border-top:1px solid #eeeae4;font-size:13.5px;line-height:2.05;letter-spacing:.04em}
+#s4 li:last-child{border-bottom:1px solid #eeeae4}
+#s4 li b{font-weight:400;color:#b3aca2;font-size:11px;letter-spacing:.14em;padding-top:.32em}
+#s4 li span{color:#4a463f}
+#s4 li i{display:block;font-style:normal;color:#9b958c;font-size:12px;line-height:1.95;margin-top:3px}
+#s4 .go{margin:76px 0 0;display:inline-flex;align-items:center;gap:14px;
+  font-size:12.5px;letter-spacing:.2em;color:#2b2926;padding-bottom:9px;
+  border-bottom:1px solid #2b2926;transition:.25s}
+#s4 .go:hover{gap:22px;color:#8a6a4a;border-color:#8a6a4a}
+#s4 .foot{margin:80px 0 0;font-size:10.5px;letter-spacing:.2em;color:#c0b9af}
+
+/* ========== 3 · 深色终端风 ========== */
+#s3{background:#0b0e0c;color:#c9d6c9;padding:clamp(28px,5vw,64px) clamp(18px,4vw,52px) 100px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Cascadia Mono",monospace}
+#s3 .win{max-width:880px;margin:0 auto;border:1px solid #1e2b20;border-radius:10px;
+  background:#0e130f;box-shadow:0 30px 70px -30px #000,inset 0 1px 0 #ffffff08;overflow:hidden}
+#s3 .bar{display:flex;align-items:center;gap:7px;padding:11px 14px;background:#121a13;
+  border-bottom:1px solid #1e2b20}
+#s3 .bar i{width:11px;height:11px;border-radius:50%;background:#2b3a2c}
+#s3 .bar i:nth-child(1){background:#e0605e}#s3 .bar i:nth-child(2){background:#e0b95e}
+#s3 .bar i:nth-child(3){background:#5ec27a}
+#s3 .bar span{margin-left:8px;font-size:11.5px;color:#5a6d5c}
+#s3 .body{padding:clamp(18px,3.4vw,30px);font-size:13.5px;line-height:1.95}
+#s3 .p{color:#4ec97a}#s3 .p::after{content:" ~/gongkao-checkin $ ";color:#3f5a44}
+#s3 .cmd{color:#e8f2e8}
+#s3 .out{color:#7f9382;white-space:pre-wrap;margin:2px 0 20px}
+#s3 h3{margin:0;font-size:clamp(26px,6vw,44px);line-height:1.2;color:#e8f2e8;font-weight:700;
+  letter-spacing:-.01em}
+#s3 .k{color:#4ec97a}#s3 .y{color:#e0b95e}#s3 .b{color:#6fa8dc}#s3 .d{color:#4a5c4d}
+#s3 table{width:100%;border-collapse:collapse;margin:4px 0 20px;font-size:13px}
+#s3 td{padding:5px 0;vertical-align:top;color:#96ab99}
+#s3 td:first-child{width:15ch;color:#4ec97a;white-space:nowrap}
+#s3 .go{display:inline-block;margin:6px 0 0;padding:12px 22px;border:1px solid #2f5c3b;border-radius:6px;
+  background:#12291a;color:#7fe0a0;font-size:13.5px;font-weight:600;transition:.18s}
+#s3 .go:hover{background:#183a24;border-color:#4ec97a;color:#b6f5c9}
+#s3 .cursor{display:inline-block;width:8px;height:15px;background:#4ec97a;vertical-align:-2px;
+  margin-left:3px}
+@media(prefers-reduced-motion:no-preference){#s3 .cursor{animation:blink 1.15s step-end infinite}
+  @keyframes blink{50%{opacity:0}}}
+
+/* ========== 2 · 分屏对比 ========== */
+#s2{background:#f4f1ec;color:#1a1c20;display:grid;grid-template-columns:1fr 1fr;align-items:center}
+#s2 .left{padding:clamp(32px,6vw,88px)}
+#s2 .tag{display:inline-block;padding:6px 13px;border-radius:6px;background:#1a1c20;color:#f4f1ec;
+  font:600 11px/1 inherit;letter-spacing:.16em;text-transform:uppercase}
+#s2 h2{margin:26px 0 0;font-size:clamp(34px,5.4vw,62px);line-height:1.06;letter-spacing:-.025em;font-weight:800}
+#s2 h2 em{font-style:normal;color:#b4643c}
+#s2 p{margin:20px 0 0;max-width:38ch;font-size:16px;line-height:1.75;color:#585c66}
+#s2 dl{margin:34px 0 0;display:grid;gap:18px 26px;grid-template-columns:repeat(2,minmax(0,1fr))}
+#s2 dt{font:600 15px/1.3 inherit}
+#s2 dd{margin:5px 0 0;font-size:13.5px;line-height:1.55;color:#6c7280}
+#s2 .go{margin:38px 0 0;display:inline-block;padding:15px 32px;border-radius:8px;
+  background:#b4643c;color:#fff;font-weight:700;transition:.2s}
+#s2 .go:hover{background:#9a5230}
+#s2 .right{align-self:stretch;background:linear-gradient(160deg,#2b2f3a,#14161c);
+  display:grid;place-items:center;padding:40px;min-height:100vh}
+/* 手机 mockup（纯 CSS） */
+#s2 .phone{width:min(276px,72vw);aspect-ratio:9/19.5;border-radius:34px;background:#fbfaf8;
+  border:9px solid #0a0b0e;box-shadow:0 40px 80px -24px #000c,0 0 0 1px #ffffff14;
+  padding:16px 13px;display:flex;flex-direction:column;gap:9px;overflow:hidden}
+#s2 .phone .hd{font:700 15px/1 inherit;color:#1a1c20}
+#s2 .phone .sd{font-size:10.5px;color:#9aa0ab;margin-bottom:3px}
+#s2 .row{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:9px;
+  background:#f1efeb;font-size:11.5px;color:#33363d}
+#s2 .row i{width:14px;height:14px;border-radius:4px;border:1.5px solid #c3c7cf;flex:0 0 auto}
+#s2 .row.ok{color:#a2a7b0}
+#s2 .row.ok i{background:#b4643c;border-color:#b4643c;position:relative}
+#s2 .row.ok i::after{content:"";position:absolute;left:3.5px;top:1px;width:4px;height:7px;
+  border:2px solid #fff;border-top:0;border-left:0;transform:rotate(40deg)}
+#s2 .row.ok span{text-decoration:line-through}
+#s2 .hm{margin-top:auto;display:grid;grid-template-columns:repeat(7,1fr);gap:3.5px}
+#s2 .hm b{aspect-ratio:1;border-radius:2.5px;background:#e7e4df}
+#s2 .hm b.a{background:#e3c3b1}#s2 .hm b.b{background:#cf9878}#s2 .hm b.c{background:#b4643c}
+@media(max-width:860px){#s2{grid-template-columns:1fr}
+  #s2 .right{min-height:0;padding:40px 24px 52px;order:2}#s2 .left{order:1;padding:52px 24px 8px}
+  #s2 dl{grid-template-columns:1fr}}
+
+/* ========== 1 · Hero 中心式 ========== */
+#s1{background:radial-gradient(120% 90% at 50% -10%,#1d2740 0%,#0d0f12 55%);
+  color:#e8edf5;display:grid;place-items:center;text-align:center;padding:96px 24px 100px}
+#s1 .kicker{font:600 12px/1 inherit;letter-spacing:.22em;text-transform:uppercase;color:#6c86b8;margin:0 0 22px}
+#s1 h1{margin:0;font-size:clamp(44px,11vw,104px);line-height:.98;font-weight:800;letter-spacing:-.03em;
+  background:linear-gradient(96deg,#fff 12%,#7fb3ff 52%,#c9a4ff 92%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+#s1 .sub{margin:22px auto 0;max-width:30ch;font-size:clamp(16px,3.6vw,21px);line-height:1.6;color:#95a3bb}
+#s1 .cta{margin:40px 0 0;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+#s1 .go{padding:15px 34px;border-radius:999px;font-weight:700;font-size:16px;
+  background:linear-gradient(96deg,#4f8cff,#8b6bff);color:#fff;
+  box-shadow:0 12px 34px -10px #4f8cff99;transition:.2s}
+#s1 .go:hover{transform:translateY(-2px);box-shadow:0 18px 44px -10px #4f8cffcc}
+#s1 .ghost{padding:15px 30px;border-radius:999px;font-weight:600;font-size:16px;
+  border:1px solid #2f3a52;color:#a9b7ce;transition:.2s}
+#s1 .ghost:hover{border-color:#4d5c7d;color:#e8edf5}
+#s1 .feat{margin:66px auto 0;padding:0;list-style:none;max-width:680px;
+  display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+#s1 .feat li{padding:9px 17px;border-radius:999px;font-size:14px;color:#9fb0c9;
+  border:1px solid #232d42;background:#131824}
+</style>
+</head>
+<body>
+<nav class="switcher" role="tablist" aria-label="页面风格切换">
+  <button role="tab" data-go="1" aria-selected="true"  aria-controls="s1"  title="Hero 中心式">1</button>
+  <button role="tab" data-go="2" aria-selected="false" aria-controls="s2"  title="分屏对比">2</button>
+  <button role="tab" data-go="3" aria-selected="false" aria-controls="s3"  title="深色终端风">3</button>
+  <button role="tab" data-go="4" aria-selected="false" aria-controls="s4"  title="日式极简">4</button>
+  <button role="tab" data-go="5" aria-selected="false" aria-controls="s5"  title="Material">5</button>
+  <button role="tab" data-go="6" aria-selected="false" aria-controls="s6"  title="杂志排版">6</button>
+  <button role="tab" data-go="7" aria-selected="false" aria-controls="s7"  title="玻璃态">7</button>
+  <button role="tab" data-go="8" aria-selected="false" aria-controls="s8"  title="时间线">8</button>
+  <button role="tab" data-go="9" aria-selected="false" aria-controls="s9"  title="数据仪表盘">9</button>
+  <button role="tab" data-go="10" aria-selected="false" aria-controls="s10" title="插画童趣">10</button>
+</nav>
+
+<!-- ============ 1 · Hero 中心式 ============ -->
+<section class="stage on" id="s1" role="tabpanel" aria-label="Hero 中心式">
+  <div>
+    <p class="kicker">Android · 开源 · 无广告</p>
+    <h1>考公打卡</h1>
+    <p class="sub">专注考公备考的打卡工具。每天该做的事，一眼看完，一次划掉。</p>
+    <div class="cta">
+      <a class="go" href="https://github.com/Alexued/gongkao-checkin/releases/latest">下载 APK</a>
+      <a class="ghost" href="https://github.com/Alexued/gongkao-checkin">看源码</a>
+    </div>
+    <ul class="feat">
+      <li>每日打卡</li><li>专注计时器</li><li>百化分背诵</li>
+      <li>资料分析公式</li><li>日历热力图</li><li>局域网同步</li>
+    </ul>
+  </div>
+</section>
+<!-- ============ 2 · 分屏对比 ============ -->
+<section class="stage" id="s2" role="tabpanel" aria-label="分屏对比">
+  <div class="left">
+    <span class="tag">Gongkao Checkin</span>
+    <h2>备考这件事，<br>靠的是<em>每天</em>。</h2>
+    <p>打开就是今天的清单，划掉的任务留在原位，不会跳到最后。翻页有惯性，长按能改，弹层是自家的样式。</p>
+    <dl>
+      <dt>专注计时器</dt><dd>倒计时与正计时，息屏也在跑</dd>
+      <dt>百化分背诵</dt><dd>全量与随机两种模式，错题有记录</dd>
+      <dt>公式背诵</dt><dd>资料分析常用公式，按分类抽</dd>
+      <dt>局域网同步</dt><dd>电脑浏览器打开就能改，不过云</dd>
+    </dl>
+    <a class="go" href="https://github.com/Alexued/gongkao-checkin/releases/latest">下载 APK →</a>
+  </div>
+  <div class="right">
+    <div class="phone" aria-hidden="true">
+      <div class="hd">今天</div>
+      <div class="sd">8月9日 · 周日</div>
+      <div class="row ok"><i></i><span>行测 · 资料分析 20 题</span></div>
+      <div class="row ok"><i></i><span>百化分 全量一轮</span></div>
+      <div class="row"><i></i>申论 · 归纳概括 1 篇</div>
+      <div class="row"><i></i>公式背诵 · 增长率</div>
+      <div class="row"><i></i>晨读 30 分钟</div>
+      <div class="hm">
+        <b class="c"></b><b class="b"></b><b class="c"></b><b class="a"></b><b class="c"></b><b class="b"></b><b></b>
+        <b class="b"></b><b class="c"></b><b class="c"></b><b class="b"></b><b class="a"></b><b class="c"></b><b class="b"></b>
+        <b class="c"></b><b class="a"></b><b class="b"></b><b class="c"></b><b class="c"></b><b></b><b class="a"></b>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ============ 3 · 深色终端风 ============ -->
+<section class="stage" id="s3" role="tabpanel" aria-label="深色终端风">
+  <div class="win">
+    <div class="bar"><i></i><i></i><i></i><span>gongkao-checkin — zsh</span></div>
+    <div class="body">
+      <div><span class="p"></span><span class="cmd">cat README</span></div>
+      <div class="out"><h3>考公打卡</h3>
+专注考公备考的打卡工具 · Android · <span class="y">无广告</span> · <span class="y">不联网上传</span></div>
+
+      <div><span class="p"></span><span class="cmd">./gongkao --features</span></div>
+      <table>
+        <tr><td>checkin</td><td>每日任务清单，划掉不改顺序，长按原位编辑</td></tr>
+        <tr><td>timer</td><td>倒计时 / 正计时，前台服务保活</td></tr>
+        <tr><td>percent</td><td>百化分背诵，全量与随机，成绩入库</td></tr>
+        <tr><td>formula</td><td>资料分析公式，按分类抽背</td></tr>
+        <tr><td>stats</td><td>月历热力图，左右滑动换月</td></tr>
+        <tr><td>sync</td><td>局域网 HTTP 服务，浏览器直接改</td></tr>
+        <tr><td>update</td><td>应用内检查更新，GitHub 与局域网双通道</td></tr>
+      </table>
+
+      <div><span class="p"></span><span class="cmd">./gongkao --install</span></div>
+      <div class="out"><span class="d">resolving latest release ...</span>
+<span class="k">✓</span> manifest.json  <span class="d">sha256 verified</span>
+<span class="k">✓</span> app-release.apk <span class="b">4.9 MB</span></div>
+      <a class="go" href="https://github.com/Alexued/gongkao-checkin/releases/latest">▸ 下载 APK</a>
+      <div style="margin-top:20px"><span class="p"></span><span class="cursor"></span></div>
+    </div>
+  </div>
+</section>
+<!-- ============ 4 · 日式极简 ============ -->
+<section class="stage" id="s4" role="tabpanel" aria-label="日式极简">
+  <div class="wrap">
+    <div class="mark"></div>
+    <h4>考公打卡</h4>
+    <p class="en">Gongkao Checkin</p>
+    <p class="lead">每天要做的事，写下来，做完划掉。<br>不提醒，不催促，不做多余的事。</p>
+    <ul>
+      <li><b>01</b><span>打卡<i>今日清单。划掉的任务留在原处，不重排。</i></span></li>
+      <li><b>02</b><span>计时<i>倒计时与正计时。息屏继续走。</i></span></li>
+      <li><b>03</b><span>背诵<i>百化分与资料分析公式。全量或随机。</i></span></li>
+      <li><b>04</b><span>统计<i>月历热力图。左右滑动换月。</i></span></li>
+      <li><b>05</b><span>同步<i>局域网内用浏览器编辑。数据不出内网。</i></span></li>
+    </ul>
+    <a class="go" href="https://github.com/Alexued/gongkao-checkin/releases/latest">下载 &nbsp;———&nbsp; APK</a>
+    <p class="foot">ANDROID 8.0+ · OPEN SOURCE</p>
+  </div>
+</section>
+<!-- ============ 5 · Material Design ============ -->
+<section class="stage" id="s5" role="tabpanel" aria-label="Material Design">
+  <header class="app"><b>考公打卡</b><span class="sp">v1.1.1</span></header>
+  <div class="band">
+    <h5>专注考公备考的打卡工具</h5>
+    <p>清单、计时、背诵、统计、同步，五件事做透，不做第六件。</p>
+  </div>
+  <div class="grid">
+    <div class="card"><div class="ic" aria-hidden="true">✓</div><h6>每日打卡</h6>
+      <p>今日任务一屏看完。划掉后留在原位，不会被排到最后。长按任务原地弹小卡片编辑。</p></div>
+    <div class="card"><div class="ic" aria-hidden="true">⏱</div><h6>专注计时器</h6>
+      <p>倒计时与正计时两种模式，前台服务保活，锁屏后仍在计。</p></div>
+    <div class="card"><div class="ic" aria-hidden="true">%</div><h6>百化分背诵</h6>
+      <p>分数与百分数互转训练。全量过一轮或随机抽题，正确率入库。</p></div>
+    <div class="card"><div class="ic" aria-hidden="true">∑</div><h6>公式背诵</h6>
+      <p>资料分析常用公式，按分类抽背，认识与不认识分开记。</p></div>
+    <div class="card"><div class="ic" aria-hidden="true">▦</div><h6>日历热力图</h6>
+      <p>月历视图看坚持了多久，颜色深浅对应当天完成量，左右滑动换月。</p></div>
+    <div class="card"><div class="ic" aria-hidden="true">⇄</div><h6>局域网同步</h6>
+      <p>手机开服务，电脑浏览器打开就能改。数据不出内网，可随时关掉。</p></div>
+  </div>
+  <div class="fabwrap">
+    <a class="fab" href="https://github.com/Alexued/gongkao-checkin/releases/latest">↓ 下载 APK</a>
+    <div class="chips"><span>Android 8.0+</span><span>约 4.9 MB</span><span>无广告</span><span>开源</span></div>
+  </div>
+</section>
+<!-- ============ 6 · 杂志排版 ============ -->
+<section class="stage" id="s6" role="tabpanel" aria-label="杂志排版">
+  <div class="rule"><b>Gongkao Checkin</b><span>ISSUE 1.1.1 · ANDROID</span></div>
+  <h6 class="hero">考公<em>打卡</em></h6>
+  <div class="meta"><span>专注考公备考</span><span>无广告</span><span>数据不出内网</span><span>开源</span></div>
+  <div class="cols">
+    <p>备考最难的不是某一天做多少题，而是明天还愿意再打开一次。这个 app 只做一件事：把今天该做的事摆在眼前，做完划掉。</p>
+    <h6>清单</h6>
+    <p>划掉的任务留在原位，不会被扔到列表最后 —— 位置变了，眼睛就得重新找一遍。长按任务从原处展开小卡片，改完缩回去。</p>
+    <h6>背诵</h6>
+    <p>百化分与资料分析公式各有全量、随机两种模式。成绩落库，错的下次还会遇到。公式按分类抽，认识与不认识分开计。</p>
+    <h6>统计</h6>
+    <p>月历热力图。颜色深浅是当天完成量，左右滑动换月。看的不是某天多努力，是这一片有没有断。</p>
+    <h6>同步</h6>
+    <p>手机起一个局域网 HTTP 服务，电脑浏览器打开就能改清单。同步开关随时能关，不想开的时候一条数据都不出去。</p>
+    <h6>更新</h6>
+    <p>应用内检查更新走两条通道：GitHub Release，或者局域网里版本更高的那台设备。下载完校验 SHA-256 再装。</p>
+  </div>
+  <div class="pull">“划掉的任务留在原位 —— 位置变了，眼睛就得重新找一遍。”</div>
+  <a class="go" href="https://github.com/Alexued/gongkao-checkin/releases/latest">下载 APK</a>
+</section>
+<!-- ============ 7 · 玻璃态 ============ -->
+<section class="stage" id="s7" role="tabpanel" aria-label="玻璃态">
+  <span class="blob b1" aria-hidden="true"></span>
+  <span class="blob b2" aria-hidden="true"></span>
+  <span class="blob b3" aria-hidden="true"></span>
+  <div class="in">
+    <span class="t">考公打卡</span>
+    <p class="lead">清单、计时、背诵、统计、同步。该有的都有，多余的一个没有。</p>
+    <div class="cta">
+      <a class="go" href="https://github.com/Alexued/gongkao-checkin/releases/latest">下载 APK</a>
+      <a class="go2" href="https://github.com/Alexued/gongkao-checkin">GitHub</a>
+    </div>
+    <div class="cards">
+      <div class="glass"><span class="em" aria-hidden="true">✓</span><span class="ct">每日打卡</span>
+        <p>划掉的任务留在原位。长按从原处展开卡片编辑，改完缩回去。</p></div>
+      <div class="glass"><span class="em" aria-hidden="true">⏱</span><span class="ct">专注计时</span>
+        <p>倒计时与正计时，前台服务保活，锁屏也在走。</p></div>
+      <div class="glass"><span class="em" aria-hidden="true">%</span><span class="ct">百化分</span>
+        <p>全量一轮或随机抽题，正确率入库，错的还会再见。</p></div>
+      <div class="glass"><span class="em" aria-hidden="true">∑</span><span class="ct">公式背诵</span>
+        <p>资料分析常用公式，按分类抽，认识与否分开记。</p></div>
+      <div class="glass"><span class="em" aria-hidden="true">▦</span><span class="ct">热力图</span>
+        <p>月历看坚持。颜色深浅是完成量，滑动换月。</p></div>
+      <div class="glass"><span class="em" aria-hidden="true">⇄</span><span class="ct">局域网同步</span>
+        <p>电脑浏览器直接改，数据不出内网，开关随时关。</p></div>
+    </div>
+  </div>
+</section>
+<!-- ============ 8 · 时间线叙事 ============ -->
+<section class="stage" id="s8" role="tabpanel" aria-label="时间线叙事">
+  <div class="in">
+    <div class="top">
+      <span class="t">考公打卡的一天</span>
+      <p>从早上打开 app 到晚上看热力图，中间发生的事。</p>
+    </div>
+    <ol>
+      <li><div class="when">06:40 · 起</div><span class="h">今天要做什么</span>
+        <p>打开就是今日清单，不用点第二下。任务按自己的顺序排，完成后划掉，位置不动。</p>
+        <div class="box">划掉不重排 —— 位置一变，眼睛就得重新找一遍。</div></li>
+      <li><div class="when">09:00 · 练</div><span class="h">计时器跑起来</span>
+        <p>资料分析限时 20 分钟。倒计时开着，锁屏也在走，前台服务保证不被系统掐掉。</p></li>
+      <li><div class="when">12:30 · 背</div><span class="h">碎时间背两轮</span>
+        <p>百化分随机抽 20 个，资料分析公式按分类抽。认识的划过，不认识的记下来，成绩落库。</p></li>
+      <li><div class="when">20:00 · 改</div><span class="h">电脑上顺手调清单</span>
+        <p>手机开同步开关，电脑浏览器进局域网地址，明天的任务批量敲进去。数据不出内网。</p></li>
+      <li><div class="when">23:10 · 看</div><span class="h">这个月连了多少天</span>
+        <p>统计页月历热力图，颜色深浅是当天完成量。看的不是某天多努力，是这一片有没有断。</p></li>
+    </ol>
+    <div class="end">
+      <span class="h">明天继续</span>
+      <p>Android 8.0+ · 约 4.9 MB · 无广告 · 开源</p>
+      <a class="go" href="https://github.com/Alexued/gongkao-checkin/releases/latest">下载 APK</a>
+    </div>
+  </div>
+</section>
+<!-- ============ 9 · 数据仪表盘 ============ -->
+<section class="stage" id="s9" role="tabpanel" aria-label="数据仪表盘">
+  <div class="in">
+    <div class="hd">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="t">考公打卡</span>
+      <span class="s">备考数据面板 · 示例</span>
+      <a class="go" href="https://github.com/Alexued/gongkao-checkin/releases/latest">下载 APK</a>
+    </div>
+    <div class="kpi">
+      <div><div class="lb">连续打卡</div><div class="vl up">38<span style="font-size:15px"> 天</span></div>
+        <div class="dt">最长纪录 41 天</div></div>
+      <div><div class="lb">本月完成率</div><div class="vl bl">86<span style="font-size:15px">%</span></div>
+        <div class="dt">156 / 181 项任务</div></div>
+      <div><div class="lb">百化分正确率</div><div class="vl pk">92<span style="font-size:15px">%</span></div>
+        <div class="dt">近 20 轮平均</div></div>
+      <div><div class="lb">累计专注</div><div class="vl yl">74<span style="font-size:15px"> 小时</span></div>
+        <div class="dt">计时器统计</div></div>
+    </div>
+    <div class="split">
+      <div class="panel">
+        <div class="pt">打卡热力图 · 近 42 天</div>
+        <div class="hm" aria-hidden="true">
+          <b class="l3"></b><b class="l2"></b><b class="l4"></b><b class="l1"></b><b class="l3"></b><b class="l4"></b><b></b>
+          <b class="l2"></b><b class="l4"></b><b class="l3"></b><b class="l3"></b><b class="l1"></b><b class="l4"></b><b class="l2"></b>
+          <b class="l4"></b><b class="l3"></b><b class="l2"></b><b class="l4"></b><b class="l4"></b><b class="l1"></b><b class="l3"></b>
+          <b class="l1"></b><b class="l4"></b><b class="l4"></b><b class="l2"></b><b class="l3"></b><b class="l4"></b><b class="l4"></b>
+          <b class="l3"></b><b class="l4"></b><b class="l1"></b><b class="l3"></b><b class="l4"></b><b class="l2"></b><b class="l4"></b>
+          <b class="l4"></b><b class="l2"></b><b class="l3"></b><b class="l4"></b><b class="l4"></b><b class="l3"></b><b class="l4"></b>
+        </div>
+        <div class="lg">少 <i style="background:#151b26"></i><i style="background:#1c4a3a"></i><i style="background:#22795c"></i><i style="background:#28b37f"></i><i style="background:#2ee6a8"></i> 多</div>
+      </div>
+      <div class="panel">
+        <div class="pt">模块使用占比</div>
+        <div class="bars">
+          <div class="bar"><div class="bt"><span>每日打卡</span><b>34%</b></div>
+            <div class="tr"><i style="width:34%;background:#2ee6a8"></i></div></div>
+          <div class="bar"><div class="bt"><span>专注计时</span><b>26%</b></div>
+            <div class="tr"><i style="width:26%;background:#6ea8ff"></i></div></div>
+          <div class="bar"><div class="bt"><span>百化分背诵</span><b>19%</b></div>
+            <div class="tr"><i style="width:19%;background:#ff6b9d"></i></div></div>
+          <div class="bar"><div class="bt"><span>公式背诵</span><b>14%</b></div>
+            <div class="tr"><i style="width:14%;background:#ffc857"></i></div></div>
+          <div class="bar"><div class="bt"><span>局域网同步</span><b>7%</b></div>
+            <div class="tr"><i style="width:7%;background:#a78bfa"></i></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ============ 10 · 插画童趣 ============ -->
+<section class="stage" id="s10" role="tabpanel" aria-label="插画童趣">
+  <div class="sky" aria-hidden="true"></div>
+  <span class="cloud c1" aria-hidden="true"></span>
+  <span class="cloud c2" aria-hidden="true"></span>
+  <div class="in">
+    <div class="mascot" aria-hidden="true"><span class="mouth"></span></div>
+    <span class="t">考公打卡</span>
+    <p class="lead">今天的事做完就划掉，一天一格，慢慢铺满一整月。</p>
+    <a class="go" href="https://github.com/Alexued/gongkao-checkin/releases/latest">下载 APK 🎒</a>
+    <div class="cards">
+      <div><div class="em" aria-hidden="true">✅</div><span class="ct">每日打卡</span>
+        <p>划掉的任务留在原地，不会突然跳到最后。长按就能改。</p></div>
+      <div><div class="em" aria-hidden="true">⏰</div><span class="ct">专注计时</span>
+        <p>倒着数或正着数都行，锁屏了也照样在跑。</p></div>
+      <div><div class="em" aria-hidden="true">🔢</div><span class="ct">百化分</span>
+        <p>全部过一轮，或者随机抽几个，正确率自己记着。</p></div>
+      <div><div class="em" aria-hidden="true">📐</div><span class="ct">公式背诵</span>
+        <p>资料分析公式按分类抽，记住的和没记住的分开放。</p></div>
+      <div><div class="em" aria-hidden="true">🗓</div><span class="ct">热力图</span>
+        <p>一天一格，做得多颜色就深，滑一下换个月看。</p></div>
+      <div><div class="em" aria-hidden="true">💻</div><span class="ct">电脑同步</span>
+        <p>手机开个开关，电脑浏览器就能改清单，不走外网。</p></div>
+    </div>
+    <p class="foot">Android 8.0+ · 约 4.9 MB · 没有广告 · 开源</p>
+  </div>
+</section>
+<script>
+(function () {
+  var tabs = [].slice.call(document.querySelectorAll('.switcher button'));
+  var stages = [].slice.call(document.querySelectorAll('.stage'));
+
+  function show(n, push) {
+    var id = 's' + n;
+    if (!document.getElementById(id)) return;
+    stages.forEach(function (s) { s.classList.toggle('on', s.id === id); });
+    tabs.forEach(function (t) { t.setAttribute('aria-selected', t.dataset.go === String(n)); });
+    window.scrollTo(0, 0);
+    if (push) history.replaceState(null, '', '#' + n);
+  }
+
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () { show(t.dataset.go, true); });
+  });
+
+  // ← → 在切换器内移动焦点并切换
+  document.querySelector('.switcher').addEventListener('keydown', function (e) {
+    var i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!d) return;
+    e.preventDefault();
+    var next = tabs[(i + d + tabs.length) % tabs.length];
+    next.focus();
+    show(next.dataset.go, true);
+  });
+
+  var start = parseInt((location.hash || '').slice(1), 10);
+  show(start >= 1 && start <= tabs.length ? start : 1, false);
+})();
+</script>
+</body>
+</html>

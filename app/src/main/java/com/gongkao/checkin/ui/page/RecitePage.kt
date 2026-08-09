@@ -17,7 +17,6 @@ import com.gongkao.checkin.ui.percent.PercentActivity
 import com.gongkao.checkin.ui.percent.PercentHistoryActivity
 import com.gongkao.checkin.ui.open
 import com.gongkao.checkin.ui.tap
-import com.gongkao.checkin.view.FormulaView
 
 /** 背诵入口页：百化分 + 资料分析公式，各自两种模式与记录入口。 */
 class RecitePage(host: MainActivity) : Page(host) {
@@ -26,7 +25,6 @@ class RecitePage(host: MainActivity) : Page(host) {
 
     private lateinit var percentStat: TextView
     private lateinit var formulaStat: TextView
-    private lateinit var formulaPreview: FormulaView
     private lateinit var categoryRow: LinearLayout
 
     /** 当前选中的公式分类，随 chip 变化并传给 FormulaActivity。 */
@@ -35,14 +33,10 @@ class RecitePage(host: MainActivity) : Page(host) {
     override fun onCreate(v: View) {
         percentStat = v.findViewById(R.id.percentStat)
         formulaStat = v.findViewById(R.id.formulaStat)
-        formulaPreview = v.findViewById(R.id.formulaPreview)
         categoryRow = v.findViewById(R.id.categoryRow)
 
         // NestedScrollView 的唯一子节点承担状态栏留白
         (v as ViewGroup).getChildAt(0).padTopInset()
-
-        formulaPreview.textSizePx = 21f.dp
-        formulaPreview.expression = FormulaData.list.firstOrNull()?.expr ?: ""
 
         v.findViewById<TextView>(R.id.btnPercentFull).tap {
             ctx.open<PercentActivity>("mode" to "FULL")
@@ -83,8 +77,6 @@ class RecitePage(host: MainActivity) : Page(host) {
                 for (i in 0 until categoryRow.childCount) {
                     categoryRow.getChildAt(i).isSelected = i == FormulaData.categories.indexOf(name)
                 }
-                // 换分类时预览该类第一条，给个直观的落点
-                formulaPreview.expression = FormulaData.byCategory(name).firstOrNull()?.expr ?: ""
             }
             categoryRow.addView(chip)
         }

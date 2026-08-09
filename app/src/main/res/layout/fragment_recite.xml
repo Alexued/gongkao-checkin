@@ -127,12 +127,6 @@
                 android:textColor="@color/ink_sub"
                 android:textSize="13sp" />
 
-            <com.gongkao.checkin.view.FormulaView
-                android:id="@+id/formulaPreview"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp" />
-
             <!-- 分类选择 -->
             <HorizontalScrollView
                 android:layout_width="match_parent"
