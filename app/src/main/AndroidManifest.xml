@@ -12,11 +12,19 @@
     <!-- 应用内更新：调起系统安装器 -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!--
+        networkSecurityConfig 是局域网更新通道的前提：对端是同一套 app 起的 http
+        服务，没有证书，只能发明文。targetSdk >= 28 默认禁止明文出站，缺这份配置
+        HttpURLConnection 会抛「Cleartext HTTP traffic not permitted」，而
+        Updater.fetchText 用 runCatching 把异常吞掉 —— 表现就是扫段秒回
+        「已经是最新版本」、对端一条日志都没有。放开范围见 xml/network_security_config。
+    -->
     <application
         android:name=".App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="false"
         android:theme="@style/Theme.Checkin">

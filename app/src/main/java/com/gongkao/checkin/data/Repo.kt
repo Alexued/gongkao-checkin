@@ -7,17 +7,32 @@ import com.google.gson.GsonBuilder
 import java.io.File
 import java.time.LocalDate
 import java.util.UUID
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 全局单例仓库。UI 线程与局域网同步线程都会访问，所有读写走 [lock]。
  * 变更后通过 [listeners] 通知（回调固定在主线程）。
+ *
+ * 落盘是异步的：[edit] 只排一次写任务，真正的 json 序列化 + 写文件在 `repo-io`
+ * 线程上做，避免每次打卡都在 UI 线程上写整份状态。进入后台时由 [flush] 兜底。
  */
 object Repo {
+
+    /** 保留的日计划天数上限，约 13 个月；连续全勤天数因此也以此为上限 */
+    private const val MAX_DAYS = 400
+
+    /** 三类练习记录各自保留的条数上限（列表是新的在前，超出从尾部丢） */
+    private const val MAX_SESSIONS = 200
 
     private val gson = GsonBuilder().setPrettyPrinting().create()
     private val lock = Any()
     private val main = Handler(Looper.getMainLooper())
     private val listeners = mutableListOf<() -> Unit>()
+
+    private val io = Executors.newSingleThreadExecutor { r -> Thread(r, "repo-io") }
+    private val writeQueued = AtomicBoolean(false)
 
     private lateinit var file: File
     private lateinit var backup: File
@@ -88,11 +103,38 @@ object Repo {
         main.post { snapshot.forEach { runCatching { it() } } }
     }
 
+    /**
+     * 异步落盘，多次连续调用只提交一次写任务（最新状态由任务执行时快照，不丢数据）。
+     * 正常使用时每次打卡触发一次 edit → 一次 persist → 一次 IO 任务；
+     * 连续快速操作自动合并，IO 线程不会被堆积。
+     */
     private fun persist() {
-        val text = synchronized(lock) { gson.toJson(state) }
+        if (!writeQueued.compareAndSet(false, true)) return
+        io.execute {
+            val text = synchronized(lock) {
+                writeQueued.set(false)
+                gson.toJson(state)
+            }
+            runCatching {
+                if (file.exists()) file.copyTo(backup, overwrite = true)
+                file.writeText(text)
+            }
+        }
+    }
+
+    /**
+     * 进入后台时调用，同步等待写完（最多 5 秒）。
+     * 保证 App.onTrimMemory / Activity.onStop 时数据不丢失。
+     */
+    fun flush() {
+        val text = synchronized(lock) { writeQueued.set(false); gson.toJson(state) }
         runCatching {
-            if (file.exists()) file.copyTo(backup, overwrite = true)
-            file.writeText(text)
+            io.submit {
+                runCatching {
+                    if (file.exists()) file.copyTo(backup, overwrite = true)
+                    file.writeText(text)
+                }
+            }.get(5, TimeUnit.SECONDS)
         }
     }
 
@@ -123,6 +165,12 @@ object Repo {
                 cursor = cursor.plusDays(1)
             }
             state.lastRolledDate = today.toString()
+
+            // 裁掉超出上限的旧天记录，保留最近 MAX_DAYS 条
+            if (state.days.size > MAX_DAYS) {
+                val toRemove = state.days.keys.sorted().take(state.days.size - MAX_DAYS)
+                toRemove.forEach { state.days.remove(it) }
+            }
         }
     }
 
@@ -249,16 +297,28 @@ object Repo {
 
     // ---------------------------------------------------------------- 记录
 
-    fun addTimerSession(s: TimerSession) = edit { st -> st.timerSessions.add(0, s) }
+    fun addTimerSession(s: TimerSession) = edit { st ->
+        st.timerSessions.add(0, s)
+        if (st.timerSessions.size > MAX_SESSIONS)
+            st.timerSessions.subList(MAX_SESSIONS, st.timerSessions.size).clear()
+    }
     fun deleteTimerSession(id: String) = edit { st -> st.timerSessions.removeAll { it.id == id } }
     fun timerSessions(): List<TimerSession> = read { it.timerSessions.toList() }
     fun timerSession(id: String): TimerSession? = read { it.timerSessions.firstOrNull { s -> s.id == id } }
 
-    fun addPercentSession(s: PercentSession) = edit { st -> st.percentSessions.add(0, s) }
+    fun addPercentSession(s: PercentSession) = edit { st ->
+        st.percentSessions.add(0, s)
+        if (st.percentSessions.size > MAX_SESSIONS)
+            st.percentSessions.subList(MAX_SESSIONS, st.percentSessions.size).clear()
+    }
     fun percentSessions(): List<PercentSession> = read { it.percentSessions.toList() }
     fun percentSession(id: String): PercentSession? = read { it.percentSessions.firstOrNull { s -> s.id == id } }
 
-    fun addFormulaSession(s: FormulaSession) = edit { st -> st.formulaSessions.add(0, s) }
+    fun addFormulaSession(s: FormulaSession) = edit { st ->
+        st.formulaSessions.add(0, s)
+        if (st.formulaSessions.size > MAX_SESSIONS)
+            st.formulaSessions.subList(MAX_SESSIONS, st.formulaSessions.size).clear()
+    }
     fun formulaSessions(): List<FormulaSession> = read { it.formulaSessions.toList() }
 
     fun newId(): String = UUID.randomUUID().toString()

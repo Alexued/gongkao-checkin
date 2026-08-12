@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    局域网更新通道的对端是同一套 app 起的 http 服务，没有证书，只能走明文。
+    Android 这份配置不支持 CIDR，没法「只对私网放开」（/24 要枚举 254 条，
+    换个网段又不成立），所以 base 放开明文，再把外网域名单独收紧。
+
+    明文下载的完整性由 Updater.download 的 sha256 校验兜底。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!--
+        GitHub 通道必须是 HTTPS：manifest.json 里的下载地址来自远端，
+        万一被改成 http:// 就会静默降级成明文下载，这里直接堵死。
+    -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">github.com</domain>
+        <domain includeSubdomains="true">githubusercontent.com</domain>
+    </domain-config>
+</network-security-config>
