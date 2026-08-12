@@ -27,3 +27,4 @@ node_modules/
 
 # 验证过程中的临时文件
 *.log
+.claude/
