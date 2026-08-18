@@ -1,6 +1,5 @@
 package com.gongkao.checkin.ui
 
-import android.app.DatePickerDialog
 import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.widget.EditText

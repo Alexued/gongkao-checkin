@@ -1,6 +1,5 @@
 package com.gongkao.checkin.ui.timer
 
-import android.app.AlertDialog
 import android.widget.TextView
 import com.gongkao.checkin.ui.AppDialog
 import com.gongkao.checkin.R

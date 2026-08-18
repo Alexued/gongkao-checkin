@@ -1,6 +1,5 @@
 package com.gongkao.checkin.ui
 
-import android.app.DatePickerDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.widget.LinearLayout
