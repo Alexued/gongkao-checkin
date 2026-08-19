@@ -323,6 +323,47 @@ object Repo {
 
     fun newId(): String = UUID.randomUUID().toString()
 
+    // ---------------------------------------------------------------- 设备直连同步：整份覆盖导出/导入
+
+    /** 覆盖式同步的数据类：任务/每日记录/三类练习历史/结束日。不含 syncPin/syncPort 等设备本地设置。 */
+    private class FullSync {
+        var endDate: String? = null
+        var tasks: MutableList<TaskDef> = mutableListOf()
+        var days: LinkedHashMap<String, DayRecord> = LinkedHashMap()
+        var timerSessions: MutableList<TimerSession> = mutableListOf()
+        var percentSessions: MutableList<PercentSession> = mutableListOf()
+        var formulaSessions: MutableList<FormulaSession> = mutableListOf()
+    }
+
+    /** 供「发送我的记录」使用：把本机全部打卡数据序列化成 JSON。 */
+    fun exportFull(): String = read { st ->
+        val f = FullSync()
+        f.endDate = st.settings.endDate
+        f.tasks = st.tasks
+        f.days = st.days
+        f.timerSessions = st.timerSessions
+        f.percentSessions = st.percentSessions
+        f.formulaSessions = st.formulaSessions
+        gson.toJson(f)
+    }
+
+    /** 供「接收记录」使用：整份覆盖本机数据（不合并）。调用前应已由 UI 二次确认。 */
+    fun importFull(json: String): Boolean {
+        val parsed = runCatching { gson.fromJson(json, FullSync::class.java) }.getOrNull() ?: return false
+        edit { st ->
+            st.settings.endDate = parsed.endDate
+            st.tasks = parsed.tasks
+            st.days = parsed.days ?: LinkedHashMap()
+            st.timerSessions = parsed.timerSessions
+            st.percentSessions = parsed.percentSessions
+            st.formulaSessions = parsed.formulaSessions
+            // 强制下次 ensureDays() 从头重建欠账链条，避免沿用本机旧的 lastRolledDate 导致漏滚
+            st.lastRolledDate = null
+        }
+        ensureDays()
+        return true
+    }
+
     // ---------------------------------------------------------------- 统计
 
     fun recordedDates(): List<String> = read { it.days.keys.sortedDescending() }

@@ -151,6 +151,8 @@ data class Settings(
     /** 总结束日（考试日），用于倒计时，也停止生成之后的任务 */
     var endDate: String? = null,
     var syncEnabled: Boolean = false,
+    /** 允许被局域网内其它设备发现（设备直连同步用，独立于网页同步开关） */
+    var syncDiscoverable: Boolean = false,
     var syncPort: Int = 8765,
     var syncPin: String = "",
     var nickname: String = "考公人"

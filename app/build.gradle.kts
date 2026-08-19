@@ -99,4 +99,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("com.google.code.gson:gson:2.11.0")
     implementation("org.nanohttpd:nanohttpd:2.3.1")
+    // 设备直连同步的二维码收发
+    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0") {
+        isTransitive = false
+    }
 }

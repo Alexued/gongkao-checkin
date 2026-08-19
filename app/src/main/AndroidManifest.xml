@@ -11,6 +11,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- 应用内更新：调起系统安装器 -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- 设备直连同步：扫描对方二维码 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
     <!--
         networkSecurityConfig 是局域网更新通道的前提：对端是同一套 app 起的 http
@@ -64,6 +68,9 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".ui.SettingsActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".sync.QrScanActivity"
             android:screenOrientation="portrait" />
 
         <service

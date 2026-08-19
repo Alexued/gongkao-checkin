@@ -8,6 +8,9 @@ import com.gongkao.checkin.BuildConfig
 import com.gongkao.checkin.R
 import com.gongkao.checkin.data.DateUtil
 import com.gongkao.checkin.data.Repo
+import com.gongkao.checkin.sync.DeviceScan
+import com.gongkao.checkin.sync.DeviceSync
+import com.gongkao.checkin.sync.FoundDevice
 import com.gongkao.checkin.sync.LanInfo
 import com.gongkao.checkin.sync.SyncService
 import java.time.LocalDate
@@ -20,6 +23,7 @@ class SettingsActivity : ListScreen() {
     override fun build() {
         endDateSection()
         syncSection()
+        deviceSyncSection()
         updateSection()
         aboutSection()
     }
@@ -110,13 +114,156 @@ class SettingsActivity : ListScreen() {
 
     private fun toggleSync(on: Boolean) {
         Repo.edit { st -> st.settings.syncEnabled = on }
-        if (on) SyncService.start(this) else SyncService.stop(this)
+        syncServiceRefresh()
+    }
+
+    /** 网页同步、设备直连发现共用同一个前台服务；任意一个开着就要常驻。 */
+    private fun syncServiceRefresh() {
+        val st = Repo.read { it.settings }
+        if (st.syncEnabled || st.syncDiscoverable) SyncService.start(this) else SyncService.stop(this)
     }
 
     private fun copy(text: String) {
         val cm = getSystemService(ClipboardManager::class.java)
         cm?.setPrimaryClip(ClipData.newPlainText("url", text))
         toast(getString(R.string.sync_copied))
+    }
+
+    // ------------------------------------------------------------ 设备直连同步
+
+    private var scanning = false
+
+    private fun deviceSyncSection() {
+        section(getString(R.string.device_sync_title))
+        val discoverable = Repo.read { it.settings.syncDiscoverable }
+
+        row(
+            title = getString(R.string.device_sync_discoverable),
+            sub = getString(R.string.device_sync_discoverable_sub),
+            value = getString(if (discoverable) R.string.sync_on else R.string.sync_off),
+            chevron = true
+        ) {
+            Repo.edit { st -> st.settings.syncDiscoverable = !discoverable }
+            syncServiceRefresh()
+        }
+
+        row(
+            title = getString(R.string.device_sync_scan),
+            sub = if (scanning) getString(R.string.device_sync_scanning) else null,
+            chevron = true
+        ) { startScan() }
+
+        row(
+            title = getString(R.string.device_sync_show_qr),
+            chevron = true
+        ) { showMyQr() }
+    }
+
+    private fun startScan() {
+        if (scanning) return
+        val ip = LanInfo.ip(this)
+        if (ip == null) {
+            toast(getString(R.string.device_sync_no_wifi))
+            return
+        }
+        scanning = true
+        rebuild()
+        val port = LanInfo.port()
+        Thread {
+            val found = runCatching { DeviceScan.scan(ip, port) }.getOrDefault(emptyList())
+            runOnUiThread {
+                scanning = false
+                if (found.isEmpty()) {
+                    toast(getString(R.string.device_sync_none_found))
+                    rebuild()
+                } else {
+                    showDeviceList(found)
+                }
+            }
+        }.start()
+    }
+
+    private fun showDeviceList(devices: List<FoundDevice>) {
+        val rows = devices.map { d ->
+            DialogRow(title = d.nickname, sub = "${d.ip}:${d.port}")
+        }
+        AppListDialog.show(
+            ctx = this,
+            title = getString(R.string.device_sync_scan),
+            rows = rows,
+            negative = getString(R.string.cancel),
+            onPick = { index -> pickAction(devices[index]) }
+        )
+        rebuild()
+    }
+
+    private fun pickAction(device: FoundDevice) {
+        AppListDialog.show(
+            ctx = this,
+            title = getString(R.string.device_sync_pick_action, device.nickname),
+            rows = listOf(
+                DialogRow(title = getString(R.string.device_sync_send)),
+                DialogRow(title = getString(R.string.device_sync_receive))
+            ),
+            negative = getString(R.string.cancel),
+            onPick = { index ->
+                if (index == 0) askPinThen(device) { pin -> doSend(device, pin) }
+                else confirmReceive(device)
+            }
+        )
+    }
+
+    private fun confirmReceive(device: FoundDevice) {
+        AppDialog.show(
+            ctx = this,
+            title = getString(R.string.device_sync_confirm_receive_title),
+            message = getString(R.string.device_sync_confirm_receive_msg),
+            positive = getString(R.string.key_confirm),
+            negative = getString(R.string.cancel),
+            destructive = true
+        ) {
+            askPinThen(device) { pin -> doReceive(device, pin) }
+        }
+    }
+
+    private fun askPinThen(device: FoundDevice, block: (String) -> Unit) {
+        PinInputDialog.show(
+            ctx = this,
+            title = getString(R.string.device_sync_pin_title),
+            message = getString(R.string.device_sync_pin_sub),
+            positive = getString(R.string.key_confirm),
+            negative = getString(R.string.cancel)
+        ) { pin -> block(pin) }
+    }
+
+    private fun doSend(device: FoundDevice, pin: String) {
+        toast(getString(R.string.device_sync_sending))
+        Thread {
+            val ok = runCatching { DeviceSync.sendFull(device, pin) }.getOrDefault(false)
+            runOnUiThread {
+                toast(getString(if (ok) R.string.device_sync_send_ok else R.string.device_sync_fail))
+            }
+        }.start()
+    }
+
+    private fun doReceive(device: FoundDevice, pin: String) {
+        toast(getString(R.string.device_sync_receiving))
+        Thread {
+            val ok = runCatching { DeviceSync.receiveFull(device, pin) }.getOrDefault(false)
+            runOnUiThread {
+                toast(getString(if (ok) R.string.device_sync_receive_ok else R.string.device_sync_fail))
+            }
+        }.start()
+    }
+
+    private fun showMyQr() {
+        val ip = LanInfo.ip(this)
+        if (ip == null) {
+            toast(getString(R.string.device_sync_no_wifi))
+            return
+        }
+        val pin = Repo.read { it.settings.syncPin }
+        QrShowDialog.show(this, ip, LanInfo.port(), pin)
     }
 
     /** 橙底提示条，用于把「同一局域网都能访问」这件事说明白。 */

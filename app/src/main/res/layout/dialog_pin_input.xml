@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  带一个输入框的确认弹层，用于让用户输对方设备的访问码（PIN）。
+  布局跟 dialog_app.xml 基本一致，只是标题和按钮之间插了一个 EditText。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialogScrim"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/dialogCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="28dp"
+        android:layout_marginEnd="28dp"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical"
+        android:paddingStart="22dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="22dp"
+        android:paddingBottom="20dp">
+
+        <TextView
+            android:id="@+id/dialogTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:textColor="@color/ink"
+            android:textSize="19sp" />
+
+        <TextView
+            android:id="@+id/dialogMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:textColor="@color/ink_sub"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/dialogInput"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_input"
+            android:gravity="center"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:letterSpacing="0.3"
+            android:maxLength="8"
+            android:maxLines="1"
+            android:paddingHorizontal="14dp"
+            android:textColor="@color/ink"
+            android:textColorHint="@color/ink_dim"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/dialogPositive"
+            style="@style/BtnPrimary"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:id="@+id/dialogNegative"
+            style="@style/BtnGhost"
+            android:layout_marginTop="10dp" />
+    </LinearLayout>
+</FrameLayout>
