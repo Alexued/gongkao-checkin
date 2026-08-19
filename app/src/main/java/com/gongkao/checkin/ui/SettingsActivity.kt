@@ -157,6 +157,47 @@ class SettingsActivity : ListScreen() {
             title = getString(R.string.device_sync_show_qr),
             chevron = true
         ) { showMyQr() }
+
+        row(
+            title = getString(R.string.device_sync_scan_qr),
+            chevron = true
+        ) { scanQrLauncher.launch(android.content.Intent(this, com.gongkao.checkin.sync.QrScanActivity::class.java)) }
+    }
+
+    private val scanQrLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val data = result.data ?: return@registerForActivityResult
+        val ip = data.getStringExtra(com.gongkao.checkin.sync.QrScanActivity.EXTRA_IP) ?: return@registerForActivityResult
+        val port = data.getIntExtra(com.gongkao.checkin.sync.QrScanActivity.EXTRA_PORT, 0)
+        val pin = data.getStringExtra(com.gongkao.checkin.sync.QrScanActivity.EXTRA_PIN).orEmpty()
+        if (port <= 0) return@registerForActivityResult
+        val device = FoundDevice(ip = ip, port = port, nickname = ip, versionName = "")
+        // 扫码已经拿到了 PIN，直接选发送/接收即可，不用再手输一遍。
+        AppListDialog.show(
+            ctx = this,
+            title = getString(R.string.device_sync_pick_action, device.nickname),
+            rows = listOf(
+                DialogRow(title = getString(R.string.device_sync_send)),
+                DialogRow(title = getString(R.string.device_sync_receive))
+            ),
+            negative = getString(R.string.cancel),
+            onPick = { index ->
+                if (index == 0) doSend(device, pin)
+                else confirmReceiveWithPin(device, pin)
+            }
+        )
+    }
+
+    private fun confirmReceiveWithPin(device: FoundDevice, pin: String) {
+        AppDialog.show(
+            ctx = this,
+            title = getString(R.string.device_sync_confirm_receive_title),
+            message = getString(R.string.device_sync_confirm_receive_msg),
+            positive = getString(R.string.key_confirm),
+            negative = getString(R.string.cancel),
+            destructive = true
+        ) { doReceive(device, pin) }
     }
 
     private fun startScan() {
