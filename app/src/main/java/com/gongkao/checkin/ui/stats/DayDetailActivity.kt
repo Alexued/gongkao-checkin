@@ -5,6 +5,7 @@ import com.gongkao.checkin.data.DateUtil
 import com.gongkao.checkin.data.DayItem
 import com.gongkao.checkin.data.DayRecord
 import com.gongkao.checkin.data.KIND_CARRY
+import com.gongkao.checkin.data.POMODORO_WORK
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.ListScreen
 import com.gongkao.checkin.ui.open
@@ -25,9 +26,11 @@ class DayDetailActivity : ListScreen() {
         val percents = Repo.percentSessions().filter { it.date == date }
         val formulas = Repo.formulaSessions().filter { it.date == date }
         val mentalMaths = Repo.mentalMathSessions().filter { it.date == date }
+        val pomodoros = Repo.pomodoroSessions().filter { it.date == date && it.kind == POMODORO_WORK }
 
         val nothing = (rec == null || rec.items.isEmpty()) &&
-            timers.isEmpty() && percents.isEmpty() && formulas.isEmpty() && mentalMaths.isEmpty()
+            timers.isEmpty() && percents.isEmpty() && formulas.isEmpty() && mentalMaths.isEmpty() &&
+            pomodoros.isEmpty()
         if (nothing) {
             empty(getString(R.string.day_sub_none))
             return
@@ -91,6 +94,17 @@ class DayDetailActivity : ListScreen() {
                     ),
                     sub = "${s.category} · ${DateUtil.human(s.durationMs())}",
                     value = getString(R.string.stat_percent, (s.accuracy() * 100).toInt())
+                )
+            }
+        }
+
+        if (pomodoros.isNotEmpty()) {
+            section(getString(R.string.detail_pomodoro))
+            pomodoros.sortedBy { it.startAt }.forEach { s ->
+                row(
+                    title = getString(R.string.pomodoro_work),
+                    sub = getString(R.string.pomodoro_session_sub, DateUtil.clock(s.startAt), DateUtil.human(s.durationMs)),
+                    value = if (s.completed) DateUtil.human(s.durationMs) else getString(R.string.pomodoro_incomplete)
                 )
             }
         }

@@ -7,6 +7,7 @@ import android.widget.TextView
 import com.gongkao.checkin.R
 import com.gongkao.checkin.anim.Motion
 import com.gongkao.checkin.data.DateUtil
+import com.gongkao.checkin.data.POMODORO_WORK
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.MainActivity
 import com.gongkao.checkin.ui.Page
@@ -149,6 +150,8 @@ class StatsPage(host: MainActivity) : Page(host) {
             .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_formula, it) }
         Repo.mentalMathSessions().count { it.date == date }
             .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_mental_math, it) }
+        Repo.pomodoroSessions().count { it.date == date && it.kind == POMODORO_WORK }
+            .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_pomodoro, it) }
         row.findViewById<TextView>(R.id.daySub).text =
             if (parts.isEmpty()) ctx.getString(R.string.day_sub_none) else parts.joinToString("・")
 

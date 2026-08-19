@@ -70,6 +70,12 @@
             android:name=".ui.mentalmath.MentalMathHistoryActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.pomodoro.PomodoroActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.pomodoro.PomodoroHistoryActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.stats.DayDetailActivity"
             android:screenOrientation="portrait" />
         <activity

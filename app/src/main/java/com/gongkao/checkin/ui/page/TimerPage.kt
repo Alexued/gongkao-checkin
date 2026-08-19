@@ -16,7 +16,9 @@ import com.gongkao.checkin.ui.MainActivity
 import com.gongkao.checkin.ui.Page
 import com.gongkao.checkin.ui.dp
 import com.gongkao.checkin.ui.inflateChild
+import com.gongkao.checkin.ui.open
 import com.gongkao.checkin.ui.padTopInset
+import com.gongkao.checkin.ui.pomodoro.PomodoroActivity
 import com.gongkao.checkin.ui.show
 import com.gongkao.checkin.ui.tap
 import com.gongkao.checkin.ui.timer.TimerHistoryActivity
@@ -76,6 +78,9 @@ class TimerPage(host: MainActivity) : Page(host) {
 
         v.findViewById<LinearLayout>(R.id.btnHistory).tap {
             ctx.startActivity(android.content.Intent(ctx, TimerHistoryActivity::class.java))
+        }
+        v.findViewById<LinearLayout>(R.id.btnPomodoro).tap {
+            ctx.open<PomodoroActivity>()
         }
         btnStart.tap(haptic = false) { toggle() }
         btnLap.tap(haptic = false) { lap() }

@@ -79,6 +79,25 @@
     <string name="mental_math_reveal">显示方法</string>
     <string name="mental_math_reveal_hint">先在心里回忆，再点开对照</string>
 
+    <string name="pomodoro_title">番茄钟</string>
+    <string name="pomodoro_records">番茄记录</string>
+    <string name="pomodoro_work">专注</string>
+    <string name="pomodoro_short_break">短休息</string>
+    <string name="pomodoro_long_break">长休息</string>
+    <string name="pomodoro_ready">准备开始第 %1$d 个番茄</string>
+    <string name="pomodoro_cycle">第 %1$d 个</string>
+    <string name="pomodoro_start">开始</string>
+    <string name="pomodoro_pause">暂停</string>
+    <string name="pomodoro_resume">继续</string>
+    <string name="pomodoro_skip">跳过</string>
+    <string name="pomodoro_reset">重置</string>
+    <string name="pomodoro_quit_confirm">现在退出，当前这一段不会被记录，确定？</string>
+    <string name="pomodoro_done_work">专注完成，歇一会儿吧</string>
+    <string name="pomodoro_done_break">休息结束，回来专注</string>
+    <string name="pomodoro_session_sub">%1$s · %2$s</string>
+    <string name="pomodoro_incomplete">中途结束</string>
+    <string name="day_sub_pomodoro">番茄 %1$d 个</string>
+
     <string name="setting_end_date">总结束日</string>
     <string name="setting_end_date_sub">用于倒计时，之后不再生成任务</string>
     <string name="setting_not_set">未设置</string>
@@ -96,6 +115,7 @@
     <string name="detail_percent">百化分背诵</string>
     <string name="detail_formula">公式背诵</string>
     <string name="detail_mental_math">速算练习</string>
+    <string name="detail_pomodoro">番茄钟</string>
 
     <string name="summary_total">总时长</string>
     <string name="summary_laps">打点数</string>

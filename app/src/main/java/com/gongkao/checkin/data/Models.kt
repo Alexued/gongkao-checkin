@@ -170,6 +170,23 @@ data class MentalMathSession(
     fun durationMs(): Long = items.sumOf { it.ms }
 }
 
+const val POMODORO_WORK = "WORK"
+const val POMODORO_SHORT_BREAK = "SHORT_BREAK"
+const val POMODORO_LONG_BREAK = "LONG_BREAK"
+
+/** 一段番茄钟（专注或休息）。completed=false 表示中途放弃/跳过，未计满设定时长。 */
+data class PomodoroSession(
+    var id: String = "",
+    /** WORK / SHORT_BREAK / LONG_BREAK */
+    var kind: String = POMODORO_WORK,
+    var date: String = "",
+    var startAt: Long = 0,
+    var endAt: Long = 0,
+    /** 实际计时的毫秒数，可能小于该阶段设定时长（提前结束时） */
+    var durationMs: Long = 0,
+    var completed: Boolean = true
+)
+
 data class Settings(
     /** 总结束日（考试日），用于倒计时，也停止生成之后的任务 */
     var endDate: String? = null,
@@ -190,5 +207,6 @@ class AppState {
     var percentSessions: MutableList<PercentSession> = mutableListOf()
     var formulaSessions: MutableList<FormulaSession> = mutableListOf()
     var mentalMathSessions: MutableList<MentalMathSession> = mutableListOf()
+    var pomodoroSessions: MutableList<PomodoroSession> = mutableListOf()
     var lastRolledDate: String? = null
 }
