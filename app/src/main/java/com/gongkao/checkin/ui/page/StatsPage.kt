@@ -147,6 +147,8 @@ class StatsPage(host: MainActivity) : Page(host) {
             .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_percent, it) }
         Repo.formulaSessions().count { it.date == date }
             .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_formula, it) }
+        Repo.mentalMathSessions().count { it.date == date }
+            .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_mental_math, it) }
         row.findViewById<TextView>(R.id.daySub).text =
             if (parts.isEmpty()) ctx.getString(R.string.day_sub_none) else parts.joinToString("・")
 

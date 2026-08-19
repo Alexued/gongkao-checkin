@@ -64,6 +64,12 @@
             android:name=".ui.formula.FormulaHistoryActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.mentalmath.MentalMathActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.mentalmath.MentalMathHistoryActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.stats.DayDetailActivity"
             android:screenOrientation="portrait" />
         <activity

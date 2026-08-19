@@ -12,6 +12,8 @@ import com.gongkao.checkin.ui.Page
 import com.gongkao.checkin.ui.dp
 import com.gongkao.checkin.ui.formula.FormulaActivity
 import com.gongkao.checkin.ui.formula.FormulaHistoryActivity
+import com.gongkao.checkin.ui.mentalmath.MentalMathActivity
+import com.gongkao.checkin.ui.mentalmath.MentalMathHistoryActivity
 import com.gongkao.checkin.ui.padTopInset
 import com.gongkao.checkin.ui.percent.PercentActivity
 import com.gongkao.checkin.ui.percent.PercentHistoryActivity
@@ -25,6 +27,7 @@ class RecitePage(host: MainActivity) : Page(host) {
 
     private lateinit var percentStat: TextView
     private lateinit var formulaStat: TextView
+    private lateinit var mentalMathStat: TextView
     private lateinit var categoryRow: LinearLayout
 
     /** 当前选中的公式分类，随 chip 变化并传给 FormulaActivity。 */
@@ -33,6 +36,7 @@ class RecitePage(host: MainActivity) : Page(host) {
     override fun onCreate(v: View) {
         percentStat = v.findViewById(R.id.percentStat)
         formulaStat = v.findViewById(R.id.formulaStat)
+        mentalMathStat = v.findViewById(R.id.mentalMathStat)
         categoryRow = v.findViewById(R.id.categoryRow)
 
         // NestedScrollView 的唯一子节点承担状态栏留白
@@ -55,6 +59,15 @@ class RecitePage(host: MainActivity) : Page(host) {
         }
         v.findViewById<TextView>(R.id.btnFormulaRecords).tap {
             ctx.open<FormulaHistoryActivity>()
+        }
+        v.findViewById<TextView>(R.id.btnMentalMathFull).tap {
+            ctx.open<MentalMathActivity>("mode" to "FULL")
+        }
+        v.findViewById<TextView>(R.id.btnMentalMathRandom).tap {
+            ctx.open<MentalMathActivity>("mode" to "RANDOM")
+        }
+        v.findViewById<TextView>(R.id.btnMentalMathRecords).tap {
+            ctx.open<MentalMathHistoryActivity>()
         }
 
         buildChips()
@@ -99,6 +112,15 @@ class RecitePage(host: MainActivity) : Page(host) {
             val acc = fs.sumOf { it.knownCount() } * 100 /
                 fs.sumOf { it.total() }.coerceAtLeast(1)
             ctx.getString(R.string.recite_stat, fs.size, acc)
+        }
+
+        val ms = Repo.mentalMathSessions()
+        mentalMathStat.text = if (ms.isEmpty()) {
+            ctx.getString(R.string.recite_stat_none)
+        } else {
+            val acc = ms.sumOf { it.knownCount() } * 100 /
+                ms.sumOf { it.total() }.coerceAtLeast(1)
+            ctx.getString(R.string.recite_stat, ms.size, acc)
         }
     }
 }

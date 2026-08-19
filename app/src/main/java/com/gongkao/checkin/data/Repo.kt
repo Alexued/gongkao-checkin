@@ -321,6 +321,13 @@ object Repo {
     }
     fun formulaSessions(): List<FormulaSession> = read { it.formulaSessions.toList() }
 
+    fun addMentalMathSession(s: MentalMathSession) = edit { st ->
+        st.mentalMathSessions.add(0, s)
+        if (st.mentalMathSessions.size > MAX_SESSIONS)
+            st.mentalMathSessions.subList(MAX_SESSIONS, st.mentalMathSessions.size).clear()
+    }
+    fun mentalMathSessions(): List<MentalMathSession> = read { it.mentalMathSessions.toList() }
+
     fun newId(): String = UUID.randomUUID().toString()
 
     // ---------------------------------------------------------------- 设备直连同步：整份覆盖导出/导入
@@ -333,6 +340,7 @@ object Repo {
         var timerSessions: MutableList<TimerSession> = mutableListOf()
         var percentSessions: MutableList<PercentSession> = mutableListOf()
         var formulaSessions: MutableList<FormulaSession> = mutableListOf()
+        var mentalMathSessions: MutableList<MentalMathSession> = mutableListOf()
     }
 
     /** 供「发送我的记录」使用：把本机全部打卡数据序列化成 JSON。 */
@@ -344,6 +352,7 @@ object Repo {
         f.timerSessions = st.timerSessions
         f.percentSessions = st.percentSessions
         f.formulaSessions = st.formulaSessions
+        f.mentalMathSessions = st.mentalMathSessions
         gson.toJson(f)
     }
 
@@ -357,6 +366,7 @@ object Repo {
             st.timerSessions = parsed.timerSessions
             st.percentSessions = parsed.percentSessions
             st.formulaSessions = parsed.formulaSessions
+            st.mentalMathSessions = parsed.mentalMathSessions
             // 强制下次 ensureDays() 从头重建欠账链条，避免沿用本机旧的 lastRolledDate 导致漏滚
             st.lastRolledDate = null
         }

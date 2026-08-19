@@ -147,6 +147,29 @@ data class FormulaSession(
     fun durationMs(): Long = items.sumOf { it.ms }
 }
 
+data class MentalMathItemRecord(
+    var mentalMathId: String = "",
+    var title: String = "",
+    /** true=记住了 false=模糊 */
+    var known: Boolean = false,
+    var ms: Long = 0
+)
+
+data class MentalMathSession(
+    var id: String = "",
+    var mode: String = "FULL",
+    var category: String = "全部",
+    var date: String = "",
+    var startAt: Long = 0,
+    var endAt: Long = 0,
+    var items: MutableList<MentalMathItemRecord> = mutableListOf()
+) {
+    fun total() = items.size
+    fun knownCount() = items.count { it.known }
+    fun accuracy(): Float = if (items.isEmpty()) 0f else knownCount().toFloat() / items.size
+    fun durationMs(): Long = items.sumOf { it.ms }
+}
+
 data class Settings(
     /** 总结束日（考试日），用于倒计时，也停止生成之后的任务 */
     var endDate: String? = null,
@@ -166,5 +189,6 @@ class AppState {
     var timerSessions: MutableList<TimerSession> = mutableListOf()
     var percentSessions: MutableList<PercentSession> = mutableListOf()
     var formulaSessions: MutableList<FormulaSession> = mutableListOf()
+    var mentalMathSessions: MutableList<MentalMathSession> = mutableListOf()
     var lastRolledDate: String? = null
 }

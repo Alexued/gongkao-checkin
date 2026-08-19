@@ -169,6 +169,73 @@
                 android:text="@string/formula_records" />
         </LinearLayout>
 
+        <!-- 速算练习 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/mental_math_title"
+                    android:textColor="@color/ink"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/mentalMathStat"
+                    style="@style/TextDim"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/mental_math_desc"
+                android:textColor="@color/ink_sub"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnMentalMathFull"
+                    style="@style/BtnPrimary"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/mode_full" />
+
+                <TextView
+                    android:id="@+id/btnMentalMathRandom"
+                    style="@style/BtnGhost"
+                    android:layout_width="0dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:text="@string/mode_random" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/btnMentalMathRecords"
+                style="@style/BtnLink"
+                android:text="@string/mental_math_records" />
+        </LinearLayout>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="20dp" />

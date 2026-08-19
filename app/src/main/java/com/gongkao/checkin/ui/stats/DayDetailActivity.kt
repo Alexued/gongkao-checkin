@@ -24,9 +24,10 @@ class DayDetailActivity : ListScreen() {
         val timers = Repo.timerSessions().filter { it.date == date }
         val percents = Repo.percentSessions().filter { it.date == date }
         val formulas = Repo.formulaSessions().filter { it.date == date }
+        val mentalMaths = Repo.mentalMathSessions().filter { it.date == date }
 
         val nothing = (rec == null || rec.items.isEmpty()) &&
-            timers.isEmpty() && percents.isEmpty() && formulas.isEmpty()
+            timers.isEmpty() && percents.isEmpty() && formulas.isEmpty() && mentalMaths.isEmpty()
         if (nothing) {
             empty(getString(R.string.day_sub_none))
             return
@@ -65,6 +66,22 @@ class DayDetailActivity : ListScreen() {
         if (formulas.isNotEmpty()) {
             section(getString(R.string.detail_formula))
             formulas.sortedBy { it.startAt }.forEach { s ->
+                val modeName = getString(
+                    if (s.mode == "RANDOM") R.string.mode_random_short else R.string.mode_full_short
+                )
+                row(
+                    title = getString(
+                        R.string.formula_session_sub, modeName, s.knownCount(), s.total()
+                    ),
+                    sub = "${s.category} · ${DateUtil.human(s.durationMs())}",
+                    value = getString(R.string.stat_percent, (s.accuracy() * 100).toInt())
+                )
+            }
+        }
+
+        if (mentalMaths.isNotEmpty()) {
+            section(getString(R.string.detail_mental_math))
+            mentalMaths.sortedBy { it.startAt }.forEach { s ->
                 val modeName = getString(
                     if (s.mode == "RANDOM") R.string.mode_random_short else R.string.mode_full_short
                 )

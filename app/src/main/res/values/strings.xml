@@ -72,6 +72,13 @@
     <string name="formula_reveal_hint">先在心里默写，再点开对照</string>
     <string name="formula_symbols_prefix">符号：</string>
 
+    <string name="mental_math_title">速算练习</string>
+    <string name="mental_math_desc">18 种行测速算技巧，讲解回顾式：先想方法，再翻开对照。</string>
+    <string name="mental_math_records">速算记录</string>
+    <string name="mental_math_method">方法</string>
+    <string name="mental_math_reveal">显示方法</string>
+    <string name="mental_math_reveal_hint">先在心里回忆，再点开对照</string>
+
     <string name="setting_end_date">总结束日</string>
     <string name="setting_end_date_sub">用于倒计时，之后不再生成任务</string>
     <string name="setting_not_set">未设置</string>
@@ -88,6 +95,7 @@
     <string name="detail_timer">做题计时</string>
     <string name="detail_percent">百化分背诵</string>
     <string name="detail_formula">公式背诵</string>
+    <string name="detail_mental_math">速算练习</string>
 
     <string name="summary_total">总时长</string>
     <string name="summary_laps">打点数</string>
@@ -121,6 +129,7 @@
     <string name="day_sub_timer">计时 %1$d 组</string>
     <string name="day_sub_percent">百化分 %1$d 次</string>
     <string name="day_sub_formula">公式 %1$d 次</string>
+    <string name="day_sub_mental_math">速算 %1$d 次</string>
     <string name="day_sub_none">当天没有记录</string>
     <string name="badge_full">全勤</string>
     <string name="timer_compare_sub">最近 %1$d 组</string>
