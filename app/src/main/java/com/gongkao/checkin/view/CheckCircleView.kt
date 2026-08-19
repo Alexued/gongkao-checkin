@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PathMeasure
+import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import com.gongkao.checkin.anim.Motion
@@ -28,8 +29,8 @@ class CheckCircleView @JvmOverloads constructor(
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
     }
-    private val burst = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
     private val particle = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val pixelRect = RectF()
     private val label = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
         typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
@@ -84,7 +85,6 @@ class CheckCircleView @JvmOverloads constructor(
         val r = minOf(w, h) / 2f - dp(3f)
         ring.strokeWidth = dp(2.2f)
         tickPaint.strokeWidth = r * 0.22f
-        burst.strokeWidth = dp(2f)
         label.textSize = r * 0.78f
         tickPath.reset()
         tickPath.moveTo(cx - r * 0.42f, cy + r * 0.04f)
@@ -98,22 +98,35 @@ class CheckCircleView @JvmOverloads constructor(
         val cy = height / 2f
         val r = minOf(width, height) / 2f - dp(3f)
 
-        // 冲击环
+        // 冲击环：像素方块沿环排列，一起向外扩散淡出，比描边圆更有"打卡"的颗粒感
         if (burstT >= 0f) {
             val t = burstT
-            burst.color = accent
-            burst.alpha = ((1f - t) * 150).toInt().coerceIn(0, 255)
-            canvas.drawCircle(cx, cy, r * (1f + t * 0.9f), burst)
-            // 粒子
+            val ringCount = 10
+            val ringR = r * (1f + t * 0.9f)
+            val pixelSize = dp(2.6f) * (1f - t * 0.35f)
+            particle.color = accent
+            particle.alpha = ((1f - t) * 150).toInt().coerceIn(0, 255)
+            for (i in 0 until ringCount) {
+                val a = Math.toRadians((360.0 / ringCount) * i)
+                val px = cx + ringR * cos(a).toFloat()
+                val py = cy + ringR * sin(a).toFloat()
+                pixelRect.set(px - pixelSize, py - pixelSize, px + pixelSize, py + pixelSize)
+                canvas.drawRect(pixelRect, particle)
+            }
+            // 飞散的像素粒子：方块而非圆点，带轻微旋转，扩散更远
             val count = 8
             for (i in 0 until count) {
                 val a = Math.toRadians((360.0 / count) * i - 90)
                 val dist = r * (1.15f + t * 1.25f)
                 val px = cx + dist * cos(a).toFloat()
                 val py = cy + dist * sin(a).toFloat()
-                particle.color = accent
+                val half = dp(2.4f) * (1f - t * 0.55f)
                 particle.alpha = ((1f - t) * 210).toInt().coerceIn(0, 255)
-                canvas.drawCircle(px, py, dp(2.4f) * (1f - t * 0.55f), particle)
+                canvas.save()
+                canvas.rotate((t * 140f), px, py)
+                pixelRect.set(px - half, py - half, px + half, py + half)
+                canvas.drawRect(pixelRect, particle)
+                canvas.restore()
             }
         }
 

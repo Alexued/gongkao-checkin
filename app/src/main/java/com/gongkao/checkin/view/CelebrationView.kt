@@ -14,8 +14,8 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * 全天完成后的庆祝层：径向光线扩散 + 彩带纸片下落 + 中央文案弹入。
- * 纸片带旋转与横向摆动，落速各不相同，避免机械感。
+ * 全天完成后的庆祝层：像素光线扩散 + 像素纸片下落 + 中央文案弹入。
+ * 纸片统一为方块（像素风格），带旋转与横向摆动，落速各不相同，避免机械感。
  */
 class CelebrationView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
@@ -24,11 +24,11 @@ class CelebrationView @JvmOverloads constructor(
     private class Piece(
         var x: Float, var y: Float, var vx: Float, var vy: Float,
         var rot: Float, var vr: Float, var w: Float, var h: Float,
-        var color: Int, var swing: Float, var phase: Float, var round: Boolean
+        var color: Int, var swing: Float, var phase: Float
     )
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val rayPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
+    private val rayPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val rect = RectF()
     private val pieces = mutableListOf<Piece>()
     private val colors = intArrayOf(
@@ -84,11 +84,10 @@ class CelebrationView @JvmOverloads constructor(
             x = x, y = y, vx = vx, vy = vy,
             rot = Random.nextFloat() * 360f,
             vr = -9f + Random.nextFloat() * 18f,
-            w = size, h = size * (0.5f + Random.nextFloat() * 1.1f),
+            w = size, h = size,
             color = colors[Random.nextInt(colors.size)],
             swing = dp(0.5f) + Random.nextFloat() * dp(1.6f),
-            phase = Random.nextFloat() * 6.28f,
-            round = Random.nextFloat() < 0.28f
+            phase = Random.nextFloat() * 6.28f
         )
     }
 
@@ -142,11 +141,8 @@ class CelebrationView @JvmOverloads constructor(
             paint.alpha = ((1f - t) * 255).toInt().coerceIn(0, 255)
             canvas.save()
             canvas.rotate(p.rot, p.x, p.y)
-            if (p.round) canvas.drawCircle(p.x, p.y, p.w / 2f, paint)
-            else {
-                rect.set(p.x - p.w / 2, p.y - p.h / 2, p.x + p.w / 2, p.y + p.h / 2)
-                canvas.drawRoundRect(rect, dp(1f), dp(1f), paint)
-            }
+            rect.set(p.x - p.w / 2, p.y - p.h / 2, p.x + p.w / 2, p.y + p.h / 2)
+            canvas.drawRect(rect, paint)
             canvas.restore()
         }
     }
@@ -158,19 +154,24 @@ class CelebrationView @JvmOverloads constructor(
         val cx = width * rayOrigin[0]
         val cy = height * rayOrigin[1]
         val maxR = maxOf(width, height) * 0.62f
-        rayPaint.strokeWidth = dp(3f)
         val n = 14
+        val pixel = dp(3f)
+        val steps = 5
         for (i in 0 until n) {
             val a = Math.toRadians((360.0 / n) * i + eased * 22)
+            val ca = cos(a).toFloat()
+            val sa = sin(a).toFloat()
             val inner = maxR * eased * 0.42f
-            val outer = inner + maxR * 0.20f * (1f - eased * 0.4f)
+            val span = maxR * 0.20f * (1f - eased * 0.4f)
             rayPaint.color = colors[i % colors.size]
             rayPaint.alpha = ((1f - eased) * 130).toInt().coerceIn(0, 255)
-            canvas.drawLine(
-                cx + inner * cos(a).toFloat(), cy + inner * sin(a).toFloat(),
-                cx + outer * cos(a).toFloat(), cy + outer * sin(a).toFloat(),
-                rayPaint
-            )
+            for (s in 0 until steps) {
+                val dist = inner + span * (s / (steps - 1f))
+                val px = cx + dist * ca
+                val py = cy + dist * sa
+                rect.set(px - pixel, py - pixel, px + pixel, py + pixel)
+                canvas.drawRect(rect, rayPaint)
+            }
         }
     }
 
