@@ -96,31 +96,46 @@ object Popup {
         card.pivotY = (a[1] + anchor.height / 2f) - c[1]
     }
 
-    /** 遮罩点击 + 返回键都走同一条退场动画。 */
-    fun wireDismiss(d: Dialog, scrim: View, card: View, anchor: View? = null) {
+    /**
+     * 遮罩点击 + 返回键都走同一条退场动画。
+     *
+     * [onCancel] 只在「用户主动放弃」时回调（点遮罩 / 按返回），
+     * 通过 [close] 程序化关闭（比如保存成功后）不会触发。
+     * 二级弹层靠这个区分：返回要回到上一级弹窗，保存则整条链一起收掉。
+     */
+    fun wireDismiss(
+        d: Dialog,
+        scrim: View,
+        card: View,
+        anchor: View? = null,
+        onCancel: (() -> Unit)? = null
+    ) {
         var closing = false
-        fun close() {
+        fun close(cancelled: Boolean) {
             if (closing) return
             closing = true
-            exit(scrim, card, anchor) { runCatching { d.dismiss() } }
+            exit(scrim, card, anchor) {
+                runCatching { d.dismiss() }
+                if (cancelled) onCancel?.invoke()
+            }
         }
-        scrim.setOnClickListener { close() }
+        scrim.setOnClickListener { close(true) }
         // 卡片自身吃掉点击，避免点在卡片上被当成点遮罩
         card.isClickable = true
         d.setOnKeyListener { _, keyCode, event ->
             if (keyCode == android.view.KeyEvent.KEYCODE_BACK &&
                 event.action == android.view.KeyEvent.ACTION_UP
             ) {
-                close(); true
+                close(true); true
             } else false
         }
         // 自己接管返回键和遮罩点击，交给系统会跳过退场动画
         d.setCancelable(false)
-        closeRefs[d] = ::close
+        closeRefs[d] = { close(false) }
         d.setOnDismissListener { closeRefs.remove(d) }
     }
 
-    /** 供调用方在自己的按钮里主动关闭。 */
+    /** 供调用方在自己的按钮里主动关闭（不算「放弃」，不触发 onCancel）。 */
     fun close(d: Dialog) {
         closeRefs[d]?.invoke() ?: runCatching { d.dismiss() }
     }

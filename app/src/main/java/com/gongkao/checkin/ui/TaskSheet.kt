@@ -24,11 +24,17 @@ object TaskSheet {
 
     private const val COLOR_COUNT = 6
 
-    fun show(host: MainActivity, existing: TaskDef?) {
+    /**
+     * [onCancel] 在按返回 / 点外部放弃时回调，用来回到上一级弹窗。
+     * 用 setOnCancelListener 而不是 setOnDismissListener：后者保存关闭时也会触发，
+     * 那样保存完还会把上一级弹回来。
+     */
+    fun show(host: MainActivity, existing: TaskDef?, onCancel: (() -> Unit)? = null) {
         val dialog = BottomSheetDialog(host)
         val v = host.inflate(R.layout.sheet_task, null)
         dialog.setContentView(v)
         bindForm(host, v, existing) { dialog.dismiss() }
+        if (onCancel != null) dialog.setOnCancelListener { onCancel() }
         dialog.show()
     }
 

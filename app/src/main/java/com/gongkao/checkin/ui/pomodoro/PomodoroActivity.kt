@@ -103,6 +103,8 @@ class PomodoroActivity : AppCompatActivity() {
             open<PomodoroHistoryActivity>()
         }
         findViewById<TextView>(R.id.btnExit).tap { askQuit() }
+        // 返回走同一套退出确认，不直接 finish，否则跑着的这一段悄悄没了
+        findViewById<android.widget.ImageView>(R.id.btnBack).tap { askQuit() }
         btnStart.tap(haptic = false) { toggle() }
         btnSkip.tap(haptic = false) { skip() }
         btnReset.tap(haptic = false) { reset() }

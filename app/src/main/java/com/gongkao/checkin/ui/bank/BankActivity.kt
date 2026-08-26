@@ -118,6 +118,8 @@ class BankActivity : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.actionRow).padBottomInset(18.dp)
 
         findViewById<TextView>(R.id.btnExit).tap { askQuit() }
+        // 返回按钮走同一套退出流程，不能直接 finish：否则做了一半的进度悄悄没了
+        findViewById<android.widget.ImageView>(R.id.btnBack).tap { askQuit() }
         btnSheet.tap { showSheet() }
         btnAction.tap { onAction() }
         progressBar.pivotX = 0f

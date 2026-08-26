@@ -278,6 +278,8 @@
     <string name="summary_slowest">最慢</string>
 
     <string name="countdown_none">还没设置结束日，点右上角设置</string>
+    <string name="countdown_set">设置结束日</string>
+    <string name="countdown_none_general">长按统计页日历可标记重要日</string>
     <string name="countdown_left">距结束还有 %1$d 天</string>
     <string name="countdown_today">今天就是结束日，冲</string>
     <string name="countdown_past">已过结束日</string>

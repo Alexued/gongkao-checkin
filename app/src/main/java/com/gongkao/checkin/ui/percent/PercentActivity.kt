@@ -118,6 +118,8 @@ class PercentActivity : AppCompatActivity() {
         keypad.padBottomInset(16.dp)
 
         findViewById<TextView>(R.id.btnExit).tap { askQuit() }
+        // 返回走同一套退出确认，不直接 finish，否则做了一半的记录悄悄丢掉
+        findViewById<android.widget.ImageView>(R.id.btnBack).tap { askQuit() }
         btnConfirm.tap { submit() }
         wireKeys(keypad)
         // 点分子/分母切换输入焦点，比只靠 ↑↓ 直观

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  暗色调色板。黑色主题和高斯模糊主题都走这一套（AppTheme.night 决定）。
+  强调色比亮色版本调亮一点，否则压在深底上偏闷。
+-->
+<resources>
+    <color name="bg">#0E1116</color>
+    <color name="surface">#161A21</color>
+    <color name="surface_alt">#1E242E</color>
+    <color name="ink">#E8ECF3</color>
+    <color name="ink_sub">#9AA5B6</color>
+    <color name="ink_dim">#6B7688</color>
+    <color name="divider">#242A34</color>
+    <color name="accent">#8AA3FF</color>
+    <color name="accent_deep">#6C8CFF</color>
+    <color name="teal">#4EDCC7</color>
+    <color name="amber">#FFC169</color>
+    <color name="rose">#FF8099</color>
+    <color name="violet">#CDA0FF</color>
+    <color name="carry_bg">#2E2416</color>
+    <color name="carry_ink">#FFC169</color>
+    <color name="scrim">#99000000</color>
+
+    <color name="task_0">#8AA3FF</color>
+    <color name="task_1">#4EDCC7</color>
+    <color name="task_2">#FFC169</color>
+    <color name="task_3">#FF8099</color>
+    <color name="task_4">#CDA0FF</color>
+    <color name="task_5">#63CCF5</color>
+</resources>

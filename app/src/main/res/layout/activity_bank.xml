@@ -5,14 +5,26 @@
     android:background="@color/bg"
     android:orientation="vertical">
 
-    <!-- 顶栏：进度 + 答题卡 + 退出 -->
+    <!-- 顶栏：返回 + 进度 + 答题卡 + 退出 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
+        android:paddingHorizontal="10dp"
         android:paddingVertical="12dp">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_circle_soft"
+            android:contentDescription="@string/back"
+            android:padding="10dp"
+            android:src="@drawable/ic_back"
+            app:tint="@color/ink"
+            xmlns:app="http://schemas.android.com/apk/res-auto" />
 
         <LinearLayout
             android:layout_width="0dp"

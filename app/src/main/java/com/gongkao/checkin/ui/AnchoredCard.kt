@@ -13,8 +13,16 @@ import com.gongkao.checkin.data.TaskDef
  */
 object AnchoredCard {
 
-    /** 长按任务行时弹出的任务编辑卡。[anchor] 是被长按的那一行。 */
-    fun showTaskEditor(host: MainActivity, existing: TaskDef?, anchor: View) {
+    /**
+     * 长按任务行时弹出的任务编辑卡。[anchor] 是被长按的那一行。
+     * [onCancel] 在按返回/点遮罩放弃时回调，用来回到上一级弹窗；保存不会触发。
+     */
+    fun showTaskEditor(
+        host: MainActivity,
+        existing: TaskDef?,
+        anchor: View,
+        onCancel: (() -> Unit)? = null
+    ) {
         val v = host.inflate(R.layout.card_anchored, null)
         val scrim = v.findViewById<View>(R.id.dialogScrim)
         val card = v.findViewById<View>(R.id.dialogCard)
@@ -27,7 +35,7 @@ object AnchoredCard {
         body.addView(form)
 
         val d = Popup.dialog(host, v)
-        Popup.wireDismiss(d, scrim, card, anchor)
+        Popup.wireDismiss(d, scrim, card, anchor, onCancel)
 
         TaskSheet.bindForm(host, form, existing) { Popup.close(d) }
 

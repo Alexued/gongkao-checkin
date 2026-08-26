@@ -24,6 +24,7 @@ import com.gongkao.checkin.ui.Page
 import com.gongkao.checkin.ui.SettingsActivity
 import com.gongkao.checkin.ui.TaskSheet
 import com.gongkao.checkin.ui.Ui
+import com.gongkao.checkin.ui.DatePicker
 import com.gongkao.checkin.ui.dp
 import com.gongkao.checkin.ui.inflateChild
 import com.gongkao.checkin.ui.padTopInset
@@ -83,7 +84,7 @@ class TodayPage(host: MainActivity) : Page(host) {
         val items = Repo.sortedItems(rec)
 
         dateText.text = DateUtil.pretty(DateUtil.today())
-        countdownText.text = countdownLine()
+        bindCountdown()
 
         val ratio = rec.ratio()
         ring.setProgress(ratio, animated = !firstBind)
@@ -104,30 +105,58 @@ class TodayPage(host: MainActivity) : Page(host) {
     }
 
     /**
-     * 顶部那行倒计时。考公模式优先播总结束日（备考主线），
-     * 通用模式没有结束日概念，改播标记的重要日；都没有就给设置引导。
+     * 顶部那一行：没设结束日时是个「设置结束日」按钮，设了之后原位变成剩余天数
+     * （按钮底去掉），点它都能进日期选择改期。
+     *
+     * 通用模式没有结束日概念，那边播标记的重要日。
      */
-    private fun countdownLine(): CharSequence {
+    private fun bindCountdown() {
         val general = Repo.appMode().isGeneral
-        val markName = ctx.getString(
-            if (general) R.string.mark_name_general else R.string.mark_name_exam
-        )
-        if (!general) {
-            val left = Repo.daysLeft()
-            when {
-                left == null -> Unit
-                left > 0 -> return ctx.getString(R.string.countdown_left, left)
-                left == 0L -> return ctx.getString(R.string.countdown_today)
-                else -> return ctx.getString(R.string.countdown_past)
+        if (general) {
+            countdownText.setBackgroundResource(0)
+            countdownText.setPadding(0, 0, 0, 0)
+            val markName = ctx.getString(R.string.mark_name_general)
+            val toMark = Repo.daysToMark()
+            countdownText.text = when {
+                toMark == null -> ctx.getString(R.string.countdown_none_general)
+                toMark > 0 -> ctx.getString(R.string.mark_countdown, markName, toMark)
+                toMark == 0L -> ctx.getString(R.string.mark_today, markName)
+                else -> ctx.getString(R.string.countdown_none_general)
+            }
+            countdownText.tap { host.select(3) }
+            return
+        }
+
+        val left = Repo.daysLeft()
+        if (left == null) {
+            // 还没设：做成按钮样子，点了直接选日期
+            countdownText.setBackgroundResource(R.drawable.bg_pill_glass)
+            countdownText.setPadding(12.dp, 6.dp, 12.dp, 6.dp)
+            countdownText.setText(R.string.countdown_set)
+        } else {
+            countdownText.setBackgroundResource(0)
+            countdownText.setPadding(0, 0, 0, 0)
+            countdownText.text = when {
+                left > 0 -> ctx.getString(R.string.countdown_left, left)
+                left == 0L -> ctx.getString(R.string.countdown_today)
+                else -> ctx.getString(R.string.countdown_past)
             }
         }
-        val toMark = Repo.daysToMark()
-        return when {
-            toMark == null -> ctx.getString(R.string.countdown_none)
-            toMark > 0 -> ctx.getString(R.string.mark_countdown, markName, toMark)
-            toMark == 0L -> ctx.getString(R.string.mark_today, markName)
-            else -> ctx.getString(R.string.countdown_none)
-        }
+        countdownText.tap { pickEndDate() }
+    }
+
+    /** 选结束日。已设置时把当前值当默认选中，方便改期。 */
+    private fun pickEndDate() {
+        val current = Repo.read { it.settings.endDate }
+        DatePicker.show(
+            ctx = host,
+            current = current,
+            title = ctx.getString(R.string.countdown_set),
+            // 已设置时给个清除入口，否则设错了只能一直改不能取消
+            allowClear = current != null,
+            onPick = { picked -> Repo.setEndDate(picked) },
+            onClear = { Repo.setEndDate(null) }
+        )
     }
 
     private fun bindList(items: List<DayItem>) {
@@ -342,8 +371,9 @@ class TodayPage(host: MainActivity) : Page(host) {
             },
             positive = ctx.getString(R.string.add_task),
             negative = ctx.getString(R.string.cancel),
-            onPick = { i -> TaskSheet.show(host, tasks[i]) },
-            onPositive = { TaskSheet.show(host, null) }
+            // 编辑器里按返回是「放弃」，退回管理列表这一级；保存则整条链一起收掉
+            onPick = { i -> TaskSheet.show(host, tasks[i], onCancel = { showManage() }) },
+            onPositive = { TaskSheet.show(host, null, onCancel = { showManage() }) }
         )
     }
 

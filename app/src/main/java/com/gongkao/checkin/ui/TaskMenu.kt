@@ -38,7 +38,10 @@ object TaskMenu {
 
         card.findViewById<TextView>(R.id.menuEdit).tap {
             Popup.close(d)
-            AnchoredCard.showTaskEditor(host, task, anchor)
+            // 编辑器里按返回退回这个菜单，而不是一路退到今日页
+            AnchoredCard.showTaskEditor(host, task, anchor) {
+                show(host, task, anchor, onReorder)
+            }
         }
         card.findViewById<TextView>(R.id.menuFocus).tap {
             Popup.close(d)

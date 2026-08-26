@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  卡片质感相关的主题属性。shape drawable 里可以直接引用 ?attr/，
+  所以换主题只需要覆盖这几项，不用逐个改布局里的 @color 引用。
+-->
+<resources>
+    <!-- 卡片/面板底色（玻璃主题下是半透明的） -->
+    <attr name="cardFill" format="color" />
+    <!-- 卡片描边；不需要描边的主题设成 transparent -->
+    <attr name="cardStroke" format="color" />
+    <attr name="cardStrokeWidth" format="dimension" />
+    <!-- 次级面板（pill / 输入框）底色 -->
+    <attr name="softFill" format="color" />
+    <!-- 页面底色之上那层彩色背景是否可见、用哪张 -->
+    <attr name="backdropDrawable" format="reference" />
+</resources>

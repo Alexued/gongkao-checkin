@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 次级小面板底，跟卡片一样走主题属性 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="@color/surface_alt" />
+    <solid android:color="?attr/softFill" />
     <corners android:radius="10dp" />
 </shape>

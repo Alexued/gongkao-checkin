@@ -41,11 +41,15 @@
                         android:textColor="#FFFFFF"
                         android:textSize="22sp" />
 
+                    <!--
+                      未设结束日时长得像个按钮（有底、有内边距），设置之后同一位置
+                      直接显示剩余天数、去掉按钮底，仍可点进去改期。
+                    -->
                     <TextView
                         android:id="@+id/countdownText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
+                        android:layout_marginTop="6dp"
                         android:textColor="#D9E2FF"
                         android:textSize="13sp" />
                 </LinearLayout>

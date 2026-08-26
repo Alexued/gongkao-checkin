@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 卡片底。填充和描边走主题属性，换主题时自动跟着变（玻璃主题下是半透明的）。 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="@color/surface" />
+    <solid android:color="?attr/cardFill" />
     <corners android:radius="20dp" />
+    <stroke
+        android:width="?attr/cardStrokeWidth"
+        android:color="?attr/cardStroke" />
 </shape>

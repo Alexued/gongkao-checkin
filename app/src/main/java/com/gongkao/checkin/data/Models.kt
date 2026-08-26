@@ -275,6 +275,8 @@ data class Settings(
     var statsDaysExpanded: Boolean = false,
     /** 复盘每次抽几题 */
     var bankBatchSize: Int = 10,
+    /** 界面主题（AppTheme.id）：light / dark / blur / liquid */
+    var themeId: String = "light",
     /** 日历上标记的重要日/考试日，yyyy-MM-dd */
     var markDate: String? = null
 )

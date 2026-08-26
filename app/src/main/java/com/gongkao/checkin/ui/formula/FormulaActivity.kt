@@ -119,6 +119,8 @@ class FormulaActivity : AppCompatActivity() {
 
         formulaView.textSizePx = 24f.dp
         findViewById<TextView>(R.id.btnExit).tap { askQuit() }
+        // 返回走同一套退出确认，不直接 finish，否则这一组记录悄悄丢掉
+        findViewById<android.widget.ImageView>(R.id.btnBack).tap { askQuit() }
         cover.tap { reveal() }
         answerCard.tap { if (!revealed) reveal() }
         btnKnown.tap { judge(true) }

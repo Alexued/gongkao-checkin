@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  高斯模糊主题的底层背景：深色底 + 几团彩色光斑。
+  真正的模糊由代码给这一层加 RenderEffect（API 31+）；
+  低版本拿不到 RenderEffect 时，这张图本身的柔和渐变就是降级效果。
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#0E1116" />
+        </shape>
+    </item>
+
+    <!-- 左上偏蓝的光团 -->
+    <item
+        android:bottom="380dp"
+        android:left="-120dp"
+        android:right="90dp"
+        android:top="-160dp">
+        <shape android:shape="oval">
+            <gradient
+                android:centerColor="#4D4A63D8"
+                android:endColor="#000E1116"
+                android:gradientRadius="320dp"
+                android:startColor="#996C8CFF"
+                android:type="radial" />
+        </shape>
+    </item>
+
+    <!-- 右侧偏紫 -->
+    <item
+        android:bottom="200dp"
+        android:left="140dp"
+        android:right="-140dp"
+        android:top="120dp">
+        <shape android:shape="oval">
+            <gradient
+                android:centerColor="#4DA67BFF"
+                android:endColor="#000E1116"
+                android:gradientRadius="300dp"
+                android:startColor="#80C08BFF"
+                android:type="radial" />
+        </shape>
+    </item>
+
+    <!-- 底部偏青，压住下半屏的空 -->
+    <item
+        android:bottom="-160dp"
+        android:left="-80dp"
+        android:right="60dp"
+        android:top="420dp">
+        <shape android:shape="oval">
+            <gradient
+                android:centerColor="#4D2A9E90"
+                android:endColor="#000E1116"
+                android:gradientRadius="300dp"
+                android:startColor="#8035D0BA"
+                android:type="radial" />
+        </shape>
+    </item>
+</layer-list>

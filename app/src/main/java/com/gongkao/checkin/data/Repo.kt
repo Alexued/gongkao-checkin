@@ -390,6 +390,10 @@ object Repo {
 
     fun setStatsDaysExpanded(on: Boolean) = edit { st -> st.settings.statsDaysExpanded = on }
 
+    fun appTheme(): AppTheme = AppTheme.of(state.settings.themeId)
+
+    fun setAppTheme(t: AppTheme) = edit { st -> st.settings.themeId = t.id }
+
     fun setBankSource(id: String) = edit { st -> st.settings.bankSourceId = id }
     fun setReviewSkill(id: String) = edit { st -> st.settings.reviewSkillId = id }
 

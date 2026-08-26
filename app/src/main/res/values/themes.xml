@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+      基础主题（＝「白色」）。调色板走 @color，暗色由 values-night 提供；
+      卡片质感走 ?attr/cardFill 这几项，各主题各自覆盖。
+    -->
     <style name="Theme.Checkin" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/accent</item>
         <item name="colorPrimaryDark">@color/accent_deep</item>
@@ -14,6 +18,49 @@
         <item name="android:forceDarkAllowed" tools:targetApi="29">false</item>
         <item name="android:textColorPrimary">@color/ink</item>
         <item name="android:textColorSecondary">@color/ink_sub</item>
+
+        <item name="cardFill">@color/surface</item>
+        <item name="cardStroke">@color/transparent</item>
+        <item name="cardStrokeWidth">0dp</item>
+        <item name="softFill">@color/surface_alt</item>
+        <item name="backdropDrawable">@null</item>
+    </style>
+
+    <!-- 黑色：跟白色同结构，调色板由 values-night 换掉 -->
+    <style name="Theme.Checkin.Dark" parent="Theme.Checkin">
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+        <item name="cardStroke">@color/divider</item>
+        <item name="cardStrokeWidth">1dp</item>
+    </style>
+
+    <!--
+      高斯模糊：暗调色板 + 半透明卡片 + 底层一张被模糊的彩色背景。
+      卡片描边压得很淡，靠透明度和背景的明暗变化区分层级。
+    -->
+    <style name="Theme.Checkin.Blur" parent="Theme.Checkin">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="cardFill">#B2161A21</item>
+        <item name="cardStroke">#26FFFFFF</item>
+        <item name="cardStrokeWidth">1dp</item>
+        <item name="softFill">#59222A36</item>
+        <item name="backdropDrawable">@drawable/bg_backdrop_blur</item>
+    </style>
+
+    <!--
+      液态玻璃：亮调色板 + 更透的卡片 + 亮边高光 + 饱和渐变背景，
+      比高斯模糊更「湿」，边缘更明显。
+    -->
+    <style name="Theme.Checkin.Liquid" parent="Theme.Checkin">
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="cardFill">#A6FFFFFF</item>
+        <item name="cardStroke">#8CFFFFFF</item>
+        <item name="cardStrokeWidth">1.5dp</item>
+        <item name="softFill">#66FFFFFF</item>
+        <item name="backdropDrawable">@drawable/bg_backdrop_liquid</item>
     </style>
 
     <!--
