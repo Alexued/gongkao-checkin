@@ -98,6 +98,9 @@
             android:name=".ui.ChangelogActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.bank.BankReviewActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.SettingsActivity"
             android:screenOrientation="portrait" />
         <activity

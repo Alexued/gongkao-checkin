@@ -190,6 +190,22 @@
     <string name="stat_days_collapse">收起</string>
     <string name="sync_switch">开启网页同步</string>
 
+    <string name="bank_review_title">本轮复盘</string>
+    <string name="bank_review_summary">成绩</string>
+    <string name="bank_review_summary_sub">%1$d / %2$d 正确 · 用时 %3$s</string>
+    <string name="bank_review_right">答对</string>
+    <string name="bank_review_wrong">答错</string>
+    <string name="bank_review_blank">未做</string>
+    <string name="stat_percent_label">正确率</string>
+    <string name="bank_review_no">第 %1$d 题 · %2$s</string>
+    <string name="bank_review_mark_right">对</string>
+    <string name="bank_review_mark_wrong">错</string>
+    <string name="bank_review_mark_blank">未做</string>
+    <string name="bank_review_stem">题干</string>
+    <string name="bank_review_missing">这道题已不在当前题库里，正确答案是 %1$s</string>
+    <string name="bank_review_more">还有 %1$d 题，点这里继续看</string>
+    <string name="bank_review_open">查看逐题解析</string>
+
     <string name="bank_start">开始做题</string>
     <string name="bank_resume">继续做题</string>
     <string name="bank_resume_sub">上次做到 %1$d/%2$d</string>

@@ -7,6 +7,7 @@ import com.gongkao.checkin.data.BankSession
 import com.gongkao.checkin.data.DateUtil
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.ListScreen
+import com.gongkao.checkin.ui.open
 import com.gongkao.checkin.ui.dp
 
 /** 技巧复盘记录。点一组展开每题的作答，跳过的题标「—」。结构照抄 MentalMathHistoryActivity。 */
@@ -36,14 +37,22 @@ class BankHistoryActivity : ListScreen() {
         )
         row(
             title = getString(R.string.bank_session_sub, modeName, s.correctCount(), s.total()),
-            sub = DateUtil.human(s.durationMs()),
+            // 用整轮的墙钟时间：改成一题一页后不再记每题耗时，durationMs() 会是 0
+            sub = DateUtil.human((s.endAt - s.startAt).coerceAtLeast(0)),
             value = getString(R.string.stat_percent, (s.accuracy() * 100).toInt()),
             chevron = true
         ) {
             if (!expanded.remove(s.id)) expanded.add(s.id)
             rebuild()
         }
-        if (s.id in expanded) details(s)
+        if (s.id in expanded) {
+            details(s)
+            // 展开后再给一条入口，回头能重看整轮的逐题解析
+            row(
+                title = getString(R.string.bank_review_open),
+                chevron = true
+            ) { open<BankReviewActivity>("sessionId" to s.id) }
+        }
     }
 
     private fun details(s: BankSession) {

@@ -205,6 +205,8 @@ data class BankSession(
     var id: String = "",
     var mode: String = "FULL",
     var chapter: String = "全部",
+    /** 题目出自哪个题库（BankSource.id），复盘页要靠它回查题面。老记录没有这个字段，按精选算 */
+    var sourceId: String = "curated",
     var date: String = "",
     var startAt: Long = 0,
     var endAt: Long = 0,

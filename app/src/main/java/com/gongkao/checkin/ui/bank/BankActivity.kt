@@ -31,6 +31,7 @@ import com.gongkao.checkin.ui.DialogRow
 import com.gongkao.checkin.ui.Popup
 import com.gongkao.checkin.ui.dp
 import com.gongkao.checkin.ui.edgeToEdge
+import com.gongkao.checkin.ui.open
 import com.gongkao.checkin.ui.padBottomInset
 import com.gongkao.checkin.ui.padTopInset
 import com.gongkao.checkin.ui.show
@@ -361,11 +362,13 @@ class BankActivity : AppCompatActivity() {
             )
         }.toMutableList()
 
+        val sessionId = Repo.newId()
         Repo.addBankSession(
             BankSession(
-                id = Repo.newId(),
+                id = sessionId,
                 mode = if (resuming) "RESUME" else "RANDOM",
                 chapter = chapter,
+                sourceId = source.id,
                 date = DateUtil.todayStr(),
                 startAt = sessionStart,
                 endAt = now,
@@ -375,10 +378,10 @@ class BankActivity : AppCompatActivity() {
         // 交完卷这份存档就没用了
         Repo.clearBankProgress()
         saved = true
-        showResult(items.count { it.correct }, items.size, now)
+        showResult(sessionId, items.count { it.correct }, items.size, now)
     }
 
-    private fun showResult(correct: Int, total: Int, endAt: Long) {
+    private fun showResult(sessionId: String, correct: Int, total: Int, endAt: Long) {
         val scrim = FrameLayout(this).apply {
             layoutParams = FrameLayout.LayoutParams(-1, -1)
             setBackgroundColor(transparentBlack(0.42f))
@@ -406,7 +409,12 @@ class BankActivity : AppCompatActivity() {
                 )
             )
         )
-        cardBox.addView(actionBtn(getString(R.string.back_home), primary = true) { finish() })
+        // 交完卷主要就是想看解析，所以「查看逐题解析」当主按钮
+        cardBox.addView(actionBtn(getString(R.string.bank_review_open), primary = true) {
+            open<BankReviewActivity>("sessionId" to sessionId)
+            finish()
+        })
+        cardBox.addView(actionBtn(getString(R.string.back_home), primary = false) { finish() })
         scrim.addView(cardBox)
         root.addView(scrim)
 
