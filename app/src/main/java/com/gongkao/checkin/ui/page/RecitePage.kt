@@ -5,10 +5,14 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.gongkao.checkin.R
+import com.gongkao.checkin.data.BankData
 import com.gongkao.checkin.data.FormulaData
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.MainActivity
 import com.gongkao.checkin.ui.Page
+import com.gongkao.checkin.ui.bank.BankActivity
+import com.gongkao.checkin.ui.bank.BankBrowseActivity
+import com.gongkao.checkin.ui.bank.BankHistoryActivity
 import com.gongkao.checkin.ui.dp
 import com.gongkao.checkin.ui.formula.FormulaActivity
 import com.gongkao.checkin.ui.formula.FormulaHistoryActivity
@@ -28,16 +32,23 @@ class RecitePage(host: MainActivity) : Page(host) {
     private lateinit var percentStat: TextView
     private lateinit var formulaStat: TextView
     private lateinit var mentalMathStat: TextView
+    private lateinit var bankStat: TextView
     private lateinit var categoryRow: LinearLayout
+    private lateinit var bankChapterRow: LinearLayout
 
     /** 当前选中的公式分类，随 chip 变化并传给 FormulaActivity。 */
     private var category = FormulaData.categories.first()
+
+    /** 当前选中的复盘章节，随 chip 变化并传给 BankActivity。 */
+    private var bankChapter = BankData.ALL
 
     override fun onCreate(v: View) {
         percentStat = v.findViewById(R.id.percentStat)
         formulaStat = v.findViewById(R.id.formulaStat)
         mentalMathStat = v.findViewById(R.id.mentalMathStat)
+        bankStat = v.findViewById(R.id.bankStat)
         categoryRow = v.findViewById(R.id.categoryRow)
+        bankChapterRow = v.findViewById(R.id.bankChapterRow)
 
         // NestedScrollView 的唯一子节点承担状态栏留白
         (v as ViewGroup).getChildAt(0).padTopInset()
@@ -69,8 +80,21 @@ class RecitePage(host: MainActivity) : Page(host) {
         v.findViewById<TextView>(R.id.btnMentalMathRecords).tap {
             ctx.open<MentalMathHistoryActivity>()
         }
+        v.findViewById<TextView>(R.id.btnBankFull).tap {
+            ctx.open<BankActivity>("mode" to "FULL", "chapter" to bankChapter)
+        }
+        v.findViewById<TextView>(R.id.btnBankRandom).tap {
+            ctx.open<BankActivity>("mode" to "RANDOM", "chapter" to bankChapter)
+        }
+        v.findViewById<TextView>(R.id.btnBankBrowse).tap {
+            ctx.open<BankBrowseActivity>()
+        }
+        v.findViewById<TextView>(R.id.btnBankRecords).tap {
+            ctx.open<BankHistoryActivity>()
+        }
 
         buildChips()
+        buildBankChips()
     }
 
     private fun buildChips() {
@@ -92,6 +116,30 @@ class RecitePage(host: MainActivity) : Page(host) {
                 }
             }
             categoryRow.addView(chip)
+        }
+    }
+
+    /** 章节 chip：文案取「第四章 增长量的比较与计算」这种全名，横向可滑。 */
+    private fun buildBankChips() {
+        bankChapterRow.removeAllViews()
+        val chapters = BankData.chapters(ctx)
+        chapters.forEach { name ->
+            val chip = TextView(ctx).apply {
+                text = name
+                textSize = 13f
+                setBackgroundResource(R.drawable.bg_chip)
+                setTextColor(ctx.getColorStateList(R.color.chip_text))
+                setPadding(14.dp, 7.dp, 14.dp, 7.dp)
+                isSelected = name == bankChapter
+                layoutParams = LinearLayout.LayoutParams(-2, -2).apply { marginEnd = 8.dp }
+            }
+            chip.tap {
+                bankChapter = name
+                for (i in 0 until bankChapterRow.childCount) {
+                    bankChapterRow.getChildAt(i).isSelected = i == chapters.indexOf(name)
+                }
+            }
+            bankChapterRow.addView(chip)
         }
     }
 
@@ -121,6 +169,15 @@ class RecitePage(host: MainActivity) : Page(host) {
             val acc = ms.sumOf { it.knownCount() } * 100 /
                 ms.sumOf { it.total() }.coerceAtLeast(1)
             ctx.getString(R.string.recite_stat, ms.size, acc)
+        }
+
+        val bs = Repo.bankSessions()
+        bankStat.text = if (bs.isEmpty()) {
+            ctx.getString(R.string.recite_stat_none)
+        } else {
+            val acc = bs.sumOf { it.correctCount() } * 100 /
+                bs.sumOf { it.total() }.coerceAtLeast(1)
+            ctx.getString(R.string.recite_stat, bs.size, acc)
         }
     }
 }

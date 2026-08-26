@@ -79,6 +79,24 @@
     <string name="mental_math_reveal">显示方法</string>
     <string name="mental_math_reveal_hint">先在心里回忆，再点开对照</string>
 
+    <string name="bank_title">资料分析技巧复盘</string>
+    <string name="bank_desc">65 道真题，选完立即判对错，再一步步看讲解怎么排除选项。</string>
+    <string name="bank_records">复盘记录</string>
+    <string name="bank_browse">题库浏览</string>
+    <string name="bank_skip">跳过本题</string>
+    <string name="bank_next_step">下一步讲解 %1$d / %2$d</string>
+    <string name="bank_next_question">下一题</string>
+    <string name="bank_finish">看结果</string>
+    <string name="bank_verdict_right">答对了</string>
+    <string name="bank_verdict_wrong">答错了，正确答案是 %1$s</string>
+    <string name="bank_mark_answer">正确答案</string>
+    <string name="bank_mark_picked">你选的</string>
+    <string name="bank_skill">考点：%1$s</string>
+    <string name="bank_source">出处：%1$s</string>
+    <string name="bank_options">选项</string>
+    <string name="bank_solution">完整解析</string>
+    <string name="bank_session_sub">%1$s · %2$d/%3$d 正确</string>
+
     <string name="pomodoro_title">番茄钟</string>
     <string name="pomodoro_records">番茄记录</string>
     <string name="pomodoro_work">专注</string>

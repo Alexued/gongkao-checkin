@@ -236,6 +236,101 @@
                 android:text="@string/mental_math_records" />
         </LinearLayout>
 
+        <!-- 资料分析技巧复盘 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/bank_title"
+                    android:textColor="@color/ink"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/bankStat"
+                    style="@style/TextDim"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/bank_desc"
+                android:textColor="@color/ink_sub"
+                android:textSize="13sp" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/bankChapterRow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnBankFull"
+                    style="@style/BtnPrimary"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/mode_full" />
+
+                <TextView
+                    android:id="@+id/btnBankRandom"
+                    style="@style/BtnGhost"
+                    android:layout_width="0dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:text="@string/mode_random" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnBankBrowse"
+                    style="@style/BtnLink"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/bank_browse" />
+
+                <TextView
+                    android:id="@+id/btnBankRecords"
+                    style="@style/BtnLink"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/bank_records" />
+            </LinearLayout>
+        </LinearLayout>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="20dp" />

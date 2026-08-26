@@ -335,6 +335,13 @@ object Repo {
     }
     fun pomodoroSessions(): List<PomodoroSession> = read { it.pomodoroSessions.toList() }
 
+    fun addBankSession(s: BankSession) = edit { st ->
+        st.bankSessions.add(0, s)
+        if (st.bankSessions.size > MAX_SESSIONS)
+            st.bankSessions.subList(MAX_SESSIONS, st.bankSessions.size).clear()
+    }
+    fun bankSessions(): List<BankSession> = read { it.bankSessions.toList() }
+
     fun newId(): String = UUID.randomUUID().toString()
 
     // ---------------------------------------------------------------- 设备直连同步：整份覆盖导出/导入
@@ -349,6 +356,7 @@ object Repo {
         var formulaSessions: MutableList<FormulaSession> = mutableListOf()
         var mentalMathSessions: MutableList<MentalMathSession> = mutableListOf()
         var pomodoroSessions: MutableList<PomodoroSession> = mutableListOf()
+        var bankSessions: MutableList<BankSession> = mutableListOf()
     }
 
     /** 供「发送我的记录」使用：把本机全部打卡数据序列化成 JSON。 */
@@ -362,6 +370,7 @@ object Repo {
         f.formulaSessions = st.formulaSessions
         f.mentalMathSessions = st.mentalMathSessions
         f.pomodoroSessions = st.pomodoroSessions
+        f.bankSessions = st.bankSessions
         gson.toJson(f)
     }
 
@@ -377,6 +386,7 @@ object Repo {
             st.formulaSessions = parsed.formulaSessions
             st.mentalMathSessions = parsed.mentalMathSessions
             st.pomodoroSessions = parsed.pomodoroSessions ?: mutableListOf()
+            st.bankSessions = parsed.bankSessions ?: mutableListOf()
             // 强制下次 ensureDays() 从头重建欠账链条，避免沿用本机旧的 lastRolledDate 导致漏滚
             st.lastRolledDate = null
         }

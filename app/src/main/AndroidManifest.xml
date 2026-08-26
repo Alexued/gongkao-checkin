@@ -70,6 +70,15 @@
             android:name=".ui.mentalmath.MentalMathHistoryActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.bank.BankActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.bank.BankBrowseActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.bank.BankHistoryActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.pomodoro.PomodoroActivity"
             android:screenOrientation="portrait" />
         <activity

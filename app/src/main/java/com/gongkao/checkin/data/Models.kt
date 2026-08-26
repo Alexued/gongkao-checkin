@@ -170,6 +170,33 @@ data class MentalMathSession(
     fun durationMs(): Long = items.sumOf { it.ms }
 }
 
+data class BankItemRecord(
+    var bankId: String = "",
+    /** 题干摘要，记录页直接显示，免得回头查题库 */
+    var title: String = "",
+    /** 用户选的选项字母，跳过则为空串 */
+    var picked: String = "",
+    var answer: String = "",
+    var correct: Boolean = false,
+    var ms: Long = 0
+)
+
+/** 一轮资料分析技巧复盘。不进每日统计，只在背诵页与记录页汇总。 */
+data class BankSession(
+    var id: String = "",
+    var mode: String = "FULL",
+    var chapter: String = "全部",
+    var date: String = "",
+    var startAt: Long = 0,
+    var endAt: Long = 0,
+    var items: MutableList<BankItemRecord> = mutableListOf()
+) {
+    fun total() = items.size
+    fun correctCount() = items.count { it.correct }
+    fun accuracy(): Float = if (items.isEmpty()) 0f else correctCount().toFloat() / items.size
+    fun durationMs(): Long = items.sumOf { it.ms }
+}
+
 const val POMODORO_WORK = "WORK"
 const val POMODORO_SHORT_BREAK = "SHORT_BREAK"
 const val POMODORO_LONG_BREAK = "LONG_BREAK"
@@ -208,5 +235,6 @@ class AppState {
     var formulaSessions: MutableList<FormulaSession> = mutableListOf()
     var mentalMathSessions: MutableList<MentalMathSession> = mutableListOf()
     var pomodoroSessions: MutableList<PomodoroSession> = mutableListOf()
+    var bankSessions: MutableList<BankSession> = mutableListOf()
     var lastRolledDate: String? = null
 }
