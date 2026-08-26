@@ -335,6 +335,9 @@ object Repo {
     }
     fun pomodoroSessions(): List<PomodoroSession> = read { it.pomodoroSessions.toList() }
 
+    fun setBankSource(id: String) = edit { st -> st.settings.bankSourceId = id }
+    fun setReviewSkill(id: String) = edit { st -> st.settings.reviewSkillId = id }
+
     fun addBankSession(s: BankSession) = edit { st ->
         st.bankSessions.add(0, s)
         if (st.bankSessions.size > MAX_SESSIONS)

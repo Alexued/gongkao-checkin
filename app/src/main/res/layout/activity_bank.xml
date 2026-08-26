@@ -170,6 +170,33 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
 
+            <!-- 没有分步数据的题（真题题库）：整段解析 -->
+            <LinearLayout
+                android:id="@+id/solutionCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    style="@style/TextDim"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/bank_solution" />
+
+                <TextView
+                    android:id="@+id/solutionText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="5dp"
+                    android:textColor="@color/ink"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="16dp" />

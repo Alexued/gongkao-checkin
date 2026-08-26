@@ -1,6 +1,8 @@
 package com.gongkao.checkin.data
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
@@ -89,34 +91,84 @@ class BankTable {
 
 data class HeadCell(val text: String, val rowSpan: Int = 1, val colSpan: Int = 1)
 
+/**
+ * 一个题库来源。[hasSteps] 决定练习页怎么讲解：
+ * 精选那 65 题带 `anim` 分步数据，陪陪刷那批只有一段 `solution` 纯文本。
+ */
+data class BankSource(
+    val id: String,
+    val name: String,
+    val asset: String,
+    val hasSteps: Boolean
+)
+
+object BankSources {
+    val CURATED = BankSource("curated", "精选 65 题", "bank.json", hasSteps = true)
+    val PEIPEI = BankSource("peipei", "真题题库", "bank_peipei.json", hasSteps = false)
+
+    val all = listOf(CURATED, PEIPEI)
+
+    fun byId(id: String?): BankSource = all.firstOrNull { it.id == id } ?: CURATED
+}
+
 object BankData {
 
-    @Volatile
-    private var cache: List<BankQuestion>? = null
+    private val cache = mutableMapOf<String, List<BankQuestion>>()
 
-    /** 首次调用时从 assets 解析并缓存（208KB，解析一次约几十毫秒）。 */
-    fun list(ctx: Context): List<BankQuestion> {
-        cache?.let { return it }
-        return synchronized(this) {
-            cache ?: load(ctx).also { cache = it }
+    /** 已经缓存好了就直接给，否则返回 null——调用方该走 [loadAsync]。 */
+    fun cached(source: BankSource): List<BankQuestion>? = synchronized(cache) { cache[source.id] }
+
+    /**
+     * 取题库。真题题库有 1175 题、2.3MB，解析要几百毫秒，不能在主线程做，
+     * 所以统一走后台线程 + 主线程回调；已缓存时同步回调，不闪一下加载态。
+     */
+    fun loadAsync(ctx: Context, source: BankSource, onReady: (List<BankQuestion>) -> Unit) {
+        cached(source)?.let {
+            onReady(it)
+            return
         }
+        val app = ctx.applicationContext
+        val main = Handler(Looper.getMainLooper())
+        Thread {
+            val list = load(app, source)
+            synchronized(cache) { cache[source.id] = list }
+            main.post { onReady(list) }
+        }.start()
     }
 
-    private fun load(ctx: Context): List<BankQuestion> = runCatching {
-        val json = ctx.assets.open("bank.json").bufferedReader().use { it.readText() }
+    private fun load(ctx: Context, source: BankSource): List<BankQuestion> = runCatching {
+        val json = ctx.assets.open(source.asset).bufferedReader().use { it.readText() }
         val type = object : TypeToken<List<BankQuestion>>() {}.type
         Gson().fromJson<List<BankQuestion>>(json, type) ?: emptyList()
     }.getOrDefault(emptyList())
 
     /** 章节 chip 用，首项是「全部」。顺序按题库里出现的先后。 */
-    fun chapters(ctx: Context): List<String> =
-        listOf(ALL) + list(ctx).map { it.chapter }.distinct()
+    fun chapters(list: List<BankQuestion>): List<String> =
+        listOf(ALL) + list.map { it.chapter }.distinct()
 
-    fun byChapter(ctx: Context, chapter: String): List<BankQuestion> =
-        if (chapter == ALL) list(ctx) else list(ctx).filter { it.chapter == chapter }
+    fun byChapter(list: List<BankQuestion>, chapter: String): List<BankQuestion> =
+        if (chapter == ALL) list else list.filter { it.chapter == chapter }
 
-    fun byId(ctx: Context, id: String): BankQuestion? =
-        list(ctx).firstOrNull { it.id == id }
+    /**
+     * 关键词搜索：空格分词，每个词都要命中（题干/考点/章节/出处/材料/选项任一）。
+     * 全是中文所以直接 contains，不做分词。
+     */
+    fun search(list: List<BankQuestion>, query: String, limit: Int = 200): List<BankQuestion> {
+        val terms = query.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+        if (terms.isEmpty()) return emptyList()
+        return list.asSequence()
+            .filter { q ->
+                val hay = buildString {
+                    append(q.stem).append('\n').append(q.skill).append('\n')
+                    append(q.chapter).append('\n').append(q.source).append('\n')
+                    append(q.material).append('\n')
+                    q.options.values.forEach { append(it).append('\n') }
+                }
+                terms.all { hay.contains(it, ignoreCase = true) }
+            }
+            .take(limit)
+            .toList()
+    }
 
     const val ALL = "全部"
 }

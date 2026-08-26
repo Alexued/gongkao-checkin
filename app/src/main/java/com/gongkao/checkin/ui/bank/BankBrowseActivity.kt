@@ -5,27 +5,98 @@ import android.widget.TextView
 import com.gongkao.checkin.R
 import com.gongkao.checkin.data.BankData
 import com.gongkao.checkin.data.BankQuestion
+import com.gongkao.checkin.data.BankSource
+import com.gongkao.checkin.data.BankSources
+import com.gongkao.checkin.data.Repo
+import com.gongkao.checkin.ui.AppListDialog
+import com.gongkao.checkin.ui.DialogRow
 import com.gongkao.checkin.ui.ListScreen
 import com.gongkao.checkin.ui.dp
+import com.gongkao.checkin.ui.open
 import com.gongkao.checkin.view.DataTableView
 
-/** 题库浏览：65 题按章节分组，点一题展开材料/表格 + 选项 + 答案 + 完整解析。 */
+/** 题库浏览：按章节分组，点一题展开材料/表格 + 选项 + 答案 + 完整解析。右上角切题库。 */
 class BankBrowseActivity : ListScreen() {
 
     private val expanded = mutableSetOf<String>()
+    private val openChapters = mutableSetOf<String>()
+    private var source: BankSource = BankSources.CURATED
+    private var questions: List<BankQuestion> = emptyList()
+    private var loading = true
 
     override fun title(): CharSequence = getString(R.string.bank_browse)
 
+    override fun onResume() {
+        super.onResume()
+        if (loading) load()
+    }
+
+    /**
+     * 章节先折叠。真题题库 1175 题，一次性铺进 ScrollView 会卡死主线程
+     * （实测 Skipped 1148 frames），所以点开章节才铺，且每章最多铺 [CHAPTER_LIMIT] 条，
+     * 剩下的引导去搜索。
+     */
     override fun build() {
-        val all = BankData.list(this)
-        if (all.isEmpty()) {
+        action(source.name) { switchSource() }
+
+        if (loading) {
+            empty(getString(R.string.bank_loading))
+            return
+        }
+        if (questions.isEmpty()) {
             empty()
             return
         }
-        all.groupBy { it.chapter }.forEach { (chapter, list) ->
-            section("$chapter · ${list.size}")
-            list.forEach { q -> group(q) }
+        questions.groupBy { it.chapter }.forEach { (chapter, list) ->
+            val open = chapter in openChapters
+            row(
+                title = chapter,
+                sub = getString(R.string.bank_chapter_count, list.size),
+                value = if (open) "−" else "+",
+                chevron = false
+            ) {
+                if (!openChapters.remove(chapter)) openChapters.add(chapter)
+                rebuild()
+            }
+            if (!open) return@forEach
+
+            list.take(CHAPTER_LIMIT).forEach { q -> group(q) }
+            if (list.size > CHAPTER_LIMIT) {
+                row(
+                    title = getString(R.string.bank_more_in_search, list.size - CHAPTER_LIMIT),
+                    chevron = true
+                ) { open<BankSearchActivity>() }
+            }
         }
+    }
+
+    private fun load() {
+        loading = true
+        source = BankSources.byId(Repo.state.settings.bankSourceId)
+        BankData.loadAsync(this, source) { all ->
+            if (isFinishing || isDestroyed) return@loadAsync
+            questions = all
+            loading = false
+            rebuild()
+        }
+    }
+
+    private fun switchSource() {
+        AppListDialog.show(
+            ctx = this,
+            title = getString(R.string.bank_switch_source),
+            rows = BankSources.all.map { DialogRow(it.name) },
+            onPick = { i ->
+                val picked = BankSources.all[i]
+                if (picked.id != source.id) {
+                    Repo.setBankSource(picked.id)
+                    expanded.clear()
+                    openChapters.clear()
+                    load()
+                    rebuild()
+                }
+            }
+        )
     }
 
     private fun group(q: BankQuestion) {
@@ -104,5 +175,9 @@ class BankBrowseActivity : ListScreen() {
         textSize = 12f
         setTextColor(getColor(R.color.ink_dim))
         layoutParams = LinearLayout.LayoutParams(-1, -2)
+    }
+
+    private companion object {
+        const val CHAPTER_LIMIT = 40
     }
 }

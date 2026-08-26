@@ -222,7 +222,11 @@ data class Settings(
     var syncDiscoverable: Boolean = false,
     var syncPort: Int = 8765,
     var syncPin: String = "",
-    var nickname: String = "考公人"
+    var nickname: String = "考公人",
+    /** 复盘用哪个题库（BankSource.id） */
+    var bankSourceId: String = "curated",
+    /** 复盘用哪种讲解风格（ReviewSkill.id） */
+    var reviewSkillId: String = "builtin"
 )
 
 class AppState {

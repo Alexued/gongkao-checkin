@@ -6,14 +6,21 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.gongkao.checkin.R
 import com.gongkao.checkin.data.BankData
+import com.gongkao.checkin.data.BankSource
+import com.gongkao.checkin.data.BankSources
 import com.gongkao.checkin.data.FormulaData
 import com.gongkao.checkin.data.Repo
+import com.gongkao.checkin.data.SkillRegistry
+import com.gongkao.checkin.ui.AppListDialog
+import com.gongkao.checkin.ui.DialogRow
 import com.gongkao.checkin.ui.MainActivity
 import com.gongkao.checkin.ui.Page
 import com.gongkao.checkin.ui.bank.BankActivity
 import com.gongkao.checkin.ui.bank.BankBrowseActivity
 import com.gongkao.checkin.ui.bank.BankHistoryActivity
+import com.gongkao.checkin.ui.bank.BankSearchActivity
 import com.gongkao.checkin.ui.dp
+import com.gongkao.checkin.ui.toast
 import com.gongkao.checkin.ui.formula.FormulaActivity
 import com.gongkao.checkin.ui.formula.FormulaHistoryActivity
 import com.gongkao.checkin.ui.mentalmath.MentalMathActivity
@@ -35,12 +42,17 @@ class RecitePage(host: MainActivity) : Page(host) {
     private lateinit var bankStat: TextView
     private lateinit var categoryRow: LinearLayout
     private lateinit var bankChapterRow: LinearLayout
+    private lateinit var bankSourceRow: LinearLayout
+    private lateinit var bankStyleRow: TextView
 
     /** 当前选中的公式分类，随 chip 变化并传给 FormulaActivity。 */
     private var category = FormulaData.categories.first()
 
     /** 当前选中的复盘章节，随 chip 变化并传给 BankActivity。 */
     private var bankChapter = BankData.ALL
+
+    /** 当前选中的题库来源，持久化在 Settings 里。 */
+    private var bankSource: BankSource = BankSources.CURATED
 
     override fun onCreate(v: View) {
         percentStat = v.findViewById(R.id.percentStat)
@@ -49,6 +61,9 @@ class RecitePage(host: MainActivity) : Page(host) {
         bankStat = v.findViewById(R.id.bankStat)
         categoryRow = v.findViewById(R.id.categoryRow)
         bankChapterRow = v.findViewById(R.id.bankChapterRow)
+        bankSourceRow = v.findViewById(R.id.bankSourceRow)
+        bankStyleRow = v.findViewById(R.id.bankStyleRow)
+        bankSource = BankSources.byId(Repo.state.settings.bankSourceId)
 
         // NestedScrollView 的唯一子节点承担状态栏留白
         (v as ViewGroup).getChildAt(0).padTopInset()
@@ -81,10 +96,17 @@ class RecitePage(host: MainActivity) : Page(host) {
             ctx.open<MentalMathHistoryActivity>()
         }
         v.findViewById<TextView>(R.id.btnBankFull).tap {
-            ctx.open<BankActivity>("mode" to "FULL", "chapter" to bankChapter)
+            ctx.open<BankActivity>(
+                "mode" to "FULL", "chapter" to bankChapter, "source" to bankSource.id
+            )
         }
         v.findViewById<TextView>(R.id.btnBankRandom).tap {
-            ctx.open<BankActivity>("mode" to "RANDOM", "chapter" to bankChapter)
+            ctx.open<BankActivity>(
+                "mode" to "RANDOM", "chapter" to bankChapter, "source" to bankSource.id
+            )
+        }
+        v.findViewById<TextView>(R.id.btnBankSearch).tap {
+            ctx.open<BankSearchActivity>()
         }
         v.findViewById<TextView>(R.id.btnBankBrowse).tap {
             ctx.open<BankBrowseActivity>()
@@ -92,9 +114,68 @@ class RecitePage(host: MainActivity) : Page(host) {
         v.findViewById<TextView>(R.id.btnBankRecords).tap {
             ctx.open<BankHistoryActivity>()
         }
+        bankStyleRow.tap { pickSkill() }
 
         buildChips()
+        buildSourceChips()
         buildBankChips()
+        showSkill()
+    }
+
+    /** 讲解风格：目前只有「题库内置讲解」能选，名师风格要接 AI，先灰着。 */
+    private fun pickSkill() {
+        AppListDialog.show(
+            ctx = ctx,
+            title = ctx.getString(R.string.bank_style_pick),
+            rows = SkillRegistry.all.map {
+                DialogRow(
+                    title = if (it.available) it.name
+                    else ctx.getString(R.string.bank_style_locked, it.name),
+                    sub = it.tagline
+                )
+            },
+            onPick = { i ->
+                val picked = SkillRegistry.all[i]
+                if (picked.available) {
+                    Repo.setReviewSkill(picked.id)
+                    showSkill()
+                } else {
+                    ctx.toast(ctx.getString(R.string.bank_style_locked, picked.name))
+                }
+            }
+        )
+    }
+
+    private fun showSkill() {
+        val skill = SkillRegistry.byId(Repo.state.settings.reviewSkillId)
+        bankStyleRow.text = ctx.getString(R.string.bank_style, skill.name)
+    }
+
+    private fun buildSourceChips() {
+        bankSourceRow.removeAllViews()
+        BankSources.all.forEach { src ->
+            val chip = TextView(ctx).apply {
+                text = src.name
+                textSize = 13f
+                setBackgroundResource(R.drawable.bg_chip)
+                setTextColor(ctx.getColorStateList(R.color.chip_text))
+                setPadding(14.dp, 7.dp, 14.dp, 7.dp)
+                isSelected = src.id == bankSource.id
+                layoutParams = LinearLayout.LayoutParams(-2, -2).apply { marginEnd = 8.dp }
+            }
+            chip.tap {
+                if (src.id == bankSource.id) return@tap
+                bankSource = src
+                bankChapter = BankData.ALL
+                Repo.setBankSource(src.id)
+                for (i in 0 until bankSourceRow.childCount) {
+                    bankSourceRow.getChildAt(i).isSelected =
+                        i == BankSources.all.indexOfFirst { it.id == src.id }
+                }
+                buildBankChips()
+            }
+            bankSourceRow.addView(chip)
+        }
     }
 
     private fun buildChips() {
@@ -119,10 +200,17 @@ class RecitePage(host: MainActivity) : Page(host) {
         }
     }
 
-    /** 章节 chip：文案取「第四章 增长量的比较与计算」这种全名，横向可滑。 */
+    /** 章节 chip：题库要后台解析，加载完才能知道有哪些章节。 */
     private fun buildBankChips() {
         bankChapterRow.removeAllViews()
-        val chapters = BankData.chapters(ctx)
+        BankData.loadAsync(ctx, bankSource) { all ->
+            if (host.isFinishing || host.isDestroyed) return@loadAsync
+            fillBankChips(BankData.chapters(all))
+        }
+    }
+
+    private fun fillBankChips(chapters: List<String>) {
+        bankChapterRow.removeAllViews()
         chapters.forEach { name ->
             val chip = TextView(ctx).apply {
                 text = name

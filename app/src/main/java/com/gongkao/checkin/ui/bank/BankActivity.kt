@@ -22,6 +22,8 @@ import com.gongkao.checkin.data.BankData
 import com.gongkao.checkin.data.BankItemRecord
 import com.gongkao.checkin.data.BankQuestion
 import com.gongkao.checkin.data.BankSession
+import com.gongkao.checkin.data.BankSource
+import com.gongkao.checkin.data.BankSources
 import com.gongkao.checkin.data.DateUtil
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.AppDialog
@@ -58,12 +60,19 @@ class BankActivity : AppCompatActivity() {
     private lateinit var verdictText: TextView
     private lateinit var skillText: TextView
     private lateinit var stepBox: LinearLayout
+    private lateinit var solutionCard: LinearLayout
+    private lateinit var solutionText: TextView
     private lateinit var btnAction: TextView
 
     private var mode = "FULL"
     private var chapter = BankData.ALL
-    private lateinit var queue: List<BankQuestion>
+    private lateinit var source: BankSource
+    private var queue: List<BankQuestion> = emptyList()
     private var cursor = 0
+    /** 从搜索结果点进来时只复盘这一题 */
+    private var singleId: String? = null
+    /** 本题没有分步数据时，solution 全文是否已展开 */
+    private var solutionShown = false
 
     private var sessionStart = 0L
     private var itemStart = 0L
@@ -80,6 +89,8 @@ class BankActivity : AppCompatActivity() {
         Repo.init(this)
         mode = intent.getStringExtra("mode") ?: "FULL"
         chapter = intent.getStringExtra("chapter") ?: BankData.ALL
+        source = BankSources.byId(intent.getStringExtra("source"))
+        singleId = intent.getStringExtra("questionId")
 
         root = FrameLayout(this)
         layoutInflater.inflate(R.layout.activity_bank, root, true)
@@ -91,19 +102,42 @@ class BankActivity : AppCompatActivity() {
         setContentView(root)
 
         bind()
-        val pool = BankData.byChapter(this, chapter)
-        queue = if (mode == "RANDOM") pool.shuffled() else pool
-        if (queue.isEmpty()) {
-            finish()
-            return
-        }
-        sessionStart = System.currentTimeMillis()
-        modeText.text = getString(if (mode == "RANDOM") R.string.mode_random else R.string.mode_full)
-        showItem()
         // targetSdk 36 走预测式返回，onBackPressed 不再回调，必须注册 callback
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() = askQuit()
         })
+
+        // 真题题库 2.3MB，解析放后台；加载完才开始出题
+        modeText.text = getString(R.string.bank_loading)
+        btnAction.isEnabled = false
+        btnAction.alpha = 0.4f
+        BankData.loadAsync(this, source) { all ->
+            if (isFinishing || isDestroyed) return@loadAsync
+            startRound(all)
+        }
+    }
+
+    private fun startRound(all: List<BankQuestion>) {
+        val id = singleId
+        queue = if (id != null) {
+            all.filter { it.id == id }
+        } else {
+            val pool = BankData.byChapter(all, chapter)
+            if (mode == "RANDOM") pool.shuffled() else pool
+        }
+        if (queue.isEmpty()) {
+            finish()
+            return
+        }
+        btnAction.isEnabled = true
+        btnAction.alpha = 1f
+        sessionStart = System.currentTimeMillis()
+        modeText.text = when {
+            singleId != null -> getString(R.string.bank_single)
+            mode == "RANDOM" -> getString(R.string.mode_random)
+            else -> getString(R.string.mode_full)
+        }
+        showItem()
     }
 
     private fun bind() {
@@ -122,6 +156,8 @@ class BankActivity : AppCompatActivity() {
         verdictText = findViewById(R.id.verdictText)
         skillText = findViewById(R.id.skillText)
         stepBox = findViewById(R.id.stepBox)
+        solutionCard = findViewById(R.id.solutionCard)
+        solutionText = findViewById(R.id.solutionText)
         btnAction = findViewById(R.id.btnAction)
         findViewById<LinearLayout>(R.id.actionRow).padBottomInset(18.dp)
 
@@ -135,6 +171,7 @@ class BankActivity : AppCompatActivity() {
     private fun showItem() {
         answered = false
         stepShown = 0
+        solutionShown = false
         itemStart = System.currentTimeMillis()
         val q = queue[cursor]
 
@@ -153,6 +190,7 @@ class BankActivity : AppCompatActivity() {
 
         verdictText.show(false)
         skillText.show(false)
+        solutionCard.show(false)
         stepBox.removeAllViews()
         buildOptions(q)
 
@@ -256,14 +294,31 @@ class BankActivity : AppCompatActivity() {
 
     // ------------------------------------------------------------ 分步讲解
 
-    /** 底部按钮：还有讲解步骤就放下一步，放完了就进下一题。 */
+    /**
+     * 底部按钮：还有讲解步骤就放下一步，放完了就进下一题。
+     * 真题题库没有分步数据，改成一次展开 solution 全文。
+     */
     private fun onAction() {
         if (!answered) {
             skip()
             return
         }
         val q = queue[cursor]
-        if (stepShown < q.anim.size) revealStep() else next()
+        when {
+            q.anim.isNotEmpty() && stepShown < q.anim.size -> revealStep()
+            q.anim.isEmpty() && !solutionShown -> revealSolution()
+            else -> next()
+        }
+    }
+
+    /** 没有分步数据的题：直接把整段解析摊开。 */
+    private fun revealSolution() {
+        solutionShown = true
+        solutionText.text = queue[cursor].solution
+        solutionCard.show(true)
+        fadeIn(solutionCard)
+        solutionCard.post { scroller.smoothScrollTo(0, scroller.getChildAt(0).height) }
+        advanceAction()
     }
 
     private fun revealStep() {
@@ -322,14 +377,14 @@ class BankActivity : AppCompatActivity() {
     private fun advanceAction() {
         val q = queue[cursor]
         val last = cursor == queue.size - 1
-        if (stepShown < q.anim.size) {
-            btnAction.text = getString(R.string.bank_next_step, stepShown + 1, q.anim.size)
-            btnAction.setBackgroundResource(R.drawable.bg_btn_primary)
-            btnAction.setTextColor(getColor(R.color.surface))
-        } else {
-            btnAction.text = getString(if (last) R.string.bank_finish else R.string.bank_next_question)
-            btnAction.setBackgroundResource(R.drawable.bg_btn_primary)
-            btnAction.setTextColor(getColor(R.color.surface))
+        btnAction.setBackgroundResource(R.drawable.bg_btn_primary)
+        btnAction.setTextColor(getColor(R.color.surface))
+        btnAction.text = when {
+            q.anim.isNotEmpty() && stepShown < q.anim.size ->
+                getString(R.string.bank_next_step, stepShown + 1, q.anim.size)
+            q.anim.isEmpty() && !solutionShown -> getString(R.string.bank_show_solution)
+            last -> getString(R.string.bank_finish)
+            else -> getString(R.string.bank_next_question)
         }
     }
 
@@ -423,10 +478,8 @@ class BankActivity : AppCompatActivity() {
         root.removeView(scrim)
         items.clear()
         cursor = 0
-        sessionStart = System.currentTimeMillis()
-        val pool = BankData.byChapter(this, chapter)
-        queue = if (mode == "RANDOM") pool.shuffled() else pool
-        showItem()
+        // 这时题库必然已在缓存里，loadAsync 会同步回调
+        BankData.loadAsync(this, source) { all -> startRound(all) }
     }
 
     private fun bigText(t: CharSequence) = TextView(this).apply {
@@ -460,7 +513,8 @@ class BankActivity : AppCompatActivity() {
         }
 
     private fun askQuit() {
-        if (items.isEmpty()) {
+        // 还没加载完就退出：queue 是空的，没什么可确认的
+        if (queue.isEmpty() || items.isEmpty()) {
             finish()
             return
         }

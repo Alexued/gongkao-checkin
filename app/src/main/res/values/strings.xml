@@ -80,7 +80,7 @@
     <string name="mental_math_reveal_hint">先在心里回忆，再点开对照</string>
 
     <string name="bank_title">资料分析技巧复盘</string>
-    <string name="bank_desc">65 道真题，选完立即判对错，再一步步看讲解怎么排除选项。</string>
+    <string name="bank_desc">选完立即判对错，再看讲解怎么排除选项。精选题走分步拆解，真题走原版解析。</string>
     <string name="bank_records">复盘记录</string>
     <string name="bank_browse">题库浏览</string>
     <string name="bank_skip">跳过本题</string>
@@ -96,6 +96,21 @@
     <string name="bank_options">选项</string>
     <string name="bank_solution">完整解析</string>
     <string name="bank_session_sub">%1$s · %2$d/%3$d 正确</string>
+    <string name="bank_loading">题库加载中…</string>
+    <string name="bank_single">单题复盘</string>
+    <string name="bank_show_solution">看解析</string>
+    <string name="bank_search">题库搜索</string>
+    <string name="bank_search_hint">搜题干、考点、材料、出处</string>
+    <string name="bank_search_empty">输入关键词开始搜索</string>
+    <string name="bank_search_none">没搜到匹配的题</string>
+    <string name="bank_search_count">%1$d 题</string>
+    <string name="bank_source_label">题库：%1$s</string>
+    <string name="bank_switch_source">切换题库</string>
+    <string name="bank_style">讲解风格：%1$s</string>
+    <string name="bank_style_pick">选择讲解风格</string>
+    <string name="bank_style_locked">%1$s（暂未接入）</string>
+    <string name="bank_chapter_count">%1$d 题</string>
+    <string name="bank_more_in_search">还有 %1$d 题，去题库搜索找</string>
 
     <string name="pomodoro_title">番茄钟</string>
     <string name="pomodoro_records">番茄记录</string>

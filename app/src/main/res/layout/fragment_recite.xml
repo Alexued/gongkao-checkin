@@ -275,10 +275,34 @@
                 android:textColor="@color/ink_sub"
                 android:textSize="13sp" />
 
+            <TextView
+                android:id="@+id/bankStyleRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_pill_soft"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="10dp"
+                android:textColor="@color/ink_sub"
+                android:textSize="12.5sp" />
+
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_marginTop="12dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/bankSourceRow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
                 android:scrollbars="none">
 
                 <LinearLayout
@@ -314,6 +338,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnBankSearch"
+                    style="@style/BtnLink"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/bank_search" />
 
                 <TextView
                     android:id="@+id/btnBankBrowse"
