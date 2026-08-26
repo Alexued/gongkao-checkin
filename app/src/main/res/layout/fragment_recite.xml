@@ -312,6 +312,20 @@
                     android:orientation="horizontal" />
             </HorizontalScrollView>
 
+            <!-- 每次抽几题 -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/bankSizeRow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -319,19 +333,21 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/btnBankFull"
+                    android:id="@+id/btnBankStart"
                     style="@style/BtnPrimary"
                     android:layout_width="0dp"
                     android:layout_weight="1"
-                    android:text="@string/mode_full" />
+                    android:text="@string/bank_start" />
 
+                <!-- 没有存档时整个隐藏，不给一个点了没反应的按钮 -->
                 <TextView
-                    android:id="@+id/btnBankRandom"
+                    android:id="@+id/btnBankResume"
                     style="@style/BtnGhost"
                     android:layout_width="0dp"
                     android:layout_marginStart="10dp"
                     android:layout_weight="1"
-                    android:text="@string/mode_random" />
+                    android:text="@string/bank_resume"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <LinearLayout

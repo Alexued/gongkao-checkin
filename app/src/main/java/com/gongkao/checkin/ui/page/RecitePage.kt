@@ -29,6 +29,7 @@ import com.gongkao.checkin.ui.padTopInset
 import com.gongkao.checkin.ui.percent.PercentActivity
 import com.gongkao.checkin.ui.percent.PercentHistoryActivity
 import com.gongkao.checkin.ui.open
+import com.gongkao.checkin.ui.show
 import com.gongkao.checkin.ui.tap
 
 /** 背诵入口页：百化分 + 资料分析公式，各自两种模式与记录入口。 */
@@ -44,6 +45,11 @@ class RecitePage(host: MainActivity) : Page(host) {
     private lateinit var bankChapterRow: LinearLayout
     private lateinit var bankSourceRow: LinearLayout
     private lateinit var bankStyleRow: TextView
+    private lateinit var bankSizeRow: LinearLayout
+    private lateinit var btnBankResume: TextView
+
+    /** 每次抽几题，0 表示全部。 */
+    private var bankSize = 10
 
     /** 当前选中的公式分类，随 chip 变化并传给 FormulaActivity。 */
     private var category = FormulaData.categories.first()
@@ -95,16 +101,17 @@ class RecitePage(host: MainActivity) : Page(host) {
         v.findViewById<TextView>(R.id.btnMentalMathRecords).tap {
             ctx.open<MentalMathHistoryActivity>()
         }
-        v.findViewById<TextView>(R.id.btnBankFull).tap {
+        bankSizeRow = v.findViewById(R.id.bankSizeRow)
+        btnBankResume = v.findViewById(R.id.btnBankResume)
+
+        v.findViewById<TextView>(R.id.btnBankStart).tap {
             ctx.open<BankActivity>(
-                "mode" to "FULL", "chapter" to bankChapter, "source" to bankSource.id
+                "chapter" to bankChapter,
+                "source" to bankSource.id,
+                "size" to bankSize.toString()
             )
         }
-        v.findViewById<TextView>(R.id.btnBankRandom).tap {
-            ctx.open<BankActivity>(
-                "mode" to "RANDOM", "chapter" to bankChapter, "source" to bankSource.id
-            )
-        }
+        btnBankResume.tap { ctx.open<BankActivity>("resume" to "1") }
         v.findViewById<TextView>(R.id.btnBankSearch).tap {
             ctx.open<BankSearchActivity>()
         }
@@ -116,10 +123,41 @@ class RecitePage(host: MainActivity) : Page(host) {
         }
         bankStyleRow.tap { pickSkill() }
 
+        bankSize = Repo.bankBatchSize()
         buildChips()
         buildSourceChips()
+        buildSizeChips()
         buildBankChips()
         showSkill()
+    }
+
+    /** 抽题数：常用几档 + 全部。选完记住，下次进来还是这个。 */
+    private fun buildSizeChips() {
+        bankSizeRow.removeAllViews()
+        val options = listOf(5, 10, 20, 30, 0)
+        options.forEach { n ->
+            val chip = TextView(ctx).apply {
+                text = if (n == 0) {
+                    ctx.getString(R.string.bank_size_all)
+                } else {
+                    ctx.getString(R.string.bank_size, n)
+                }
+                textSize = 13f
+                setBackgroundResource(R.drawable.bg_chip)
+                setTextColor(ctx.getColorStateList(R.color.chip_text))
+                setPadding(14.dp, 7.dp, 14.dp, 7.dp)
+                isSelected = n == bankSize
+                layoutParams = LinearLayout.LayoutParams(-2, -2).apply { marginEnd = 8.dp }
+            }
+            chip.tap {
+                bankSize = n
+                Repo.setBankBatchSize(n)
+                for (i in 0 until bankSizeRow.childCount) {
+                    bankSizeRow.getChildAt(i).isSelected = i == options.indexOf(n)
+                }
+            }
+            bankSizeRow.addView(chip)
+        }
     }
 
     /** 讲解风格：目前只有「题库内置讲解」能选，名师风格要接 AI，先灰着。 */
@@ -258,6 +296,10 @@ class RecitePage(host: MainActivity) : Page(host) {
                 ms.sumOf { it.total() }.coerceAtLeast(1)
             ctx.getString(R.string.recite_stat, ms.size, acc)
         }
+
+        // 有存档才给「继续做题」，没存档时按钮直接不出现
+        val progress = Repo.bankProgress()
+        btnBankResume.show(progress != null && !progress.isEmpty())
 
         val bs = Repo.bankSessions()
         bankStat.text = if (bs.isEmpty()) {

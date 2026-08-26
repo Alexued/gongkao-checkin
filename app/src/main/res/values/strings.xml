@@ -177,6 +177,39 @@
     <string name="menu_delete">删除任务</string>
     <string name="menu_delete_confirm">删除「%1$s」？之前的打卡记录会保留。</string>
 
+    <string name="setting_end_date_note">设了之后倒计时按它算，之后不再生成任务</string>
+    <string name="sync_note">电脑和手机连同一个 Wi-Fi，用浏览器打开就能看</string>
+    <string name="device_sync_note">两台手机之间整份覆盖传输，需要对方确认</string>
+    <string name="about_intro">软件介绍</string>
+    <string name="about_intro_sub">在浏览器里打开项目介绍页</string>
+    <string name="about_intro_fail">没有可用的浏览器</string>
+    <string name="about_taps_left">再点 %1$d 下查看更新日志</string>
+    <string name="changelog_title">更新日志</string>
+    <string name="changelog_current">当前版本</string>
+    <string name="stat_days_expand">展开 %1$d 天</string>
+    <string name="stat_days_collapse">收起</string>
+    <string name="sync_switch">开启网页同步</string>
+
+    <string name="bank_start">开始做题</string>
+    <string name="bank_resume">继续做题</string>
+    <string name="bank_resume_sub">上次做到 %1$d/%2$d</string>
+    <string name="bank_size">%1$d 题</string>
+    <string name="bank_size_all">全部</string>
+    <string name="bank_save_ask_title">保存进度？</string>
+    <string name="bank_save_ask">已经做了 %1$d 题。保存后可以从「继续做题」接着做。</string>
+    <string name="bank_save_keep">保存并退出</string>
+    <string name="bank_save_drop">不保存</string>
+    <string name="bank_saved">进度已保存</string>
+    <string name="bank_sheet_title">答题卡</string>
+    <string name="bank_sheet_sub">已做 %1$d / %2$d，点题号跳转</string>
+    <string name="bank_sheet_open">答题卡</string>
+    <string name="bank_swipe_hint">左右滑动切换上下题</string>
+    <string name="bank_submit">交卷</string>
+    <string name="bank_submit_ask">还有 %1$d 题没做，确定交卷？</string>
+    <string name="bank_legend_right">■ 对</string>
+    <string name="bank_legend_wrong">■ 错</string>
+    <string name="bank_legend_blank">■ 未做</string>
+
     <string name="task_add_subtask">＋ 加一步</string>
     <string name="task_subtask_hint">这一步做什么</string>
     <string name="task_remove_subtask">×</string>

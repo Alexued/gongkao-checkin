@@ -36,6 +36,12 @@ class StatsPage(host: MainActivity) : Page(host) {
     private lateinit var timerCompareSub: TextView
     private lateinit var timerEmpty: TextView
     private lateinit var dayList: LinearLayout
+    private lateinit var dayHeader: View
+    private lateinit var dayToggle: TextView
+
+    /** 按天列表是否展开，持久化在 Settings 里。 */
+    private var daysExpanded = false
+    private var dayCount = 0
 
     /** 只在第一次绑定时播入场动效，数据刷新时直接落位。 */
     private var firstBind = true
@@ -59,6 +65,14 @@ class StatsPage(host: MainActivity) : Page(host) {
         chartRate.fixedMax = 100f
         heatmap.onPick = { date -> openDay(date) }
         heatmap.onLongPick = { date -> toggleMark(date) }
+
+        dayHeader = v.findViewById(R.id.dayHeader)
+        dayToggle = v.findViewById(R.id.dayToggle)
+        dayHeader.tap {
+            daysExpanded = !daysExpanded
+            Repo.setStatsDaysExpanded(daysExpanded)
+            paintDayList()
+        }
     }
 
     override fun refresh() {
@@ -81,7 +95,12 @@ class StatsPage(host: MainActivity) : Page(host) {
 
         bindRateChart()
         bindTimerChart()
-        bindDays(dates.take(14))
+
+        val recent = dates.take(14)
+        dayCount = recent.size
+        daysExpanded = Repo.read { it.settings.statsDaysExpanded }
+        bindDays(recent)
+        paintDayList()
 
         firstBind = false
     }
@@ -174,6 +193,16 @@ class StatsPage(host: MainActivity) : Page(host) {
 
         row.tap { openDay(date) }
         if (firstBind) Motion.stagger(row, index)
+    }
+
+    private fun paintDayList() {
+        dayList.show(daysExpanded && dayCount > 0)
+        dayHeader.show(dayCount > 0)
+        dayToggle.text = if (daysExpanded) {
+            ctx.getString(R.string.stat_days_collapse)
+        } else {
+            ctx.getString(R.string.stat_days_expand, dayCount)
+        }
     }
 
     private fun openDay(date: String) {

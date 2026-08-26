@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 答题卡：全屏遮罩 + 一张卡，卡里是题号网格 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <View
+        android:id="@+id/sheetScrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/sheetCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginHorizontal="24dp"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:text="@string/bank_sheet_title"
+            android:textColor="@color/ink"
+            android:textSize="17sp" />
+
+        <TextView
+            android:id="@+id/sheetSub"
+            style="@style/TextDim"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:maxHeight="360dp">
+
+            <GridLayout
+                android:id="@+id/sheetGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="6" />
+        </ScrollView>
+
+        <!-- 图例 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/legendRight"
+                style="@style/TextDim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="14dp" />
+
+            <TextView
+                android:id="@+id/legendWrong"
+                style="@style/TextDim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="14dp" />
+
+            <TextView
+                android:id="@+id/legendBlank"
+                style="@style/TextDim"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnSheetSubmit"
+            style="@style/BtnPrimary"
+            android:layout_width="match_parent"
+            android:layout_marginTop="18dp"
+            android:text="@string/bank_submit" />
+    </LinearLayout>
+</FrameLayout>

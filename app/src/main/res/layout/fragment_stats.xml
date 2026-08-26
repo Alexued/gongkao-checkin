@@ -151,19 +151,43 @@
                 android:visibility="gone" />
         </LinearLayout>
 
-        <!-- 最近的日子 -->
-        <TextView
-            style="@style/SectionTitle"
-            android:layout_marginStart="4dp"
+        <!-- 最近的日子：标题可点，整段折叠（14 条铺开太长） -->
+        <LinearLayout
+            android:id="@+id/dayHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="@string/stat_days" />
+            android:background="?android:attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingVertical="4dp">
+
+            <TextView
+                style="@style/SectionTitle"
+                android:layout_width="0dp"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:text="@string/stat_days" />
+
+            <TextView
+                android:id="@+id/dayToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/bg_pill_soft"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="5dp"
+                android:textColor="@color/accent"
+                android:textSize="12.5sp" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/dayList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:orientation="vertical" />
+            android:orientation="vertical"
+            android:visibility="gone" />
 
         <View
             android:layout_width="match_parent"

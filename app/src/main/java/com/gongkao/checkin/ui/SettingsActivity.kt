@@ -6,6 +6,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.gongkao.checkin.BuildConfig
 import com.gongkao.checkin.R
+import android.view.View
 import com.gongkao.checkin.data.AppMode
 import com.gongkao.checkin.data.DateUtil
 import com.gongkao.checkin.data.Repo
@@ -21,6 +22,10 @@ class SettingsActivity : ListScreen() {
 
     override fun title(): CharSequence = getString(R.string.settings)
 
+    /**
+     * 分区顺序按「多久动一次」排：模式和计划是偶尔改的，同步是要用时才找的，
+     * 更新和关于放最后。每区一个色标，扫一眼就知道换段了。
+     */
     override fun build() {
         modeSection()
         endDateSection()
@@ -37,7 +42,7 @@ class SettingsActivity : ListScreen() {
      * 所以不需要二次确认。切完要重建 MainActivity（tab 数量会变），故直接重启回首页。
      */
     private fun modeSection() {
-        section(getString(R.string.mode_section))
+        sectionColored(getString(R.string.mode_section), R.color.violet)
         val mode = Repo.appMode()
         row(
             title = getString(R.string.mode_exam),
@@ -68,7 +73,7 @@ class SettingsActivity : ListScreen() {
     // ------------------------------------------------------------ 更新
 
     private fun updateSection() {
-        section(getString(R.string.update_title))
+        sectionColored(getString(R.string.update_title), R.color.rose)
         row(
             title = getString(R.string.update_github),
             sub = getString(R.string.update_github_sub),
@@ -84,11 +89,15 @@ class SettingsActivity : ListScreen() {
     // ------------------------------------------------------------ 结束日
 
     private fun endDateSection() {
-        section(getString(R.string.setting_end_date))
+        sectionColored(
+            getString(R.string.setting_end_date),
+            R.color.accent,
+            getString(R.string.setting_end_date_note)
+        )
         val end = Repo.read { it.settings.endDate }
+        // 说明已经在分区标题下了，行里不再重复一遍
         row(
             title = end?.let { DateUtil.prettyStr(it) } ?: getString(R.string.setting_not_set),
-            sub = getString(R.string.setting_end_date_sub),
             value = if (end != null) getString(R.string.setting_clear) else null,
             chevron = end == null
         ) {
@@ -119,14 +128,18 @@ class SettingsActivity : ListScreen() {
     // ------------------------------------------------------------ 局域网同步
 
     private fun syncSection() {
-        section(getString(R.string.sync_title))
+        sectionColored(
+            getString(R.string.sync_title),
+            R.color.teal,
+            getString(R.string.sync_note)
+        )
         val on = Repo.read { it.settings.syncEnabled }
         val pin = Repo.read { it.settings.syncPin }
         val ip = LanInfo.ip(this)
 
+        // 标题在分区标题里已经有了，这行只留开关本身
         row(
-            title = getString(R.string.sync_title),
-            sub = getString(R.string.sync_sub),
+            title = getString(R.string.sync_switch),
             value = getString(if (on) R.string.sync_on else R.string.sync_off),
             chevron = true
         ) { toggleSync(!on) }
@@ -169,9 +182,21 @@ class SettingsActivity : ListScreen() {
     // ------------------------------------------------------------ 设备直连同步
 
     private var scanning = false
+    private var scanRow: View? = null
+
+    /** 只改「搜索附近设备」那一行的副标题，避免整页重建。 */
+    private fun paintScanRow() {
+        val sub = scanRow?.findViewById<TextView>(R.id.sSub) ?: return
+        sub.show(scanning)
+        if (scanning) sub.text = getString(R.string.device_sync_scanning)
+    }
 
     private fun deviceSyncSection() {
-        section(getString(R.string.device_sync_title))
+        sectionColored(
+            getString(R.string.device_sync_title),
+            R.color.amber,
+            getString(R.string.device_sync_note)
+        )
         val discoverable = Repo.read { it.settings.syncDiscoverable }
 
         row(
@@ -184,7 +209,8 @@ class SettingsActivity : ListScreen() {
             syncServiceRefresh()
         }
 
-        row(
+        // 扫描是个瞬时状态，只改这一行的副标题，不要整页 rebuild（会闪两遍错峰动画）
+        scanRow = row(
             title = getString(R.string.device_sync_scan),
             sub = if (scanning) getString(R.string.device_sync_scanning) else null,
             chevron = true
@@ -245,15 +271,15 @@ class SettingsActivity : ListScreen() {
             return
         }
         scanning = true
-        rebuild()
+        paintScanRow()
         val port = LanInfo.port()
         Thread {
             val found = runCatching { DeviceScan.scan(ip, port) }.getOrDefault(emptyList())
             runOnUiThread {
                 scanning = false
+                paintScanRow()
                 if (found.isEmpty()) {
                     toast(getString(R.string.device_sync_none_found))
-                    rebuild()
                 } else {
                     showDeviceList(found)
                 }
@@ -272,7 +298,6 @@ class SettingsActivity : ListScreen() {
             negative = getString(R.string.cancel),
             onPick = { index -> pickAction(devices[index]) }
         )
-        rebuild()
     }
 
     private fun pickAction(device: FoundDevice) {
@@ -363,9 +388,21 @@ class SettingsActivity : ListScreen() {
     // ------------------------------------------------------------ 关于
 
     private fun aboutSection() {
-        section(getString(R.string.setting_about))
+        sectionColored(getString(R.string.setting_about), R.color.ink_dim)
+
+        row(
+            title = getString(R.string.about_intro),
+            sub = getString(R.string.about_intro_sub),
+            chevron = true
+        ) { openIntroPage() }
+
+        // 版本号连点 5 下看更新日志，仿系统「开发者选项」那套
+        row(
+            title = getString(R.string.setting_version),
+            value = BuildConfig.VERSION_NAME
+        ) { tapVersion() }
+
         val box = card()
-        kv(getString(R.string.setting_version), BuildConfig.VERSION_NAME, box)
         val taskCount = Repo.read { it.tasks.count { t -> !t.archived } }
         val dayCount = Repo.read { it.days.size }
         kv(
@@ -373,5 +410,49 @@ class SettingsActivity : ListScreen() {
             getString(R.string.setting_counts, taskCount, dayCount),
             box
         )
+    }
+
+    private fun openIntroPage() {
+        runCatching {
+            startActivity(
+                android.content.Intent(
+                    android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse(INTRO_URL)
+                )
+            )
+        }.onFailure { toast(getString(R.string.about_intro_fail)) }
+    }
+
+    // ------------------------------------------------------------ 连点看更新日志
+
+    private var versionTaps = 0
+    private var lastTapAt = 0L
+
+    /**
+     * 连点 5 下版本号打开更新日志。第 2 下起提示还差几下；
+     * 间隔超过 [TAP_WINDOW_MS] 就重新数，避免误触慢慢攒够。
+     */
+    private fun tapVersion() {
+        val now = System.currentTimeMillis()
+        if (now - lastTapAt > TAP_WINDOW_MS) versionTaps = 0
+        lastTapAt = now
+        versionTaps++
+
+        val left = TAPS_NEEDED - versionTaps
+        when {
+            left <= 0 -> {
+                versionTaps = 0
+                open<ChangelogActivity>()
+            }
+            // 第 1 下不提示，避免正常浏览时冒出莫名其妙的 toast
+            versionTaps >= 2 -> toast(getString(R.string.about_taps_left, left))
+        }
+    }
+
+    private companion object {
+        const val TAPS_NEEDED = 5
+        // 2.5 秒：1.5 秒对正常手速偏紧，容易点到一半被清零
+        const val TAP_WINDOW_MS = 2500L
+        const val INTRO_URL = "https://alexued.github.io/gongkao-checkin/"
     }
 }

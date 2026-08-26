@@ -5,7 +5,7 @@
     android:background="@color/bg"
     android:orientation="vertical">
 
-    <!-- 顶栏：章节 + 进度 + 退出 -->
+    <!-- 顶栏：进度 + 答题卡 + 退出 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -37,6 +37,18 @@
         </LinearLayout>
 
         <TextView
+            android:id="@+id/btnSheet"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_pill_soft"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="8dp"
+            android:text="@string/bank_sheet_open"
+            android:textColor="@color/accent"
+            android:textSize="13sp" />
+
+        <TextView
             android:id="@+id/btnExit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -54,156 +66,13 @@
         android:layout_height="3dp"
         android:background="@color/accent" />
 
-    <ScrollView
-        android:id="@+id/scroller"
+    <!-- 一题一页，左右滑动切上下题 -->
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/questionPager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="16dp">
+        android:layout_weight="1" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <!-- 题面卡：出处 + 材料/表格 + 题干 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical"
-                android:padding="18dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/chapterText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/bg_pill_soft"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="4dp"
-                        android:textColor="@color/accent"
-                        android:textSize="11sp" />
-
-                    <TextView
-                        android:id="@+id/sourceText"
-                        style="@style/TextDim"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp" />
-                </LinearLayout>
-
-                <!-- 文字材料（61 题） -->
-                <TextView
-                    android:id="@+id/materialText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:lineSpacingExtra="5dp"
-                    android:textColor="@color/ink_sub"
-                    android:textSize="13.5sp"
-                    android:visibility="gone" />
-
-                <!-- 表格材料（4 题） -->
-                <com.gongkao.checkin.view.DataTableView
-                    android:id="@+id/tableView"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:visibility="gone" />
-
-                <TextView
-                    android:id="@+id/stemText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:fontFamily="sans-serif-medium"
-                    android:lineSpacingExtra="5dp"
-                    android:textColor="@color/ink"
-                    android:textSize="16.5sp" />
-            </LinearLayout>
-
-            <!-- 四个选项，代码里填充 -->
-            <LinearLayout
-                android:id="@+id/optionBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="vertical" />
-
-            <!-- 判定结果条 -->
-            <TextView
-                android:id="@+id/verdictText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/bg_pill_soft"
-                android:fontFamily="sans-serif-medium"
-                android:padding="14dp"
-                android:textSize="14.5sp"
-                android:visibility="gone" />
-
-            <!-- 技巧名 -->
-            <TextView
-                android:id="@+id/skillText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_card"
-                android:lineSpacingExtra="3dp"
-                android:padding="14dp"
-                android:textColor="@color/ink_sub"
-                android:textSize="13sp"
-                android:visibility="gone" />
-
-            <!-- 分步讲解，逐步 addView -->
-            <LinearLayout
-                android:id="@+id/stepBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" />
-
-            <!-- 没有分步数据的题（真题题库）：整段解析 -->
-            <LinearLayout
-                android:id="@+id/solutionCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical"
-                android:padding="16dp"
-                android:visibility="gone">
-
-                <TextView
-                    style="@style/TextDim"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/bank_solution" />
-
-                <TextView
-                    android:id="@+id/solutionText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:lineSpacingExtra="5dp"
-                    android:textColor="@color/ink"
-                    android:textSize="14sp" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="16dp" />
-        </LinearLayout>
-    </ScrollView>
-
-    <!-- 底部主按钮：未答时「跳过本题」，答完后「下一步讲解」/「下一题」 -->
     <LinearLayout
         android:id="@+id/actionRow"
         android:layout_width="match_parent"
@@ -218,6 +87,6 @@
             style="@style/BtnGhost"
             android:layout_width="match_parent"
             android:layout_height="54dp"
-            android:text="@string/bank_skip" />
+            android:text="@string/bank_swipe_hint" />
     </LinearLayout>
 </LinearLayout>

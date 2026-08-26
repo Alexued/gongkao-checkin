@@ -88,6 +88,54 @@ abstract class ListScreen : AppCompatActivity() {
         return tv
     }
 
+    /**
+     * 带色标的小节标题：左侧一根该分区的颜色竖条 + 标题 +（可选）说明。
+     * 设置页项目多，纯文字标题分不开区块，加个色标一眼就知道换段了。
+     */
+    protected fun sectionColored(
+        text: CharSequence,
+        colorRes: Int,
+        note: CharSequence? = null
+    ): View {
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = if (content.childCount == 0) 0 else 22.dp
+                bottomMargin = 10.dp
+                marginStart = 4.dp
+            }
+        }
+        val head = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            layoutParams = LinearLayout.LayoutParams(-1, -2)
+        }
+        head.addView(View(this).apply {
+            setBackgroundColor(getColor(colorRes))
+            layoutParams = LinearLayout.LayoutParams(3.dp, 15.dp).apply { marginEnd = 9.dp }
+        })
+        head.addView(TextView(this).apply {
+            this.text = text
+            setTextColor(getColor(R.color.ink))
+            textSize = 15f
+            typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+        })
+        box.addView(head)
+        if (note != null) {
+            box.addView(TextView(this).apply {
+                this.text = note
+                setTextColor(getColor(R.color.ink_dim))
+                textSize = 11.5f
+                layoutParams = LinearLayout.LayoutParams(-1, -2).apply {
+                    topMargin = 5.dp
+                    marginStart = 12.dp
+                }
+            })
+        }
+        content.addView(box)
+        return box
+    }
+
     /** 一行「标题 / 副标题 / 右值」的卡片，可点。 */
     protected fun row(
         title: CharSequence,

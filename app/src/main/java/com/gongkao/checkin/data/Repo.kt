@@ -388,6 +388,8 @@ object Repo {
     }
     fun pomodoroSessions(): List<PomodoroSession> = read { it.pomodoroSessions.toList() }
 
+    fun setStatsDaysExpanded(on: Boolean) = edit { st -> st.settings.statsDaysExpanded = on }
+
     fun setBankSource(id: String) = edit { st -> st.settings.bankSourceId = id }
     fun setReviewSkill(id: String) = edit { st -> st.settings.reviewSkillId = id }
 
@@ -397,6 +399,22 @@ object Repo {
             st.bankSessions.subList(MAX_SESSIONS, st.bankSessions.size).clear()
     }
     fun bankSessions(): List<BankSession> = read { it.bankSessions.toList() }
+
+    // ---------------------------------------------------------------- 复盘存档
+
+    fun bankProgress(): BankProgress? = read { it.bankProgress }
+
+    fun saveBankProgress(p: BankProgress) = edit { st ->
+        p.savedAt = System.currentTimeMillis()
+        st.bankProgress = p
+    }
+
+    fun clearBankProgress() = edit { st -> st.bankProgress = null }
+
+    /** 每次抽题数量，记住上次选的。 */
+    fun bankBatchSize(): Int = read { it.settings.bankBatchSize }
+
+    fun setBankBatchSize(n: Int) = edit { st -> st.settings.bankBatchSize = n }
 
     fun newId(): String = UUID.randomUUID().toString()
 

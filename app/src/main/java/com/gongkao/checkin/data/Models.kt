@@ -216,6 +216,27 @@ data class BankSession(
     fun durationMs(): Long = items.sumOf { it.ms }
 }
 
+/**
+ * 一份没做完的复盘存档。只留一份——「继续做题」是接着上次那次，
+ * 存多份就得让用户选，反而更麻烦。
+ */
+data class BankProgress(
+    var sourceId: String = "curated",
+    var chapter: String = "全部",
+    /** 抽出来的题 id，顺序就是做题顺序，续做时照原顺序 */
+    var questionIds: MutableList<String> = mutableListOf(),
+    /** 已作答：题 id → 选的选项字母 */
+    var answers: MutableMap<String, String> = mutableMapOf(),
+    /** 上次停在第几题（下标） */
+    var cursor: Int = 0,
+    var startAt: Long = 0,
+    var savedAt: Long = 0
+) {
+    fun total() = questionIds.size
+    fun answered() = answers.size
+    fun isEmpty() = questionIds.isEmpty()
+}
+
 const val POMODORO_WORK = "WORK"
 const val POMODORO_SHORT_BREAK = "SHORT_BREAK"
 const val POMODORO_LONG_BREAK = "LONG_BREAK"
@@ -248,6 +269,10 @@ data class Settings(
     var reviewSkillId: String = "builtin",
     /** 使用模式（AppMode.id）：exam=考公，general=通用 */
     var appMode: String = "exam",
+    /** 统计页「按天查看」是否展开（默认收起，14 条铺开太长） */
+    var statsDaysExpanded: Boolean = false,
+    /** 复盘每次抽几题 */
+    var bankBatchSize: Int = 10,
     /** 日历上标记的重要日/考试日，yyyy-MM-dd */
     var markDate: String? = null
 )
@@ -263,5 +288,7 @@ class AppState {
     var mentalMathSessions: MutableList<MentalMathSession> = mutableListOf()
     var pomodoroSessions: MutableList<PomodoroSession> = mutableListOf()
     var bankSessions: MutableList<BankSession> = mutableListOf()
+    /** 没做完的复盘存档，null 表示没有；「继续做题」按钮按它显隐 */
+    var bankProgress: BankProgress? = null
     var lastRolledDate: String? = null
 }

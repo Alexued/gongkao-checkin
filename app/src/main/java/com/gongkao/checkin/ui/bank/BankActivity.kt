@@ -2,24 +2,23 @@ package com.gongkao.checkin.ui.bank
 
 import android.graphics.Typeface
 import android.os.Bundle
-import android.text.SpannableString
-import android.text.Spanned
-import android.text.style.ForegroundColorSpan
-import android.text.style.StrikethroughSpan
-import android.text.style.StyleSpan
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import android.widget.GridLayout
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.dynamicanimation.animation.DynamicAnimation
+import androidx.viewpager.widget.PagerAdapter
+import androidx.viewpager.widget.ViewPager
 import com.gongkao.checkin.R
 import com.gongkao.checkin.anim.Motion
 import com.gongkao.checkin.data.BankData
 import com.gongkao.checkin.data.BankItemRecord
+import com.gongkao.checkin.data.BankProgress
 import com.gongkao.checkin.data.BankQuestion
 import com.gongkao.checkin.data.BankSession
 import com.gongkao.checkin.data.BankSource
@@ -27,70 +26,54 @@ import com.gongkao.checkin.data.BankSources
 import com.gongkao.checkin.data.DateUtil
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.AppDialog
+import com.gongkao.checkin.ui.AppListDialog
+import com.gongkao.checkin.ui.DialogRow
+import com.gongkao.checkin.ui.Popup
 import com.gongkao.checkin.ui.dp
 import com.gongkao.checkin.ui.edgeToEdge
-import com.gongkao.checkin.ui.inflateChild
 import com.gongkao.checkin.ui.padBottomInset
 import com.gongkao.checkin.ui.padTopInset
 import com.gongkao.checkin.ui.show
 import com.gongkao.checkin.ui.tap
+import com.gongkao.checkin.ui.toast
 import com.gongkao.checkin.ui.transparentBlack
 import com.gongkao.checkin.view.CelebrationView
-import com.gongkao.checkin.view.DataTableView
 
 /**
- * 资料分析技巧复盘：材料/表格 + 题干 → 选 ABCD 立即判对错 → 逐步放出讲解步骤
- * （每步划掉被排除的选项、高亮关键数字，pick 那步落到正确答案）。
- * mode = FULL 按顺序，RANDOM 打乱；chapter 限定章节。记录只进本功能自己的历史，不进每日统计。
+ * 资料分析复盘的做题页。一题一页可左右滑，答题卡看进度，退出时可存档续做。
+ *
+ * 三种进入方式：新开一轮（chapter+source+size）、续做存档（resume=1）、
+ * 从搜索结果单题复盘（questionId）。
  */
 class BankActivity : AppCompatActivity() {
 
     private lateinit var root: FrameLayout
     private lateinit var celebration: CelebrationView
-    private lateinit var scroller: ScrollView
+    private lateinit var pager: ViewPager
     private lateinit var modeText: TextView
     private lateinit var progressText: TextView
     private lateinit var progressBar: View
-    private lateinit var chapterText: TextView
-    private lateinit var sourceText: TextView
-    private lateinit var materialText: TextView
-    private lateinit var tableView: DataTableView
-    private lateinit var stemText: TextView
-    private lateinit var optionBox: LinearLayout
-    private lateinit var verdictText: TextView
-    private lateinit var skillText: TextView
-    private lateinit var stepBox: LinearLayout
-    private lateinit var solutionCard: LinearLayout
-    private lateinit var solutionText: TextView
     private lateinit var btnAction: TextView
+    private lateinit var btnSheet: TextView
 
-    private var mode = "FULL"
-    private var chapter = BankData.ALL
     private lateinit var source: BankSource
-    private var queue: List<BankQuestion> = emptyList()
-    private var cursor = 0
-    /** 从搜索结果点进来时只复盘这一题 */
+    private var chapter = BankData.ALL
     private var singleId: String? = null
-    /** 本题没有分步数据时，solution 全文是否已展开 */
-    private var solutionShown = false
+    private var resuming = false
 
+    private var queue: List<BankQuestion> = emptyList()
+    /** 题 id → 选的选项。答题卡和存档都看它。 */
+    private val answers = linkedMapOf<String, String>()
+    private val pages = mutableMapOf<Int, BankQuestionView>()
     private var sessionStart = 0L
-    private var itemStart = 0L
-    private var answered = false
-    private var stepShown = 0
-    private val items = mutableListOf<BankItemRecord>()
-
-    /** 选项字母 → 那一行的视图，讲解时要回头改它们的样式。 */
-    private val optionRows = mutableMapOf<String, View>()
+    private var saved = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         edgeToEdge()
         Repo.init(this)
-        mode = intent.getStringExtra("mode") ?: "FULL"
-        chapter = intent.getStringExtra("chapter") ?: BankData.ALL
-        source = BankSources.byId(intent.getStringExtra("source"))
         singleId = intent.getStringExtra("questionId")
+        resuming = intent.getStringExtra("resume") == "1"
 
         root = FrameLayout(this)
         layoutInflater.inflate(R.layout.activity_bank, root, true)
@@ -102,338 +85,300 @@ class BankActivity : AppCompatActivity() {
         setContentView(root)
 
         bind()
-        // targetSdk 36 走预测式返回，onBackPressed 不再回调，必须注册 callback
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() = askQuit()
         })
 
-        // 真题题库 2.3MB，解析放后台；加载完才开始出题
+        val stored = if (resuming) Repo.bankProgress() else null
+        source = when {
+            stored != null -> BankSources.byId(stored.sourceId)
+            else -> BankSources.byId(intent.getStringExtra("source"))
+        }
+        chapter = stored?.chapter ?: intent.getStringExtra("chapter") ?: BankData.ALL
+
         modeText.text = getString(R.string.bank_loading)
         btnAction.isEnabled = false
         btnAction.alpha = 0.4f
         BankData.loadAsync(this, source) { all ->
             if (isFinishing || isDestroyed) return@loadAsync
-            startRound(all)
+            start(all, stored)
         }
-    }
-
-    private fun startRound(all: List<BankQuestion>) {
-        val id = singleId
-        queue = if (id != null) {
-            all.filter { it.id == id }
-        } else {
-            val pool = BankData.byChapter(all, chapter)
-            if (mode == "RANDOM") pool.shuffled() else pool
-        }
-        if (queue.isEmpty()) {
-            finish()
-            return
-        }
-        btnAction.isEnabled = true
-        btnAction.alpha = 1f
-        sessionStart = System.currentTimeMillis()
-        modeText.text = when {
-            singleId != null -> getString(R.string.bank_single)
-            mode == "RANDOM" -> getString(R.string.mode_random)
-            else -> getString(R.string.mode_full)
-        }
-        showItem()
     }
 
     private fun bind() {
         val page = root.getChildAt(0) as ViewGroup
         page.getChildAt(0).padTopInset()
-        scroller = findViewById(R.id.scroller)
+        pager = findViewById(R.id.questionPager)
         modeText = findViewById(R.id.modeText)
         progressText = findViewById(R.id.progressText)
         progressBar = findViewById(R.id.progressBar)
-        chapterText = findViewById(R.id.chapterText)
-        sourceText = findViewById(R.id.sourceText)
-        materialText = findViewById(R.id.materialText)
-        tableView = findViewById(R.id.tableView)
-        stemText = findViewById(R.id.stemText)
-        optionBox = findViewById(R.id.optionBox)
-        verdictText = findViewById(R.id.verdictText)
-        skillText = findViewById(R.id.skillText)
-        stepBox = findViewById(R.id.stepBox)
-        solutionCard = findViewById(R.id.solutionCard)
-        solutionText = findViewById(R.id.solutionText)
         btnAction = findViewById(R.id.btnAction)
+        btnSheet = findViewById(R.id.btnSheet)
         findViewById<LinearLayout>(R.id.actionRow).padBottomInset(18.dp)
 
         findViewById<TextView>(R.id.btnExit).tap { askQuit() }
+        btnSheet.tap { showSheet() }
         btnAction.tap { onAction() }
         progressBar.pivotX = 0f
     }
 
-    // ------------------------------------------------------------ 出题
+    // ------------------------------------------------------------ 组卷
 
-    private fun showItem() {
-        answered = false
-        stepShown = 0
-        solutionShown = false
-        itemStart = System.currentTimeMillis()
-        val q = queue[cursor]
-
-        chapterText.text = q.chapter
-        sourceText.text = q.source
-        sourceText.show(q.source.isNotBlank())
-        stemText.text = q.stem
-        progressText.text = getString(R.string.progress_of, cursor + 1, queue.size)
-
-        val hasMaterial = q.material.isNotBlank()
-        materialText.show(hasMaterial)
-        if (hasMaterial) materialText.text = q.material
-        val t = q.table
-        tableView.show(t != null)
-        if (t != null) tableView.bind(t)
-
-        verdictText.show(false)
-        skillText.show(false)
-        solutionCard.show(false)
-        stepBox.removeAllViews()
-        buildOptions(q)
-
-        btnAction.text = getString(R.string.bank_skip)
-        btnAction.setBackgroundResource(R.drawable.bg_btn_ghost)
-        btnAction.setTextColor(getColor(R.color.ink_sub))
-
-        scroller.scrollTo(0, 0)
-        stemText.alpha = 0f
-        stemText.translationY = 12f.dp
-        stemText.animate().alpha(1f).translationY(0f)
-            .setDuration(340).setInterpolator(Motion.SOFT).start()
-        Motion.springTo(progressBar, DynamicAnimation.SCALE_X, cursor.toFloat() / queue.size)
-    }
-
-    private fun buildOptions(q: BankQuestion) {
-        optionBox.removeAllViews()
-        optionRows.clear()
-        q.optionList().forEachIndexed { i, (key, text) ->
-            val row = optionBox.inflateChild(R.layout.item_bank_option)
-            row.findViewById<TextView>(R.id.optKey).text = key
-            row.findViewById<TextView>(R.id.optText).text = text
-            row.findViewById<TextView>(R.id.optMark).show(false)
-            row.tap { pick(key) }
-            optionBox.addView(row)
-            optionRows[key] = row
-            Motion.stagger(row, i)
-        }
-    }
-
-    // ------------------------------------------------------------ 作答
-
-    private fun pick(key: String) {
-        if (answered) return
-        answered = true
-        val q = queue[cursor]
-        val correct = key == q.answer
-
-        items.add(
-            BankItemRecord(
-                bankId = q.id,
-                title = q.stem,
-                picked = key,
-                answer = q.answer,
-                correct = correct,
-                ms = System.currentTimeMillis() - itemStart
-            )
-        )
-
-        optionRows.forEach { (k, row) ->
-            row.isClickable = false
-            when {
-                k == q.answer -> markOption(row, R.drawable.bg_option_correct, R.color.teal, getString(R.string.bank_mark_answer))
-                k == key -> markOption(row, R.drawable.bg_option_wrong, R.color.rose, getString(R.string.bank_mark_picked))
+    private fun start(all: List<BankQuestion>, stored: BankProgress?) {
+        val id = singleId
+        queue = when {
+            id != null -> all.filter { it.id == id }
+            stored != null -> {
+                // 按存档里的顺序还原，题库里已经没有的 id 直接跳过
+                val byId = all.associateBy { it.id }
+                stored.questionIds.mapNotNull { byId[it] }
+            }
+            else -> {
+                val pool = BankData.byChapter(all, chapter).shuffled()
+                val size = intent.getStringExtra("size")?.toIntOrNull() ?: Repo.bankBatchSize()
+                if (size <= 0) pool else pool.take(size)
             }
         }
-
-        verdictText.show(true)
-        verdictText.text = if (correct) {
-            getString(R.string.bank_verdict_right)
-        } else {
-            getString(R.string.bank_verdict_wrong, q.answer)
-        }
-        verdictText.setTextColor(getColor(if (correct) R.color.teal else R.color.rose))
-        fadeIn(verdictText)
-
-        skillText.show(true)
-        skillText.text = getString(R.string.bank_skill, q.skill)
-        fadeIn(skillText, delay = 80)
-
-        val row = optionRows[key]
-        if (row != null) {
-            if (correct) Motion.confirm(row) else Motion.reject(row)
-        }
-        if (correct) {
-            val me = IntArray(2)
-            val base = IntArray(2)
-            row?.getLocationInWindow(me)
-            root.getLocationInWindow(base)
-            if (row != null) {
-                celebration.burstAt(
-                    me[0] - base[0] + row.width / 2f,
-                    me[1] - base[1] + row.height / 2f,
-                    10
-                )
-            }
-        }
-
-        advanceAction()
-    }
-
-    private fun markOption(row: View, bg: Int, colorRes: Int, mark: String) {
-        row.setBackgroundResource(bg)
-        row.findViewById<TextView>(R.id.optMark).apply {
-            show(true)
-            text = mark
-            setTextColor(getColor(colorRes))
-        }
-        row.findViewById<TextView>(R.id.optKey).setTextColor(getColor(colorRes))
-    }
-
-    // ------------------------------------------------------------ 分步讲解
-
-    /**
-     * 底部按钮：还有讲解步骤就放下一步，放完了就进下一题。
-     * 真题题库没有分步数据，改成一次展开 solution 全文。
-     */
-    private fun onAction() {
-        if (!answered) {
-            skip()
+        if (queue.isEmpty()) {
+            toast(getString(R.string.bank_search_none))
+            finish()
             return
         }
-        val q = queue[cursor]
+
+        answers.clear()
+        if (stored != null) {
+            // 只回填仍在题里的作答
+            val live = queue.map { it.id }.toSet()
+            stored.answers.forEach { (qid, picked) -> if (qid in live) answers[qid] = picked }
+        }
+        sessionStart = stored?.startAt?.takeIf { it > 0 } ?: System.currentTimeMillis()
+
+        btnAction.isEnabled = true
+        btnAction.alpha = 1f
+        modeText.text = when {
+            singleId != null -> getString(R.string.bank_single)
+            stored != null -> getString(R.string.bank_resume)
+            else -> getString(R.string.bank_start)
+        }
+        btnSheet.show(singleId == null)
+
+        pager.adapter = QuestionAdapter()
+        pager.addOnPageChangeListener(pageListener)
+        val startAt = (stored?.cursor ?: 0).coerceIn(0, queue.size - 1)
+        pager.setCurrentItem(startAt, false)
+        paintHeader(startAt)
+    }
+
+    private inner class QuestionAdapter : PagerAdapter() {
+
+        override fun getCount() = queue.size
+
+        override fun isViewFromObject(view: View, obj: Any) = view === obj
+
+        override fun instantiateItem(container: ViewGroup, position: Int): Any {
+            val q = queue[position]
+            val holder = BankQuestionView(this@BankActivity, q, answers[q.id]) { qid, picked, correct ->
+                answers[qid] = picked
+                onAnswer(correct)
+            }
+            pages[position] = holder
+            container.addView(holder.root, ViewGroup.LayoutParams(-1, -1))
+            return holder.root
+        }
+
+        override fun destroyItem(container: ViewGroup, position: Int, obj: Any) {
+            container.removeView(obj as View)
+            pages.remove(position)
+        }
+    }
+
+    private val pageListener = object : ViewPager.SimpleOnPageChangeListener() {
+        override fun onPageSelected(position: Int) = paintHeader(position)
+    }
+
+    // ------------------------------------------------------------ 头部与按钮
+
+    private fun paintHeader(position: Int) {
+        progressText.text = getString(R.string.progress_of, position + 1, queue.size)
+        Motion.springTo(
+            progressBar, DynamicAnimation.SCALE_X,
+            (answers.size.toFloat() / queue.size).coerceIn(0f, 1f)
+        )
+        paintAction(position)
+    }
+
+    private fun paintAction(position: Int) {
+        val holder = pages[position]
+        val last = position == queue.size - 1
         when {
-            q.anim.isNotEmpty() && stepShown < q.anim.size -> revealStep()
-            q.anim.isEmpty() && !solutionShown -> revealSolution()
-            else -> next()
-        }
-    }
-
-    /** 没有分步数据的题：直接把整段解析摊开。 */
-    private fun revealSolution() {
-        solutionShown = true
-        solutionText.text = queue[cursor].solution
-        solutionCard.show(true)
-        fadeIn(solutionCard)
-        solutionCard.post { scroller.smoothScrollTo(0, scroller.getChildAt(0).height) }
-        advanceAction()
-    }
-
-    private fun revealStep() {
-        val q = queue[cursor]
-        val step = q.anim[stepShown]
-        stepShown++
-
-        val card = stepBox.inflateChild(R.layout.item_bank_step)
-        card.findViewById<TextView>(R.id.stepIndex).text = stepShown.toString()
-        card.findViewById<TextView>(R.id.stepTitle).text = step.t
-        card.findViewById<TextView>(R.id.stepBody).text = highlightFacts(step.b, step.facts)
-        stepBox.addView(card)
-        card.alpha = 0f
-        card.translationY = 16f.dp
-        card.animate().alpha(1f).translationY(0f)
-            .setDuration(340).setInterpolator(Motion.SOFT).start()
-
-        step.kill.forEach { killOption(it) }
-        if (step.pick) optionRows[q.answer]?.let { Motion.confirm(it) }
-
-        card.post { scroller.smoothScrollTo(0, scroller.getChildAt(0).height) }
-        advanceAction()
-    }
-
-    /** 讲解里被排除的选项：划掉并压暗。正确答案不会被划。 */
-    private fun killOption(key: String) {
-        val row = optionRows[key] ?: return
-        if (key == queue[cursor].answer) return
-        val text = row.findViewById<TextView>(R.id.optText)
-        val raw = text.text.toString()
-        text.text = SpannableString(raw).apply {
-            setSpan(StrikethroughSpan(), 0, raw.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-        row.animate().alpha(0.45f).setDuration(260).setInterpolator(Motion.SOFT).start()
-    }
-
-    /** 讲解正文里的关键数字标成强调色，方便对着材料找。 */
-    private fun highlightFacts(body: String, facts: List<String>): CharSequence {
-        if (facts.isEmpty()) return body
-        val sp = SpannableString(body)
-        val accent = getColor(R.color.accent_deep)
-        facts.filter { it.isNotBlank() }.forEach { fact ->
-            var from = 0
-            while (true) {
-                val at = body.indexOf(fact, from)
-                if (at < 0) break
-                sp.setSpan(ForegroundColorSpan(accent), at, at + fact.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                sp.setSpan(StyleSpan(Typeface.BOLD), at, at + fact.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                from = at + fact.length
+            holder == null -> btnAction.text = getString(R.string.bank_swipe_hint)
+            holder.answered == null -> {
+                btnAction.text = getString(R.string.bank_swipe_hint)
+                btnAction.setBackgroundResource(R.drawable.bg_btn_ghost)
+                btnAction.setTextColor(getColor(R.color.ink_sub))
+            }
+            holder.hasMoreExplain() -> {
+                btnAction.text = holder.explainLabel()
+                btnAction.setBackgroundResource(R.drawable.bg_btn_primary)
+                btnAction.setTextColor(getColor(R.color.surface))
+            }
+            last -> {
+                btnAction.text = getString(R.string.bank_submit)
+                btnAction.setBackgroundResource(R.drawable.bg_btn_primary)
+                btnAction.setTextColor(getColor(R.color.surface))
+            }
+            else -> {
+                btnAction.text = getString(R.string.bank_next_question)
+                btnAction.setBackgroundResource(R.drawable.bg_btn_primary)
+                btnAction.setTextColor(getColor(R.color.surface))
             }
         }
-        return sp
     }
 
-    /** 按钮文案随剩余步骤变化。 */
-    private fun advanceAction() {
-        val q = queue[cursor]
-        val last = cursor == queue.size - 1
-        btnAction.setBackgroundResource(R.drawable.bg_btn_primary)
-        btnAction.setTextColor(getColor(R.color.surface))
-        btnAction.text = when {
-            q.anim.isNotEmpty() && stepShown < q.anim.size ->
-                getString(R.string.bank_next_step, stepShown + 1, q.anim.size)
-            q.anim.isEmpty() && !solutionShown -> getString(R.string.bank_show_solution)
-            last -> getString(R.string.bank_finish)
-            else -> getString(R.string.bank_next_question)
+    private fun onAction() {
+        val pos = pager.currentItem
+        val holder = pages[pos] ?: return
+        when {
+            holder.answered == null -> Unit // 还没选，按钮只是提示滑动
+            holder.hasMoreExplain() -> {
+                holder.explainNext()
+                paintAction(pos)
+            }
+            pos < queue.size - 1 -> pager.setCurrentItem(pos + 1, true)
+            else -> submit()
         }
     }
 
-    /** 跳过：不记录作答，直接进下一题。 */
-    private fun skip() {
-        items.add(
-            BankItemRecord(
-                bankId = queue[cursor].id,
-                title = queue[cursor].stem,
-                picked = "",
-                answer = queue[cursor].answer,
-                correct = false,
-                ms = System.currentTimeMillis() - itemStart
+    private fun onAnswer(correct: Boolean) {
+        val pos = pager.currentItem
+        paintHeader(pos)
+        if (correct) {
+            val holder = pages[pos] ?: return
+            val loc = IntArray(2)
+            val base = IntArray(2)
+            holder.root.getLocationInWindow(loc)
+            root.getLocationInWindow(base)
+            celebration.burstAt(
+                (loc[0] - base[0] + holder.root.width / 2f),
+                (loc[1] - base[1] + holder.root.height * 0.4f),
+                10
             )
-        )
-        next()
+        }
     }
 
-    private fun next() {
-        cursor++
-        if (cursor >= queue.size) finishRound() else showItem()
+    // ------------------------------------------------------------ 答题卡
+
+    private fun showSheet() {
+        val v = layoutInflater.inflate(R.layout.dialog_bank_sheet, null)
+        val scrim = v.findViewById<View>(R.id.sheetScrim)
+        val card = v.findViewById<View>(R.id.sheetCard)
+        val grid = v.findViewById<GridLayout>(R.id.sheetGrid)
+        val d = Popup.dialog(this, v)
+        Popup.wireDismiss(d, scrim, card)
+
+        v.findViewById<TextView>(R.id.sheetSub).text =
+            getString(R.string.bank_sheet_sub, answers.size, queue.size)
+        v.findViewById<TextView>(R.id.legendRight).setText(R.string.bank_legend_right)
+        v.findViewById<TextView>(R.id.legendWrong).setText(R.string.bank_legend_wrong)
+        v.findViewById<TextView>(R.id.legendBlank).setText(R.string.bank_legend_blank)
+
+        queue.forEachIndexed { i, q ->
+            val picked = answers[q.id]
+            val cell = TextView(this).apply {
+                text = (i + 1).toString()
+                textSize = 13.5f
+                gravity = Gravity.CENTER
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                setBackgroundResource(
+                    when {
+                        picked == null -> R.drawable.bg_option
+                        picked == q.answer -> R.drawable.bg_option_correct
+                        else -> R.drawable.bg_option_wrong
+                    }
+                )
+                setTextColor(
+                    getColor(
+                        when {
+                            picked == null -> R.color.ink_sub
+                            picked == q.answer -> R.color.teal
+                            else -> R.color.rose
+                        }
+                    )
+                )
+                // 当前题加一圈提示，知道自己在哪
+                if (i == pager.currentItem) {
+                    setTypeface(typeface, Typeface.BOLD)
+                }
+                layoutParams = GridLayout.LayoutParams().apply {
+                    width = 44.dp
+                    height = 44.dp
+                    setMargins(5.dp, 5.dp, 5.dp, 5.dp)
+                }
+                tap {
+                    Popup.close(d)
+                    pager.setCurrentItem(i, true)
+                }
+            }
+            grid.addView(cell)
+        }
+
+        v.findViewById<TextView>(R.id.btnSheetSubmit).tap {
+            Popup.close(d)
+            submit()
+        }
+        d.show()
+        Popup.enter(scrim, card)
     }
 
-    private fun fadeIn(v: View, delay: Long = 0) {
-        v.alpha = 0f
-        v.translationY = 10f.dp
-        v.animate().alpha(1f).translationY(0f)
-            .setStartDelay(delay).setDuration(320).setInterpolator(Motion.SOFT).start()
-    }
+    // ------------------------------------------------------------ 交卷 / 存档
 
-    // ------------------------------------------------------------ 收尾
+    private fun submit() {
+        val blank = queue.size - answers.size
+        if (blank > 0) {
+            AppDialog.show(
+                ctx = this,
+                title = getString(R.string.bank_submit),
+                message = getString(R.string.bank_submit_ask, blank),
+                positive = getString(R.string.bank_submit),
+                negative = getString(R.string.cancel)
+            ) { finishRound() }
+        } else {
+            finishRound()
+        }
+    }
 
     private fun finishRound() {
         val now = System.currentTimeMillis()
-        val session = BankSession(
-            id = Repo.newId(),
-            mode = mode,
-            chapter = chapter,
-            date = DateUtil.todayStr(),
-            startAt = sessionStart,
-            endAt = now,
-            items = items.toMutableList()
+        val items = queue.map { q ->
+            val picked = answers[q.id].orEmpty()
+            BankItemRecord(
+                bankId = q.id,
+                title = q.stem,
+                picked = picked,
+                answer = q.answer,
+                correct = picked == q.answer,
+                ms = 0
+            )
+        }.toMutableList()
+
+        Repo.addBankSession(
+            BankSession(
+                id = Repo.newId(),
+                mode = if (resuming) "RESUME" else "RANDOM",
+                chapter = chapter,
+                date = DateUtil.todayStr(),
+                startAt = sessionStart,
+                endAt = now,
+                items = items
+            )
         )
-        Repo.addBankSession(session)
-        Motion.springTo(progressBar, DynamicAnimation.SCALE_X, 1f)
-        showResult(session, now)
+        // 交完卷这份存档就没用了
+        Repo.clearBankProgress()
+        saved = true
+        showResult(items.count { it.correct }, items.size, now)
     }
 
-    private fun showResult(s: BankSession, endAt: Long) {
+    private fun showResult(correct: Int, total: Int, endAt: Long) {
         val scrim = FrameLayout(this).apply {
             layoutParams = FrameLayout.LayoutParams(-1, -1)
             setBackgroundColor(transparentBlack(0.42f))
@@ -445,7 +390,7 @@ class BankActivity : AppCompatActivity() {
             setBackgroundResource(R.drawable.bg_card)
             setPadding(22.dp, 24.dp, 22.dp, 20.dp)
             layoutParams = FrameLayout.LayoutParams(-1, -2).apply {
-                gravity = android.view.Gravity.CENTER
+                gravity = Gravity.CENTER
                 marginStart = 28.dp
                 marginEnd = 28.dp
             }
@@ -456,38 +401,72 @@ class BankActivity : AppCompatActivity() {
         cardBox.addView(
             subText(
                 getString(
-                    R.string.round_result,
-                    s.correctCount(), s.total(), DateUtil.human(endAt - s.startAt)
+                    R.string.round_result, correct, total,
+                    DateUtil.human(endAt - sessionStart)
                 )
             )
         )
-        cardBox.addView(actionBtn(getString(R.string.again), primary = true) { restart(scrim) })
-        cardBox.addView(actionBtn(getString(R.string.back_home), primary = false) { finish() })
+        cardBox.addView(actionBtn(getString(R.string.back_home), primary = true) { finish() })
         scrim.addView(cardBox)
         root.addView(scrim)
 
         scrim.animate().alpha(1f).setDuration(240).setInterpolator(Motion.EMPHASIZED).start()
         Motion.springTo(cardBox, DynamicAnimation.SCALE_X, 1f, stiffness = 520f, damping = 0.62f)
         Motion.springTo(cardBox, DynamicAnimation.SCALE_Y, 1f, stiffness = 520f, damping = 0.62f)
-        if (s.correctCount() == s.total() && s.total() > 0) {
+        if (correct == total && total > 0) {
             celebration.celebrate(root.width / 2f, root.height * 0.4f)
         }
     }
 
-    private fun restart(scrim: View) {
-        root.removeView(scrim)
-        items.clear()
-        cursor = 0
-        // 这时题库必然已在缓存里，loadAsync 会同步回调
-        BankData.loadAsync(this, source) { all -> startRound(all) }
+    /**
+     * 退出前问要不要存档。单题复盘和一题没做的直接走，没什么可存的。
+     */
+    private fun askQuit() {
+        if (saved || singleId != null || answers.isEmpty()) {
+            finish()
+            return
+        }
+        // 三条出路（存档走 / 丢弃走 / 不走），AppDialog 只有一个回调，所以用列表弹层
+        AppListDialog.show(
+            ctx = this,
+            title = getString(R.string.bank_save_ask_title),
+            rows = listOf(
+                DialogRow(
+                    title = getString(R.string.bank_save_keep),
+                    sub = getString(R.string.bank_save_ask, answers.size)
+                ),
+                DialogRow(title = getString(R.string.bank_save_drop))
+            ),
+            negative = getString(R.string.cancel),
+            onPick = { index ->
+                if (index == 0) saveProgress() else finish()
+            }
+        )
     }
+
+    private fun saveProgress() {
+        Repo.saveBankProgress(
+            BankProgress(
+                sourceId = source.id,
+                chapter = chapter,
+                questionIds = queue.map { it.id }.toMutableList(),
+                answers = LinkedHashMap(answers),
+                cursor = pager.currentItem,
+                startAt = sessionStart
+            )
+        )
+        toast(getString(R.string.bank_saved))
+        finish()
+    }
+
+    // ------------------------------------------------------------ 结果卡的小组件
 
     private fun bigText(t: CharSequence) = TextView(this).apply {
         text = t
         textSize = 21f
         setTextColor(getColor(R.color.ink))
         typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-        gravity = android.view.Gravity.CENTER
+        gravity = Gravity.CENTER
         layoutParams = LinearLayout.LayoutParams(-1, -2)
     }
 
@@ -495,7 +474,7 @@ class BankActivity : AppCompatActivity() {
         text = t
         textSize = 13f
         setTextColor(getColor(R.color.ink_sub))
-        gravity = android.view.Gravity.CENTER
+        gravity = Gravity.CENTER
         layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = 8.dp }
     }
 
@@ -503,7 +482,7 @@ class BankActivity : AppCompatActivity() {
         TextView(this).apply {
             text = t
             textSize = 15f
-            gravity = android.view.Gravity.CENTER
+            gravity = Gravity.CENTER
             setTextColor(getColor(if (primary) R.color.surface else R.color.ink_sub))
             setBackgroundResource(if (primary) R.drawable.bg_btn_primary else R.drawable.bg_btn_ghost)
             layoutParams = LinearLayout.LayoutParams(-1, 48.dp).apply {
@@ -511,20 +490,4 @@ class BankActivity : AppCompatActivity() {
             }
             tap { onTap() }
         }
-
-    private fun askQuit() {
-        // 还没加载完就退出：queue 是空的，没什么可确认的
-        if (queue.isEmpty() || items.isEmpty()) {
-            finish()
-            return
-        }
-        AppDialog.show(
-            ctx = this,
-            title = getString(R.string.quit),
-            message = getString(R.string.quit_confirm),
-            positive = getString(R.string.quit),
-            negative = getString(R.string.keep_going),
-            destructive = true
-        ) { finish() }
-    }
 }
