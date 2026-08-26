@@ -13,8 +13,11 @@ import com.gongkao.checkin.data.DateUtil
 import com.gongkao.checkin.data.REPEAT_DAILY
 import com.gongkao.checkin.data.REPEAT_UNTIL
 import com.gongkao.checkin.data.Repo
+import com.gongkao.checkin.data.Subtask
 import com.gongkao.checkin.data.TaskDef
+import androidx.core.widget.doAfterTextChanged
 import java.time.LocalDate
+import java.util.UUID
 
 /** 新建 / 编辑任务的底部面板。existing 为 null 表示新建。 */
 object TaskSheet {
@@ -96,6 +99,39 @@ object TaskSheet {
         btnUntilDate.tap { pickDate(host, until) { until = it; paintMode() } }
         paintMode()
 
+        // ---- 步骤 ----
+        val subtaskBox = v.findViewById<LinearLayout>(R.id.subtaskBox)
+        val btnAddSubtask = v.findViewById<TextView>(R.id.btnAddSubtask)
+        val quantityRow = v.findViewById<LinearLayout>(R.id.quantityRow)
+        // 编辑中的步骤（id 沿用原有的，新加的先留空、保存时再生成）
+        val drafts = existing?.subtasks?.map { Subtask(it.id, it.title) }?.toMutableList()
+            ?: mutableListOf()
+
+        fun paintSubtasks() {
+            // 有步骤时目标数由步骤数决定，数量/单位那行就没有意义了
+            quantityRow.show(drafts.isEmpty())
+            subtaskBox.removeAllViews()
+            drafts.forEachIndexed { i, s ->
+                val row = subtaskBox.inflateChild(R.layout.item_subtask_edit)
+                val input = row.findViewById<EditText>(R.id.subtaskTitle)
+                input.setText(s.title)
+                input.doAfterTextChanged { drafts[i].title = it?.toString() ?: "" }
+                row.findViewById<TextView>(R.id.btnRemoveSubtask).tap {
+                    drafts.removeAt(i)
+                    paintSubtasks()
+                }
+                subtaskBox.addView(row)
+            }
+        }
+        paintSubtasks()
+        btnAddSubtask.tap {
+            drafts.add(Subtask())
+            paintSubtasks()
+            // 新加的那行直接聚焦，省一次点击
+            subtaskBox.getChildAt(drafts.size - 1)
+                ?.findViewById<EditText>(R.id.subtaskTitle)?.requestFocus()
+        }
+
         btnDelete.show(existing != null)
         btnDelete.tap {
             AppDialog.show(
@@ -122,7 +158,17 @@ object TaskSheet {
                 host.toast(host.getString(R.string.pick_until_date))
                 return@tap
             }
-            val target = inputTarget.text.toString().toIntOrNull()?.coerceIn(1, 999) ?: 1
+            // 空标题的步骤当没填，直接丢掉；没填 id 的是新加的，这时才发 id
+            val subtasks = drafts
+                .filter { it.title.isNotBlank() }
+                .map { Subtask(it.id.ifBlank { UUID.randomUUID().toString() }, it.title.trim()) }
+                .toMutableList()
+
+            val target = if (subtasks.isNotEmpty()) {
+                subtasks.size
+            } else {
+                inputTarget.text.toString().toIntOrNull()?.coerceIn(1, 999) ?: 1
+            }
             val base = existing ?: TaskDef(startDate = DateUtil.todayStr())
             Repo.upsertTask(
                 base.copy(
@@ -130,8 +176,9 @@ object TaskSheet {
                     repeat = mode,
                     untilDate = if (mode == REPEAT_UNTIL) until else null,
                     target = target,
-                    unit = inputUnit.text.toString().trim(),
-                    colorIndex = colorIndex
+                    unit = if (subtasks.isNotEmpty()) "" else inputUnit.text.toString().trim(),
+                    colorIndex = colorIndex,
+                    subtasks = subtasks
                 )
             )
             onDone()

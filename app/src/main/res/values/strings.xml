@@ -176,6 +176,12 @@
     <string name="menu_reorder">调整顺序</string>
     <string name="menu_delete">删除任务</string>
     <string name="menu_delete_confirm">删除「%1$s」？之前的打卡记录会保留。</string>
+
+    <string name="task_add_subtask">＋ 加一步</string>
+    <string name="task_subtask_hint">这一步做什么</string>
+    <string name="task_remove_subtask">×</string>
+    <string name="task_subtask_note">目标数由步骤数决定，共 %1$d 步</string>
+    <string name="subtask_progress">%1$d/%2$d 步</string>
     <string name="bank_more_in_search">还有 %1$d 题，去题库搜索找</string>
 
     <string name="pomodoro_title">番茄钟</string>

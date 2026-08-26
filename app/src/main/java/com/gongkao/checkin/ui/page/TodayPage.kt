@@ -14,6 +14,7 @@ import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.AnchoredCard
 import com.gongkao.checkin.ui.AppListDialog
 import com.gongkao.checkin.ui.DialogRow
+import com.gongkao.checkin.data.Subtask
 import com.gongkao.checkin.ui.MainActivity
 import com.gongkao.checkin.ui.TaskMenu
 import com.gongkao.checkin.ui.open
@@ -139,6 +140,62 @@ class TodayPage(host: MainActivity) : Page(host) {
         }
     }
 
+    /** 展开了步骤清单的条目 key。 */
+    private val expanded = mutableSetOf<String>()
+
+    /** 步骤清单：勾一条就联动主进度，勾满整条自动完成。 */
+    private fun bindSubtasks(row: View, item: DayItem, subs: List<Subtask>) {
+        val box = row.findViewById<LinearLayout>(R.id.subtaskBox)
+        val open = subs.isNotEmpty() && item.key in expanded
+        box.show(open)
+        if (!open) {
+            box.removeAllViews()
+            return
+        }
+        box.removeAllViews()
+        subs.forEachIndexed { i, s ->
+            val line = box.inflateChild(R.layout.item_subtask)
+            val done = s.id in item.doneSubtasks
+            line.findViewById<TextView>(R.id.subCheck).apply {
+                text = if (done) "✓" else ""
+                setBackgroundResource(
+                    if (done) R.drawable.bg_circle_accent else R.drawable.bg_circle_soft
+                )
+            }
+            line.findViewById<TextView>(R.id.subTitle).apply {
+                text = s.title
+                alpha = if (done) 0.45f else 1f
+                paintFlags = if (done) {
+                    paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
+                } else {
+                    paintFlags and android.graphics.Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                }
+            }
+            line.tap(haptic = false) { v ->
+                Motion.tick(v)
+                val justDone = Repo.toggleSubtask(Repo.today().date, item.key, s.id)
+                if (justDone) celebrateAt(v)
+            }
+            box.addView(line)
+            Motion.stagger(line, i)
+        }
+    }
+
+    /** 步骤勾满导致整条完成时，在那一步的位置放动效。 */
+    private fun celebrateAt(v: View) {
+        val loc = IntArray(2)
+        v.getLocationOnScreen(loc)
+        val cx = loc[0] + v.width / 2f
+        val cy = loc[1] + v.height / 2f
+        val rec = Repo.today()
+        if (rec.allDone() && !rec.celebrated) {
+            Repo.markCelebrated(rec.date)
+            host.celebrateDay(cx, cy, encourage())
+        } else {
+            host.burst(cx, cy)
+        }
+    }
+
     private fun bindRow(row: View, item: DayItem, index: Int) {
         val carry = item.kind == KIND_CARRY
         val color = Ui.taskColor(ctx, item.colorIndex)
@@ -160,8 +217,14 @@ class TodayPage(host: MainActivity) : Page(host) {
             carryTag.text = ctx.getString(R.string.tag_carry, days.coerceAtLeast(1))
         }
 
+        // 步骤：只有当天条目才有粒度，欠账只结转数量
+        val def = Repo.taskById(item.taskId)
+        val subs = if (item.kind == KIND_CARRY) emptyList() else def?.subtasks.orEmpty()
+
         row.findViewById<TextView>(R.id.sub).text = buildString {
-            if (item.target > 1) {
+            if (subs.isNotEmpty()) {
+                append(ctx.getString(R.string.subtask_progress, item.progress, item.target))
+            } else if (item.target > 1) {
                 append(item.progress).append('/').append(item.target)
                 if (item.unit.isNotBlank()) append(' ').append(item.unit)
             } else if (item.unit.isNotBlank()) {
@@ -176,6 +239,8 @@ class TodayPage(host: MainActivity) : Page(host) {
                 append(ctx.getString(R.string.tag_done_at, DateUtil.clock(item.doneAt)))
             }
         }
+
+        bindSubtasks(row, item, subs)
 
         val check = row.findViewById<CheckCircleView>(R.id.check)
         check.accent = if (carry) ctx.getColor(R.color.carry_ink) else color
@@ -192,8 +257,18 @@ class TodayPage(host: MainActivity) : Page(host) {
         minus.show(item.progress > 0 && !item.done)
         minus.tap { Repo.bump(Repo.today().date, item.key, -1) }
 
+        // 圆圈永远是「整条打卡/取消」；有步骤时点卡片改成展开清单，
+        // 否则点一下就把所有步骤刷成完成，等于绕过了拆步骤的意义
         check.tap(haptic = false) { onCheck(check, item) }
-        row.tap(haptic = false) { onCheck(check, item) }
+        val rowBody = row.findViewById<View>(R.id.taskRow)
+        if (subs.isEmpty()) {
+            rowBody.tap(haptic = false) { onCheck(check, item) }
+        } else {
+            rowBody.tap(haptic = false) {
+                if (!expanded.remove(item.key)) expanded.add(item.key)
+                bindSubtasks(row, item, subs)
+            }
+        }
 
         // 长按弹操作菜单：编辑 / 开始专注 / 调整顺序 / 删除。
         // 菜单锚在这一行上，不跟手指位置——为了拿落点得自己装 OnTouchListener，

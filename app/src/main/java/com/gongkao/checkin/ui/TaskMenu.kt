@@ -10,13 +10,12 @@ import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.data.TaskDef
 
 /**
- * 长按任务卡弹出的操作菜单。菜单从手指位置展开，靠边时朝反方向翻转，
- * 免得贴着屏幕边缘只露出一半。
+ * 长按任务卡弹出的操作菜单。**盖在被长按那一行上面**、宽度与该行一致、
+ * 从行中心长出来——看上去是这张卡自己翻开成了菜单，而不是旁边又冒出一个东西。
  */
 object TaskMenu {
 
     private const val EDGE = 12
-    private const val GAP = 6
     private const val BOTTOM_CLEARANCE = 86
 
     fun show(
@@ -29,9 +28,13 @@ object TaskMenu {
         val scrim = v.findViewById<View>(R.id.menuScrim)
         val card = v.findViewById<LinearLayout>(R.id.menuCard)
         v.findViewById<TextView>(R.id.menuTitle).text = task.title
+        // 色条跟任务本身同色，接得上那一行
+        v.findViewById<View>(R.id.menuColorBar)
+            .setBackgroundColor(Ui.taskColor(host, task.colorIndex))
 
         val d = Popup.dialog(host, v)
-        Popup.wireDismiss(d, scrim, card, anchor)
+        // anchor 传 null：菜单已经盖在行上，缩放原点取卡片中心正好等于行中心
+        Popup.wireDismiss(d, scrim, card)
 
         card.findViewById<TextView>(R.id.menuEdit).tap {
             Popup.close(d)
@@ -58,27 +61,36 @@ object TaskMenu {
             ) { Repo.deleteTask(task.id) }
         }
 
-        // 量完才知道卡片多大，才能决定往上还是往下开
+        // 宽度要跟行一样，得等行量好；菜单高度也要等自己量完才知道能不能居中盖住
         card.post { place(card, anchor) }
-        Popup.enter(scrim, card, anchor)
+        Popup.enter(scrim, card)
     }
 
     /**
-     * 把卡片贴在被长按那一行的下方；下面放不下就翻到行的上方，
-     * 最后夹进屏幕安全区。水平方向跟行左对齐。
+     * 让菜单盖住被长按的那一行：宽度取行宽、横向与行对齐，
+     * 纵向以行中心为中心展开（放不下时才上下夹回安全区）。
      */
     private fun place(card: View, anchor: View) {
         val parent = card.parent as? FrameLayout ?: return
         val a = IntArray(2)
         anchor.getLocationInWindow(a)
 
+        // 宽度对齐行，菜单就不像"另一个控件"
+        if (anchor.width > 0 && card.width != anchor.width) {
+            card.layoutParams = card.layoutParams.apply { width = anchor.width }
+            card.requestLayout()
+            // 改了宽度要重新量一轮再定位，否则拿到的还是旧高度
+            card.post { place(card, anchor) }
+            return
+        }
+
+        val rowCenterY = a[1] + anchor.height / 2f
         val maxX = (parent.width - card.width - EDGE.dp).coerceAtLeast(EDGE.dp)
         val maxY = (parent.height - card.height - BOTTOM_CLEARANCE.dp).coerceAtLeast(EDGE.dp)
 
-        val belowY = a[1] + anchor.height + GAP.dp
-        val y = if (belowY > maxY) a[1] - card.height - GAP.dp else belowY
-
         card.x = a[0].toFloat().coerceIn(EDGE.dp.toFloat(), maxX.toFloat())
-        card.y = y.toFloat().coerceIn(EDGE.dp.toFloat(), maxY.toFloat())
+        card.y = (rowCenterY - card.height / 2f)
+            .coerceIn(EDGE.dp.toFloat(), maxY.toFloat())
+        // 卡片已经以行为中心，pivot 交给 Popup 取卡片中心即可（= 行中心）
     }
 }

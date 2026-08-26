@@ -33,6 +33,7 @@
         android:textSize="15sp" />
 
     <LinearLayout
+        android:id="@+id/quantityRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
@@ -69,6 +70,24 @@
             android:textColorHint="@color/ink_dim"
             android:textSize="15sp" />
     </LinearLayout>
+
+    <!-- 步骤：有步骤时目标数＝步骤数，上面那行数量/单位会隐藏 -->
+    <LinearLayout
+        android:id="@+id/subtaskBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+
+    <TextView
+        android:id="@+id/btnAddSubtask"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_dash"
+        android:gravity="center"
+        android:text="@string/task_add_subtask"
+        android:textColor="@color/accent"
+        android:textSize="13.5sp" />
 
     <!-- 重复方式 -->
     <LinearLayout

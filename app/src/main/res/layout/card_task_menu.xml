@@ -9,33 +9,50 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- 宽度在代码里改成被长按那一行的宽度，让它盖住那张卡 -->
     <LinearLayout
         android:id="@+id/menuCard"
-        android:layout_width="230dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_card"
         android:elevation="16dp"
         android:orientation="vertical"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp">
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp">
 
-        <TextView
-            android:id="@+id/menuTitle"
+        <!-- 标题沿用任务行的样子（左侧色条 + 标题），过渡才不突兀 -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:fontFamily="sans-serif-medium"
-            android:maxLines="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
             android:paddingHorizontal="16dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="8dp"
-            android:textColor="@color/ink"
-            android:textSize="14sp" />
+            android:paddingTop="8dp"
+            android:paddingBottom="10dp">
+
+            <View
+                android:id="@+id/menuColorBar"
+                android:layout_width="3dp"
+                android:layout_height="16dp"
+                android:background="@color/accent" />
+
+            <TextView
+                android:id="@+id/menuTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:textColor="@color/ink"
+                android:textSize="15sp" />
+        </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginHorizontal="12dp"
+            android:layout_marginHorizontal="16dp"
             android:layout_marginBottom="4dp"
             android:background="@color/divider" />
 

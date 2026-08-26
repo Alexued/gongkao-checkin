@@ -8,6 +8,12 @@ const val KIND_CARRY = "CARRY"
 const val REPEAT_DAILY = "DAILY"
 const val REPEAT_UNTIL = "UNTIL"
 
+/** 任务下的一步。只有标题，完成状态是按天记的（见 [DayItem.doneSubtasks]）。 */
+data class Subtask(
+    var id: String = "",
+    var title: String = ""
+)
+
 /** 任务定义。repeat=DAILY 每天都要；repeat=UNTIL 每天都要但到 untilDate（含）截止。 */
 data class TaskDef(
     var id: String = "",
@@ -19,8 +25,16 @@ data class TaskDef(
     var unit: String = "",
     var order: Int = 0,
     var archived: Boolean = false,
-    var colorIndex: Int = 0
+    var colorIndex: Int = 0,
+    /** 拆出来的步骤。非空时 [target] 由步骤数决定、[unit] 不用（编辑器里也会隐藏这两项）。 */
+    var subtasks: MutableList<Subtask> = mutableListOf()
 ) {
+    val hasSubtasks: Boolean get() = subtasks.isNotEmpty()
+
+    /** 有步骤时目标数就是步骤数，否则用手填的 target。 */
+    fun effectiveTarget(): Int =
+        if (hasSubtasks) subtasks.size else target.coerceAtLeast(1)
+
     fun appliesTo(date: LocalDate, globalEnd: LocalDate?): Boolean {
         if (archived) return false
         val s = runCatching { LocalDate.parse(startDate) }.getOrNull() ?: return false
@@ -52,7 +66,12 @@ data class DayItem(
     /** 最早欠账的那一天，用于显示「欠了几天」 */
     var oldestDebtDate: String? = null,
     /** 任务定义已删除，只保留补做条目 */
-    var orphan: Boolean = false
+    var orphan: Boolean = false,
+    /**
+     * 当天勾掉的步骤 id。只存 id 不存标题，改名后显示自动跟着变；
+     * 步骤被删掉留下的陈旧 id 由 buildDay 清掉。欠账条目不带步骤（只结转数量）。
+     */
+    var doneSubtasks: MutableList<String> = mutableListOf()
 ) {
     val done: Boolean get() = progress >= target
     val remaining: Int get() = (target - progress).coerceAtLeast(0)

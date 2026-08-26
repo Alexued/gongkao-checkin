@@ -202,14 +202,26 @@ object Repo {
                 rec.items.add(
                     DayItem(
                         taskId = t.id, title = t.title, kind = KIND_TODAY,
-                        target = t.target.coerceAtLeast(1), unit = t.unit, colorIndex = t.colorIndex
+                        target = t.effectiveTarget(),
+                        unit = if (t.hasSubtasks) "" else t.unit,
+                        colorIndex = t.colorIndex
                     )
                 )
             } else {
                 exist.title = t.title
-                exist.unit = t.unit
+                exist.unit = if (t.hasSubtasks) "" else t.unit
                 exist.colorIndex = t.colorIndex
-                if (exist.target < t.target) exist.target = t.target
+                if (t.hasSubtasks) {
+                    // 步骤数就是目标数，增删步骤都要跟着变（不像手填 target 只增不减，
+                    // 否则删掉一步之后目标永远到不了，这条就再也做不完）
+                    exist.target = t.subtasks.size
+                    val live = t.subtasks.map { s -> s.id }.toSet()
+                    exist.doneSubtasks.retainAll(live)
+                    exist.progress = exist.doneSubtasks.size
+                } else {
+                    exist.doneSubtasks.clear()
+                    if (exist.target < t.target) exist.target = t.target
+                }
             }
         }
         // 任务已删除/归档，且当天还没做过 → 移除当天条目（保留已有进度的）
@@ -280,6 +292,32 @@ object Repo {
         val item = rec.items.firstOrNull { it.key == key } ?: return@edit false
         val before = item.done
         item.progress = (item.progress + delta).coerceIn(0, item.target)
+        item.doneAt = if (item.done) System.currentTimeMillis() else 0L
+        // 直接点大圆圈的情况：把步骤勾选同步成一致，免得展开后进度和勾选对不上
+        val subs = st.tasks.firstOrNull { it.id == item.taskId }?.subtasks
+        if (item.kind == KIND_TODAY && !subs.isNullOrEmpty()) {
+            val ids = subs.map { it.id }
+            item.doneSubtasks = ids.take(item.progress).toMutableList()
+        }
+        if (!rec.allDone()) rec.celebrated = false
+        item.done && !before
+    }
+
+    /**
+     * 勾/取消某一步，进度跟着步骤数走。返回是否「刚好整条做完」，交给 UI 放庆祝动效。
+     * 只对当天条目生效——欠账条目只结转数量，没有步骤粒度。
+     */
+    fun toggleSubtask(date: String, key: String, subtaskId: String): Boolean = edit { st ->
+        val rec = st.days[date] ?: return@edit false
+        val item = rec.items.firstOrNull { it.key == key } ?: return@edit false
+        if (item.kind != KIND_TODAY) return@edit false
+        val subs = st.tasks.firstOrNull { it.id == item.taskId }?.subtasks.orEmpty()
+        if (subs.none { it.id == subtaskId }) return@edit false
+
+        val before = item.done
+        if (!item.doneSubtasks.remove(subtaskId)) item.doneSubtasks.add(subtaskId)
+        item.target = subs.size
+        item.progress = item.doneSubtasks.size
         item.doneAt = if (item.done) System.currentTimeMillis() else 0L
         if (!rec.allDone()) rec.celebrated = false
         item.done && !before
