@@ -135,6 +135,23 @@ abstract class ListScreen : AppCompatActivity() {
         return box
     }
 
+    /** 小节下面的说明文字，解释这组设置的影响。 */
+    protected fun hint(text: CharSequence): TextView {
+        val tv = TextView(this).apply {
+            this.text = text
+            setTextColor(getColor(R.color.ink_dim))
+            textSize = 12f
+            setLineSpacing(4f.dp, 1f)
+            layoutParams = LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = 8.dp
+                marginStart = 4.dp
+                marginEnd = 4.dp
+            }
+        }
+        content.addView(tv)
+        return tv
+    }
+
     protected fun empty(text: CharSequence = getString(R.string.no_record)) {
         val tv = TextView(this).apply {
             this.text = text

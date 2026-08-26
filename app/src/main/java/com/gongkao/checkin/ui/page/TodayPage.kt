@@ -15,6 +15,9 @@ import com.gongkao.checkin.ui.AnchoredCard
 import com.gongkao.checkin.ui.AppListDialog
 import com.gongkao.checkin.ui.DialogRow
 import com.gongkao.checkin.ui.MainActivity
+import com.gongkao.checkin.ui.TaskMenu
+import com.gongkao.checkin.ui.open
+import com.gongkao.checkin.ui.stats.OverviewActivity
 import com.gongkao.checkin.ui.toast
 import com.gongkao.checkin.ui.Page
 import com.gongkao.checkin.ui.SettingsActivity
@@ -70,6 +73,7 @@ class TodayPage(host: MainActivity) : Page(host) {
         }
         v.findViewById<TextView>(R.id.btnAddTask).tap { TaskSheet.show(host, null) }
         v.findViewById<TextView>(R.id.btnManageTasks).tap { showManage() }
+        v.findViewById<TextView>(R.id.btnOverview).tap { ctx.open<OverviewActivity>() }
     }
 
     override fun refresh() {
@@ -78,13 +82,7 @@ class TodayPage(host: MainActivity) : Page(host) {
         val items = Repo.sortedItems(rec)
 
         dateText.text = DateUtil.pretty(DateUtil.today())
-        val left = Repo.daysLeft()
-        countdownText.text = when {
-            left == null -> ctx.getString(R.string.countdown_none)
-            left > 0 -> ctx.getString(R.string.countdown_left, left)
-            left == 0L -> ctx.getString(R.string.countdown_today)
-            else -> ctx.getString(R.string.countdown_past)
-        }
+        countdownText.text = countdownLine()
 
         val ratio = rec.ratio()
         ring.setProgress(ratio, animated = !firstBind)
@@ -102,6 +100,33 @@ class TodayPage(host: MainActivity) : Page(host) {
         emptyText.show(items.isEmpty())
         bindList(items)
         firstBind = false
+    }
+
+    /**
+     * 顶部那行倒计时。考公模式优先播总结束日（备考主线），
+     * 通用模式没有结束日概念，改播标记的重要日；都没有就给设置引导。
+     */
+    private fun countdownLine(): CharSequence {
+        val general = Repo.appMode().isGeneral
+        val markName = ctx.getString(
+            if (general) R.string.mark_name_general else R.string.mark_name_exam
+        )
+        if (!general) {
+            val left = Repo.daysLeft()
+            when {
+                left == null -> Unit
+                left > 0 -> return ctx.getString(R.string.countdown_left, left)
+                left == 0L -> return ctx.getString(R.string.countdown_today)
+                else -> return ctx.getString(R.string.countdown_past)
+            }
+        }
+        val toMark = Repo.daysToMark()
+        return when {
+            toMark == null -> ctx.getString(R.string.countdown_none)
+            toMark > 0 -> ctx.getString(R.string.mark_countdown, markName, toMark)
+            toMark == 0L -> ctx.getString(R.string.mark_today, markName)
+            else -> ctx.getString(R.string.countdown_none)
+        }
     }
 
     private fun bindList(items: List<DayItem>) {
@@ -170,15 +195,17 @@ class TodayPage(host: MainActivity) : Page(host) {
         check.tap(haptic = false) { onCheck(check, item) }
         row.tap(haptic = false) { onCheck(check, item) }
 
-        // 长按直接改这条任务：卡片从这一行展开，关闭时缩回同一行
+        // 长按弹操作菜单：编辑 / 开始专注 / 调整顺序 / 删除。
+        // 菜单锚在这一行上，不跟手指位置——为了拿落点得自己装 OnTouchListener，
+        // 那会把 tap() 里 Motion.touchable 的按压反馈顶掉，不值得。
         row.setOnLongClickListener { v ->
             val def = Repo.taskById(item.taskId)
             if (def == null) {
-                // 任务定义已删、只剩补做条目，没有可编辑的对象
+                // 任务定义已删、只剩补做条目，没有可操作的对象
                 ctx.toast(ctx.getString(R.string.tag_orphan))
             } else {
                 Motion.tick(v)
-                AnchoredCard.showTaskEditor(host, def, v)
+                TaskMenu.show(host, def, v) { showManage() }
             }
             true // 吃掉事件，避免松手时又触发打卡
         }

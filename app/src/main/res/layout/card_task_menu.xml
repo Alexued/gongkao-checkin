@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 任务卡长按菜单：全屏遮罩 + 一张跟着手指定位的小卡 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <View
+        android:id="@+id/menuScrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/menuCard"
+        android:layout_width="230dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_card"
+        android:elevation="16dp"
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/menuTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="8dp"
+            android:textColor="@color/ink"
+            android:textSize="14sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginBottom="4dp"
+            android:background="@color/divider" />
+
+        <TextView
+            android:id="@+id/menuEdit"
+            style="@style/TaskMenuItem"
+            android:text="@string/menu_edit" />
+
+        <TextView
+            android:id="@+id/menuFocus"
+            style="@style/TaskMenuItem"
+            android:text="@string/menu_focus" />
+
+        <TextView
+            android:id="@+id/menuReorder"
+            style="@style/TaskMenuItem"
+            android:text="@string/menu_reorder" />
+
+        <TextView
+            android:id="@+id/menuDelete"
+            style="@style/TaskMenuItem"
+            android:text="@string/menu_delete"
+            android:textColor="@color/rose" />
+    </LinearLayout>
+</FrameLayout>

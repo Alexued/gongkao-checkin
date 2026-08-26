@@ -92,6 +92,9 @@
             android:name=".ui.stats.DayDetailActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.stats.OverviewActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.SettingsActivity"
             android:screenOrientation="portrait" />
         <activity

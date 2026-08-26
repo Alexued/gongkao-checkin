@@ -22,10 +22,12 @@ class DayDetailActivity : ListScreen() {
 
     override fun build() {
         val rec = Repo.day(date)
+        // 通用模式隐藏背诵训练的记录，数据保留
+        val drills = !Repo.appMode().isGeneral
         val timers = Repo.timerSessions().filter { it.date == date }
-        val percents = Repo.percentSessions().filter { it.date == date }
-        val formulas = Repo.formulaSessions().filter { it.date == date }
-        val mentalMaths = Repo.mentalMathSessions().filter { it.date == date }
+        val percents = if (drills) Repo.percentSessions().filter { it.date == date } else emptyList()
+        val formulas = if (drills) Repo.formulaSessions().filter { it.date == date } else emptyList()
+        val mentalMaths = if (drills) Repo.mentalMathSessions().filter { it.date == date } else emptyList()
         val pomodoros = Repo.pomodoroSessions().filter { it.date == date && it.kind == POMODORO_WORK }
 
         val nothing = (rec == null || rec.items.isEmpty()) &&

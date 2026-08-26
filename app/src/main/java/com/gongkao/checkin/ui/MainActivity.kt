@@ -40,9 +40,31 @@ class MainActivity : AppCompatActivity() {
     private val labels = arrayOfNulls<TextView>(4)
 
     private lateinit var pages: List<Page>
+    private lateinit var tabOrder: List<Int>
     private var current = -1
 
     private val onData: () -> Unit = { pages.forEach { if (it.created) it.refresh() } }
+
+    companion object {
+        const val EXTRA_TAB = "tab"
+
+        /** 语义化的 tab 名。实际下标随模式变（通用模式没有背诵），用 [pageIndexOf] 换算。 */
+        const val TAB_TODAY = "today"
+        const val TAB_TIMER = "timer"
+        const val TAB_RECITE = "recite"
+        const val TAB_STATS = "stats"
+    }
+
+    /** 语义名 → 当前模式下的页面下标。背诵在通用模式不存在，退回统计。 */
+    private fun pageIndexOf(name: String?): Int {
+        val general = Repo.appMode().isGeneral
+        return when (name) {
+            TAB_TIMER -> 1
+            TAB_RECITE -> if (general) if (pages.size > 2) 2 else 0 else 2
+            TAB_STATS -> pages.size - 1
+            else -> 0
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,7 +86,16 @@ class MainActivity : AppCompatActivity() {
         tabBar.padBottomInset()
         celebration.isClickable = false
 
-        pages = listOf(TodayPage(this), TimerPage(this), RecitePage(this), StatsPage(this))
+        // 通用模式下背诵训练用不上，直接不给这个 tab（记录仍在库里，切回考公照旧可见）
+        val general = Repo.appMode().isGeneral
+        pages = if (general) {
+            listOf(TodayPage(this), TimerPage(this), StatsPage(this))
+        } else {
+            listOf(TodayPage(this), TimerPage(this), RecitePage(this), StatsPage(this))
+        }
+        // XML 里的 tab 下标 → 页面下标。通用模式抽掉背诵那格，统计顶上来。
+        tabOrder = if (general) listOf(0, 1, 3) else listOf(0, 1, 2, 3)
+        if (general) tabs[2]?.show(false)
 
         pager.adapter = PagesAdapter()
         // 四页全部保活，切页不重建（计时器、滚动位置都要留住）
@@ -72,8 +103,8 @@ class MainActivity : AppCompatActivity() {
         pager.setPageTransformer(false, ParallaxTransformer())
         pager.addOnPageChangeListener(pageListener)
 
-        tabs.forEachIndexed { i, tab ->
-            tab?.tap { select(i) }
+        tabOrder.forEachIndexed { pageIndex, xmlIndex ->
+            tabs[xmlIndex]?.tap { select(pageIndex) }
         }
 
         // 指示条宽度 = 屏宽 / 4，等布局完成后才知道实际宽度
@@ -91,6 +122,21 @@ class MainActivity : AppCompatActivity() {
         paintTabs()
         onBackPressedDispatcher.addCallback(this, backToToday)
         Repo.addListener(onData)
+        openRequestedTab(intent)
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        openRequestedTab(intent)
+    }
+
+    /** 概览页的建议按钮会带 EXTRA_TAB 回来，直接跳到对应 tab。 */
+    private fun openRequestedTab(intent: android.content.Intent?) {
+        val name = intent?.getStringExtra(EXTRA_TAB) ?: return
+        intent.removeExtra(EXTRA_TAB)
+        val target = pageIndexOf(name)
+        if (target != pager.currentItem) pager.setCurrentItem(target, false)
     }
 
     override fun onDestroy() {
@@ -187,8 +233,8 @@ class MainActivity : AppCompatActivity() {
     private fun paintTabs() {
         val on = getColor(R.color.accent)
         val off = getColor(R.color.ink_dim)
-        for (i in 0..3) {
-            val active = i == current
+        tabOrder.forEachIndexed { pageIndex, i ->
+            val active = pageIndex == current
             icons[i]?.let {
                 it.setColorFilter(if (active) on else off)
                 Motion.springTo(it, androidx.dynamicanimation.animation.DynamicAnimation.SCALE_X, if (active) 1.12f else 1f)

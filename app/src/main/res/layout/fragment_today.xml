@@ -155,16 +155,34 @@
             android:textColor="@color/accent"
             android:textSize="15sp" />
 
-        <TextView
-            android:id="@+id/btnManageTasks"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
-            android:gravity="center"
-            android:padding="10dp"
-            android:text="@string/manage_tasks"
-            android:textColor="@color/ink_dim"
-            android:textSize="13sp" />
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/btnManageTasks"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="@string/manage_tasks"
+                android:textColor="@color/ink_dim"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/btnOverview"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="@string/overview_entry"
+                android:textColor="@color/accent"
+                android:textSize="13sp" />
+        </LinearLayout>
 
         <View
             android:layout_width="match_parent"

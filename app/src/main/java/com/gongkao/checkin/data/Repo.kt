@@ -140,8 +140,23 @@ object Repo {
 
     // ---------------------------------------------------------------- 日计划
 
+    /**
+     * 总结束日只在考公模式下生效。通用模式不套用它（但值保留，切回考公照旧），
+     * 否则当习惯打卡用的时候会莫名其妙在考试日之后就不再生成计划。
+     */
     val globalEnd: LocalDate?
-        get() = DateUtil.parse(state.settings.endDate)
+        get() = if (appMode().isGeneral) null else DateUtil.parse(state.settings.endDate)
+
+    fun appMode(): AppMode = AppMode.of(state.settings.appMode)
+
+    fun setAppMode(mode: AppMode) = edit { st -> st.settings.appMode = mode.id }
+
+    fun markDate(): LocalDate? = DateUtil.parse(state.settings.markDate)
+
+    fun setMarkDate(d: String?) = edit { st -> st.settings.markDate = d }
+
+    /** 距标记日还有几天。已过去返回负数，未设置返回 null。 */
+    fun daysToMark(): Long? = markDate()?.let { DateUtil.daysBetween(DateUtil.today(), it) }
 
     /**
      * 保证「今天」的计划存在，并把历史未完成的量逐日累加滚到今天。

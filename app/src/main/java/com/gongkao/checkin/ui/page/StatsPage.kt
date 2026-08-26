@@ -18,6 +18,7 @@ import com.gongkao.checkin.ui.show
 import com.gongkao.checkin.ui.stats.DayDetailActivity
 import com.gongkao.checkin.ui.tap
 import com.gongkao.checkin.view.BarChartView
+import com.gongkao.checkin.ui.toast
 import com.gongkao.checkin.view.CalendarView
 
 /** 统计页：四个数字 + 热力图 + 完成率柱图 + 用时对比，下面按天进入当日全部记录。 */
@@ -57,6 +58,7 @@ class StatsPage(host: MainActivity) : Page(host) {
         // 完成率是百分比，纵轴固定 0~100%，不能按当期最大值缩放
         chartRate.fixedMax = 100f
         heatmap.onPick = { date -> openDay(date) }
+        heatmap.onLongPick = { date -> toggleMark(date) }
     }
 
     override fun refresh() {
@@ -75,6 +77,7 @@ class StatsPage(host: MainActivity) : Page(host) {
             dates.associateWith { (Repo.day(it)?.ratio() ?: 0f) },
             animated = firstBind
         )
+        heatmap.marked = Repo.read { it.settings.markDate }
 
         bindRateChart()
         bindTimerChart()
@@ -144,12 +147,15 @@ class StatsPage(host: MainActivity) : Page(host) {
         }
         Repo.timerSessions().count { it.date == date }
             .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_timer, it) }
-        Repo.percentSessions().count { it.date == date }
-            .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_percent, it) }
-        Repo.formulaSessions().count { it.date == date }
-            .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_formula, it) }
-        Repo.mentalMathSessions().count { it.date == date }
-            .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_mental_math, it) }
+        // 通用模式隐藏背诵训练的记录：数据仍在库里，切回考公照旧显示
+        if (!Repo.appMode().isGeneral) {
+            Repo.percentSessions().count { it.date == date }
+                .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_percent, it) }
+            Repo.formulaSessions().count { it.date == date }
+                .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_formula, it) }
+            Repo.mentalMathSessions().count { it.date == date }
+                .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_mental_math, it) }
+        }
         Repo.pomodoroSessions().count { it.date == date && it.kind == POMODORO_WORK }
             .takeIf { it > 0 }?.let { parts += ctx.getString(R.string.day_sub_pomodoro, it) }
         row.findViewById<TextView>(R.id.daySub).text =
@@ -172,5 +178,18 @@ class StatsPage(host: MainActivity) : Page(host) {
 
     private fun openDay(date: String) {
         ctx.open<DayDetailActivity>("date" to date)
+    }
+
+    /** 长按日历格子标记/取消重要日，文案随模式叫「考试日」或「重要日」。 */
+    private fun toggleMark(date: String) {
+        val name = ctx.getString(
+            if (Repo.appMode().isGeneral) R.string.mark_name_general else R.string.mark_name_exam
+        )
+        val already = Repo.read { it.settings.markDate } == date
+        Repo.setMarkDate(if (already) null else date)
+        heatmap.marked = Repo.read { it.settings.markDate }
+        ctx.toast(
+            ctx.getString(if (already) R.string.mark_clear else R.string.mark_set, name)
+        )
     }
 }

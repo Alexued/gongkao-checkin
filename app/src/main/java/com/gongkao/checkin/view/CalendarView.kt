@@ -59,6 +59,9 @@ class CalendarView @JvmOverloads constructor(
     var inkColor = Color.parseColor("#0E1526")
     var dimColor = Color.parseColor("#8C97AF")
 
+    /** 标记日的环色，默认琥珀，避免和 accent 撞色 */
+    var markColor = Color.parseColor("#FFB24D")
+
     // ---------------------------------------------------------------- 状态
 
     var mode = Mode.HEATMAP
@@ -66,6 +69,16 @@ class CalendarView @JvmOverloads constructor(
 
     /** 换月时回调，宿主可以据此更新自己的标题。 */
     var onMonthChange: ((YearMonth) -> Unit)? = null
+
+    /** 长按某一天。设了才启用长按检测。 */
+    var onLongPick: ((String) -> Unit)? = null
+
+    /** 被标记的重要日/考试日，画一圈强调环。 */
+    var marked: String? = null
+        set(value) {
+            field = value
+            invalidate()
+        }
 
     private var month: YearMonth = YearMonth.now()
     private var ratios: Map<String, Float> = emptyMap()
@@ -241,6 +254,15 @@ class CalendarView @JvmOverloads constructor(
                 val baseline = rect.centerY() - (dayPaint.descent() + dayPaint.ascent()) / 2f
                 canvas.drawText(date.dayOfMonth.toString(), rect.centerX(), baseline, dayPaint)
 
+                // 标记日用琥珀色环，和「今天/选中」的强调色区分开
+                if (key == marked) {
+                    strokePaint.color = applyAlpha(markColor, bodyAlpha)
+                    strokePaint.strokeWidth = dp(2.4f)
+                    rect.set(x, y, x + size, y + size)
+                    rect.inset(-dp(3.2f), -dp(3.2f))
+                    canvas.drawRoundRect(rect, size * 0.38f, size * 0.38f, strokePaint)
+                }
+
                 // 今天 / 选中：描边（选中更粗）
                 val isPicked = key == picked
                 val isToday = date == today
@@ -264,7 +286,15 @@ class CalendarView @JvmOverloads constructor(
     private var downX = 0f
     private var downY = 0f
     private var swiped = false
+    private var longFired = false
     private val slop by lazy { ViewConfiguration.get(context).scaledTouchSlop }
+    private val longPress = Runnable {
+        longFired = true
+        dateAt(downX, downY)?.let {
+            Motion.tick(this)
+            onLongPick?.invoke(it.toString())
+        }
+    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
@@ -272,8 +302,12 @@ class CalendarView @JvmOverloads constructor(
                 downX = event.x
                 downY = event.y
                 swiped = false
+                longFired = false
                 // 横向滑动要自己处理，先请求父级别抢（外层是 ViewPager）
                 parent?.requestDisallowInterceptTouchEvent(true)
+                if (onLongPick != null) {
+                    postDelayed(longPress, ViewConfiguration.getLongPressTimeout().toLong())
+                }
                 return true
             }
 
@@ -282,13 +316,17 @@ class CalendarView @JvmOverloads constructor(
                 val dy = event.y - downY
                 if (!swiped && kotlin.math.abs(dx) > slop && kotlin.math.abs(dx) > kotlin.math.abs(dy)) {
                     swiped = true
+                    removeCallbacks(longPress)
                 }
                 return true
             }
 
             MotionEvent.ACTION_UP -> {
                 parent?.requestDisallowInterceptTouchEvent(false)
+                removeCallbacks(longPress)
                 val dx = event.x - downX
+                // 长按已经处理过了，松手不要再当成点选
+                if (longFired) return true
                 if (swiped) {
                     if (dx < 0) showMonth(month.plusMonths(1), animatedFrom = 1)
                     else showMonth(month.minusMonths(1), animatedFrom = -1)
@@ -300,10 +338,23 @@ class CalendarView @JvmOverloads constructor(
 
             MotionEvent.ACTION_CANCEL -> {
                 parent?.requestDisallowInterceptTouchEvent(false)
+                removeCallbacks(longPress)
                 return true
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    /** 命中测试：把触点换成日期，超出本月或网格返回 null。 */
+    private fun dateAt(px: Float, py: Float): LocalDate? {
+        val size = cellSize()
+        val gridTop = paddingTop + titleH + weekH
+        val c = ((px - paddingLeft) / (size + gap)).toInt()
+        val r = ((py - gridTop) / (size + gap)).toInt()
+        if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return null
+        val date = gridStart().plusWeeks(r.toLong()).plusDays(c.toLong())
+        if (YearMonth.from(date) != month) return null
+        return date
     }
 
     private fun pickAt(px: Float, py: Float) {

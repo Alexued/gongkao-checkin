@@ -6,6 +6,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.gongkao.checkin.BuildConfig
 import com.gongkao.checkin.R
+import com.gongkao.checkin.data.AppMode
 import com.gongkao.checkin.data.DateUtil
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.sync.DeviceScan
@@ -21,11 +22,47 @@ class SettingsActivity : ListScreen() {
     override fun title(): CharSequence = getString(R.string.settings)
 
     override fun build() {
+        modeSection()
         endDateSection()
         syncSection()
         deviceSyncSection()
         updateSection()
         aboutSection()
+    }
+
+    // ------------------------------------------------------------ 使用模式
+
+    /**
+     * 考公 / 通用 二选一。切换只改界面和统计口径，一条业务数据都不动，
+     * 所以不需要二次确认。切完要重建 MainActivity（tab 数量会变），故直接重启回首页。
+     */
+    private fun modeSection() {
+        section(getString(R.string.mode_section))
+        val mode = Repo.appMode()
+        row(
+            title = getString(R.string.mode_exam),
+            sub = getString(R.string.mode_exam_sub),
+            value = if (mode == AppMode.EXAM) "✓" else null
+        ) { switchMode(AppMode.EXAM) }
+        row(
+            title = getString(R.string.mode_general),
+            sub = getString(R.string.mode_general_sub),
+            value = if (mode == AppMode.GENERAL) "✓" else null
+        ) { switchMode(AppMode.GENERAL) }
+        hint(getString(R.string.mode_hint))
+    }
+
+    private fun switchMode(target: AppMode) {
+        if (Repo.appMode() == target) return
+        Repo.setAppMode(target)
+        val name = getString(if (target.isGeneral) R.string.mode_general else R.string.mode_exam)
+        toast(getString(R.string.mode_switched, name))
+        rebuild()
+        // tab 数量随模式变，回到首页重建一次才对得上
+        startActivity(
+            android.content.Intent(this, MainActivity::class.java)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        )
     }
 
     // ------------------------------------------------------------ 更新

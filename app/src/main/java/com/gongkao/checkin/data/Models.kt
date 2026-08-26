@@ -226,7 +226,11 @@ data class Settings(
     /** 复盘用哪个题库（BankSource.id） */
     var bankSourceId: String = "curated",
     /** 复盘用哪种讲解风格（ReviewSkill.id） */
-    var reviewSkillId: String = "builtin"
+    var reviewSkillId: String = "builtin",
+    /** 使用模式（AppMode.id）：exam=考公，general=通用 */
+    var appMode: String = "exam",
+    /** 日历上标记的重要日/考试日，yyyy-MM-dd */
+    var markDate: String? = null
 )
 
 class AppState {
