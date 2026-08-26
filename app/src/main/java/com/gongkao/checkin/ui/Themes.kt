@@ -47,6 +47,12 @@ object Themes {
         val root = activity.findViewById<ViewGroup>(android.R.id.content) ?: return
         val res = themeAttrDrawable(activity) ?: return
 
+        // 页面根布局大多写死了 android:background="@color/bg"，不透明，会把底层背景整块盖住。
+        // 玻璃主题下把它清掉，彩色底才透得上来。
+        for (i in 0 until root.childCount) {
+            root.getChildAt(i).background = null
+        }
+
         val backdrop = ImageView(activity).apply {
             setImageDrawable(res)
             scaleType = ImageView.ScaleType.CENTER_CROP

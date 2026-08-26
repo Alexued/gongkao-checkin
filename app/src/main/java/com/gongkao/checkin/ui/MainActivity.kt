@@ -70,7 +70,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         edgeToEdge()
         Repo.init(this)
+        // 必须在 setContentView 之前：主题决定调色板和卡片质感，之后再套就来不及了
+        Themes.apply(this)
         setContentView(R.layout.activity_main)
+        Themes.installBackdrop(this)
 
         pager = findViewById(R.id.pager)
         tabBar = findViewById(R.id.tabBar)

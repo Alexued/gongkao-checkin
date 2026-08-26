@@ -279,6 +279,15 @@
 
     <string name="countdown_none">还没设置结束日，点右上角设置</string>
     <string name="countdown_set">设置结束日</string>
+    <string name="theme_switch">切换主题</string>
+    <string name="theme_light">白色</string>
+    <string name="theme_dark">黑色</string>
+    <string name="theme_blur">高斯模糊</string>
+    <string name="theme_liquid">液态玻璃</string>
+    <string name="theme_switched">已切换到%1$s</string>
+    <string name="reorder_on">排序模式：按住任务上下拖动</string>
+    <string name="reorder_off">已退出排序模式</string>
+    <string name="reorder_done">完成</string>
     <string name="countdown_none_general">长按统计页日历可标记重要日</string>
     <string name="countdown_left">距结束还有 %1$d 天</string>
     <string name="countdown_today">今天就是结束日，冲</string>

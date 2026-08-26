@@ -30,6 +30,7 @@ import com.gongkao.checkin.ui.AppListDialog
 import com.gongkao.checkin.ui.DialogRow
 import com.gongkao.checkin.ui.Popup
 import com.gongkao.checkin.ui.dp
+import com.gongkao.checkin.ui.Themes
 import com.gongkao.checkin.ui.edgeToEdge
 import com.gongkao.checkin.ui.open
 import com.gongkao.checkin.ui.padBottomInset
@@ -73,6 +74,7 @@ class BankActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         edgeToEdge()
         Repo.init(this)
+        Themes.apply(this)
         singleId = intent.getStringExtra("questionId")
         resuming = intent.getStringExtra("resume") == "1"
 
@@ -84,6 +86,7 @@ class BankActivity : AppCompatActivity() {
         }
         root.addView(celebration)
         setContentView(root)
+        Themes.installBackdrop(this)
 
         bind()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {

@@ -281,10 +281,38 @@ object Repo {
      * 顺序只由「欠账优先 → 最早欠账日 → 标题」决定，**不含完成状态**：
      * 划掉的任务留在原地，不会跳到列表末尾。
      */
-    fun sortedItems(rec: DayRecord): List<DayItem> =
-        rec.items.sortedWith(
-            compareBy({ it.kind != KIND_CARRY }, { it.oldestDebtDate ?: "" }, { it.title })
+    /**
+     * 今日列表的顺序：欠账条目置顶（按最早欠账日），其余按任务自己的 [TaskDef.order]。
+     *
+     * 按 order 排是「调整顺序」能看出效果的前提——原先按标题排，
+     * 拖完写回 order 界面上一点变化都没有。完成的条目不沉底，位置固定。
+     */
+    fun sortedItems(rec: DayRecord): List<DayItem> {
+        val orderOf = state.tasks.associate { it.id to it.order }
+        return rec.items.sortedWith(
+            compareBy(
+                { it.kind != KIND_CARRY },
+                { if (it.kind == KIND_CARRY) it.oldestDebtDate ?: "" else "" },
+                { orderOf[it.taskId] ?: Int.MAX_VALUE },
+                { it.title }
+            )
         )
+    }
+
+    /**
+     * 把 [fromId] 挪到 [toId] 现在的位置，其余顺延。拖动排序松手时调。
+     * 先把 order 规范化成 0..n-1，避免历史数据里有重复的 order 导致挪不动。
+     */
+    fun moveTask(fromId: String, toId: String) = edit { st ->
+        if (fromId == toId) return@edit
+        val ordered = st.tasks.sortedBy { it.order }.toMutableList()
+        val from = ordered.indexOfFirst { it.id == fromId }
+        val to = ordered.indexOfFirst { it.id == toId }
+        if (from < 0 || to < 0) return@edit
+        ordered.add(to, ordered.removeAt(from))
+        ordered.forEachIndexed { i, t -> t.order = i }
+        buildDay(DateUtil.today(), DateUtil.today().minusDays(1))
+    }
 
     /** 打卡 / 反打卡。返回操作后该条目是否刚刚完成。 */
     fun bump(date: String, key: String, delta: Int): Boolean = edit { st ->

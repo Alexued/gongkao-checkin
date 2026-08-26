@@ -19,6 +19,7 @@ import com.gongkao.checkin.data.MentalMathItemRecord
 import com.gongkao.checkin.data.MentalMathSession
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.dp
+import com.gongkao.checkin.ui.Themes
 import com.gongkao.checkin.ui.edgeToEdge
 import com.gongkao.checkin.ui.padBottomInset
 import com.gongkao.checkin.ui.padTopInset
@@ -65,6 +66,7 @@ class MentalMathActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         edgeToEdge()
         Repo.init(this)
+        Themes.apply(this)
         mode = intent.getStringExtra("mode") ?: "FULL"
         category = intent.getStringExtra("category") ?: "全部"
 
@@ -76,6 +78,7 @@ class MentalMathActivity : AppCompatActivity() {
         }
         root.addView(celebration)
         setContentView(root)
+        Themes.installBackdrop(this)
 
         bind()
         val pool = MentalMathData.byCategory(category)

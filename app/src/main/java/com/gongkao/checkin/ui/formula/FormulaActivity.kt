@@ -19,6 +19,7 @@ import com.gongkao.checkin.data.FormulaItemRecord
 import com.gongkao.checkin.data.FormulaSession
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.dp
+import com.gongkao.checkin.ui.Themes
 import com.gongkao.checkin.ui.edgeToEdge
 import com.gongkao.checkin.ui.padBottomInset
 import com.gongkao.checkin.ui.padTopInset
@@ -66,6 +67,7 @@ class FormulaActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         edgeToEdge()
         Repo.init(this)
+        Themes.apply(this)
         mode = intent.getStringExtra("mode") ?: "FULL"
         category = intent.getStringExtra("category") ?: "全部"
 
@@ -77,6 +79,7 @@ class FormulaActivity : AppCompatActivity() {
         }
         root.addView(celebration)
         setContentView(root)
+        Themes.installBackdrop(this)
 
         bind()
         val pool = FormulaData.byCategory(category)

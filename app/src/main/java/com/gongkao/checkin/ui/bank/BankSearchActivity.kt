@@ -20,6 +20,7 @@ import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.AppListDialog
 import com.gongkao.checkin.ui.DialogRow
 import com.gongkao.checkin.ui.dp
+import com.gongkao.checkin.ui.Themes
 import com.gongkao.checkin.ui.edgeToEdge
 import com.gongkao.checkin.ui.inflateChild
 import com.gongkao.checkin.ui.open
@@ -44,7 +45,9 @@ class BankSearchActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         edgeToEdge()
         Repo.init(this)
+        Themes.apply(this)
         setContentView(R.layout.activity_bank_search)
+        Themes.installBackdrop(this)
         source = BankSources.byId(Repo.state.settings.bankSourceId)
 
         findViewById<View>(R.id.topBar).padTopInset()

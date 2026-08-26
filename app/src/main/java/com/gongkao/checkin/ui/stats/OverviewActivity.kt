@@ -19,6 +19,7 @@ import com.gongkao.checkin.data.SuggestKind
 import com.gongkao.checkin.data.Track
 import com.gongkao.checkin.ui.MainActivity
 import com.gongkao.checkin.ui.dp
+import com.gongkao.checkin.ui.Themes
 import com.gongkao.checkin.ui.edgeToEdge
 import com.gongkao.checkin.ui.padTopInset
 import com.gongkao.checkin.ui.show
@@ -50,7 +51,9 @@ class OverviewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         edgeToEdge()
         Repo.init(this)
+        Themes.apply(this)
         setContentView(R.layout.activity_overview)
+        Themes.installBackdrop(this)
 
         findViewById<View>(R.id.topBar).padTopInset()
         findViewById<TextView>(R.id.barTitle).text = getString(

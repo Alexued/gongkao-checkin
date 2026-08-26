@@ -22,6 +22,7 @@ import com.gongkao.checkin.data.POMODORO_WORK
 import com.gongkao.checkin.data.PomodoroSession
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.AppDialog
+import com.gongkao.checkin.ui.Themes
 import com.gongkao.checkin.ui.edgeToEdge
 import com.gongkao.checkin.ui.open
 import com.gongkao.checkin.ui.padTopInset
@@ -84,7 +85,9 @@ class PomodoroActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         edgeToEdge()
         Repo.init(this)
+        Themes.apply(this)
         setContentView(R.layout.activity_pomodoro)
+        Themes.installBackdrop(this)
 
         (findViewById<android.view.View>(android.R.id.content).let {
             (it as android.view.ViewGroup).getChildAt(0)

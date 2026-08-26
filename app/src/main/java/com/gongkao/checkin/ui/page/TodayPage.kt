@@ -2,11 +2,13 @@ package com.gongkao.checkin.ui.page
 
 import android.view.View
 import android.view.ViewGroup
+import android.view.MotionEvent
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.gongkao.checkin.R
 import com.gongkao.checkin.anim.Motion
+import com.gongkao.checkin.data.AppTheme
 import com.gongkao.checkin.data.DateUtil
 import com.gongkao.checkin.data.DayItem
 import com.gongkao.checkin.data.KIND_CARRY
@@ -76,6 +78,40 @@ class TodayPage(host: MainActivity) : Page(host) {
         v.findViewById<TextView>(R.id.btnAddTask).tap { TaskSheet.show(host, null) }
         v.findViewById<TextView>(R.id.btnManageTasks).tap { showManage() }
         v.findViewById<TextView>(R.id.btnOverview).tap { ctx.open<OverviewActivity>() }
+        v.findViewById<ImageView>(R.id.btnTheme).tap { pickTheme() }
+        v.findViewById<ImageView>(R.id.btnReorder).tap { toggleReorder() }
+    }
+
+    /** 四主题任选。切换要重建 Activity（调色板和 style 都在 onCreate 时定）。 */
+    private fun pickTheme() {
+        val current = Repo.appTheme()
+        AppListDialog.show(
+            ctx = ctx,
+            title = ctx.getString(R.string.theme_switch),
+            rows = AppTheme.entries.map { t ->
+                DialogRow(
+                    title = ctx.getString(t.nameRes) + if (t == current) "  ✓" else ""
+                )
+            },
+            negative = ctx.getString(R.string.cancel),
+            onPick = { i ->
+                val picked = AppTheme.entries[i]
+                if (picked != current) {
+                    Repo.setAppTheme(picked)
+                    host.recreate()
+                }
+            }
+        )
+    }
+
+    /** 进/出排序模式。排序模式下任务卡可按住上下拖。 */
+    private fun toggleReorder() {
+        reordering = !reordering
+        ctx.toast(
+            ctx.getString(if (reordering) R.string.reorder_on else R.string.reorder_off)
+        )
+        firstBind = false
+        refresh()
     }
 
     override fun refresh() {
@@ -171,6 +207,75 @@ class TodayPage(host: MainActivity) : Page(host) {
 
     /** 展开了步骤清单的条目 key。 */
     private val expanded = mutableSetOf<String>()
+
+    /** 是否处于排序模式（顶栏那个按钮切换）。 */
+    private var reordering = false
+
+    /**
+     * 排序模式下的拖动。按住某一行上下移动，越过相邻行就换位并立刻写回顺序；
+     * 松手结束。只对当天条目生效——欠账是聚合出来的，没有独立顺序。
+     */
+    private fun wireDrag(row: View, item: DayItem) {
+        // 必须装在 rowBody（内层）上：它有 tap()、是 clickable，
+        // 装外层 row 的话触摸被它先吃掉，拖动收不到事件。
+        val target = row.findViewById<View>(R.id.taskRow)
+        if (!reordering || item.kind == KIND_CARRY) {
+            target.setOnTouchListener(null)
+            return
+        }
+        var startY = 0f
+        var dragging = false
+        target.setOnTouchListener { v, ev ->
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    startY = ev.rawY
+                    dragging = true
+                    // 不让外面的滚动容器把这次手势抢走
+                    row.parent?.requestDisallowInterceptTouchEvent(true)
+                    row.elevation = 12f.dp
+                    Motion.tick(v)
+                    true
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    if (!dragging) return@setOnTouchListener false
+                    val dy = ev.rawY - startY
+                    row.translationY = dy
+                    // 位移过大半行就跟邻居换位，换完把基准点移过去
+                    val step = row.height.toFloat().coerceAtLeast(1f)
+                    if (kotlin.math.abs(dy) > step * 0.6f) {
+                        val moved = swapWithNeighbor(item, down = dy > 0)
+                        if (moved) {
+                            startY = ev.rawY
+                            row.translationY = 0f
+                        }
+                    }
+                    true
+                }
+
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    dragging = false
+                    row.elevation = 0f
+                    row.animate().translationY(0f).setDuration(140).start()
+                    row.parent?.requestDisallowInterceptTouchEvent(false)
+                    true
+                }
+
+                else -> false
+            }
+        }
+    }
+
+    /** 跟上/下一个当天条目换位，返回是否真的换了。 */
+    private fun swapWithNeighbor(item: DayItem, down: Boolean): Boolean {
+        val todayItems = Repo.sortedItems(Repo.today()).filter { it.kind != KIND_CARRY }
+        val i = todayItems.indexOfFirst { it.key == item.key }
+        if (i < 0) return false
+        val j = if (down) i + 1 else i - 1
+        if (j < 0 || j >= todayItems.size) return false
+        Repo.moveTask(item.taskId, todayItems[j].taskId)
+        return true
+    }
 
     /** 步骤清单：勾一条就联动主进度，勾满整条自动完成。 */
     private fun bindSubtasks(row: View, item: DayItem, subs: List<Subtask>) {
@@ -294,13 +399,20 @@ class TodayPage(host: MainActivity) : Page(host) {
         val rowBody = row.findViewById<View>(R.id.taskRow)
         val longPress: (View) -> Unit = { openTaskMenu(rowBody, item) }
 
-        check.tap(haptic = false, onLongPress = longPress) { onCheck(check, item) }
-        if (subs.isEmpty()) {
-            rowBody.tap(haptic = false, onLongPress = longPress) { onCheck(check, item) }
+        // 排序模式下这一行只管拖：tap() 会重装 OnTouchListener，把拖动顶掉
+        val draggable = reordering && item.kind != KIND_CARRY
+        if (draggable) {
+            wireDrag(row, item)
         } else {
-            rowBody.tap(haptic = false, onLongPress = longPress) {
-                if (!expanded.remove(item.key)) expanded.add(item.key)
-                bindSubtasks(row, item, subs)
+            wireDrag(row, item) // 非排序模式：清掉可能残留的拖动监听
+            check.tap(haptic = false, onLongPress = longPress) { onCheck(check, item) }
+            if (subs.isEmpty()) {
+                rowBody.tap(haptic = false, onLongPress = longPress) { onCheck(check, item) }
+            } else {
+                rowBody.tap(haptic = false, onLongPress = longPress) {
+                    if (!expanded.remove(item.key)) expanded.add(item.key)
+                    bindSubtasks(row, item, subs)
+                }
             }
         }
 

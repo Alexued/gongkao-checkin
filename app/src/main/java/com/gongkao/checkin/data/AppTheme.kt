@@ -30,6 +30,15 @@ enum class AppTheme(
     /** 这套主题要不要在页面底层铺一张彩色背景（模糊/液态玻璃靠它出效果） */
     val hasBackdrop: Boolean get() = this == BLUR || this == LIQUID
 
+    /** 给用户看的名字 */
+    val nameRes: Int
+        get() = when (this) {
+            LIGHT -> R.string.theme_light
+            DARK -> R.string.theme_dark
+            BLUR -> R.string.theme_blur
+            LIQUID -> R.string.theme_liquid
+        }
+
     companion object {
         fun of(id: String?): AppTheme = entries.firstOrNull { it.id == id } ?: LIGHT
 

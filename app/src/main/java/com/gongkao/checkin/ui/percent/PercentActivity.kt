@@ -19,6 +19,7 @@ import com.gongkao.checkin.data.PercentItem
 import com.gongkao.checkin.data.PercentSession
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.dp
+import com.gongkao.checkin.ui.Themes
 import com.gongkao.checkin.ui.edgeToEdge
 import com.gongkao.checkin.ui.padBottomInset
 import com.gongkao.checkin.ui.padTopInset
@@ -70,6 +71,7 @@ class PercentActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         edgeToEdge()
         Repo.init(this)
+        Themes.apply(this)
         mode = intent.getStringExtra("mode") ?: "FULL"
 
         // 用 FrameLayout 包一层，庆祝层盖在最上面
@@ -81,6 +83,7 @@ class PercentActivity : AppCompatActivity() {
         }
         root.addView(celebration)
         setContentView(root)
+        Themes.installBackdrop(this)
 
         bind()
         queue = if (mode == "RANDOM") PercentData.entries.shuffled() else PercentData.entries

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 调整顺序：三条横线 + 上下箭头，暗示可以上下拖 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M3,6h11v2H3zM3,11h11v2H3zM3,16h11v2H3z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M19,4l3,4h-6zM19,20l-3,-4h6z" />
+</vector>
