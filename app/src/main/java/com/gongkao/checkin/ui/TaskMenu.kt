@@ -63,6 +63,8 @@ object TaskMenu {
 
         // 宽度要跟行一样，得等行量好；菜单高度也要等自己量完才知道能不能居中盖住
         card.post { place(card, anchor) }
+        // Popup.dialog() 只是建窗口，不会自己显示——漏了这句弹层永远不出现且不报错
+        d.show()
         Popup.enter(scrim, card)
     }
 

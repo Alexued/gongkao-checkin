@@ -89,9 +89,19 @@ fun View.padVerticalInsets() {
     ViewCompat.requestApplyInsets(this)
 }
 
-/** 统一的可点击：按压回弹 + 轻震动 + 点击回调。 */
-fun View.tap(haptic: Boolean = true, block: (View) -> Unit) {
-    Motion.touchable(this)
+/**
+ * 统一的可点击：按压回弹 + 轻震动 + 点击回调。
+ *
+ * [onLongPress] 走 [Motion.touchable] 里自建的长按检测，而不是 setOnLongClickListener——
+ * 后者在滚动容器里会被父级抢手势取消掉。两者共用同一个 OnTouchListener，
+ * 所以不能再另外 setOnTouchListener，否则按压反馈和长按会互相顶掉。
+ */
+fun View.tap(
+    haptic: Boolean = true,
+    onLongPress: ((View) -> Unit)? = null,
+    block: (View) -> Unit
+) {
+    Motion.touchable(this, onLongPress = onLongPress)
     isClickable = true
     setOnClickListener {
         if (haptic) Motion.tick(this)

@@ -79,17 +79,70 @@ object Motion {
         anim.animateToFinalPosition(value)
     }
 
-    /** 让 View 具备统一的按压反馈，同时保留原本的点击回调。 */
-    fun touchable(view: View, scale: Float = 0.96f) {
+    /**
+     * 让 View 具备统一的按压反馈，同时保留原本的点击回调。
+     *
+     * [onLongPress] 给了就自己做长按检测（DOWN 起定时器、移动超过 slop 或抬手就取消），
+     * **不用框架的 setOnLongClickListener**：列表在滚动容器里，父级一旦抢走手势就会给子 view
+     * 发 CANCEL，框架那套待触发的长按随之作废——手指稍微一动就长按不出来。
+     * CalendarView 的标记日长按早就是这么做的，这里沿用同一套。
+     */
+    fun touchable(
+        view: View,
+        scale: Float = 0.96f,
+        onLongPress: ((View) -> Unit)? = null
+    ) {
+        val slop = android.view.ViewConfiguration.get(view.context).scaledTouchSlop
+        var fired = false
+        var pending: Runnable? = null
+
+        fun cancelPending(v: View) {
+            pending?.let { v.removeCallbacks(it) }
+            pending = null
+        }
+
         view.setOnTouchListener { v, ev ->
             when (ev.actionMasked) {
-                android.view.MotionEvent.ACTION_DOWN -> press(v, true, scale)
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    press(v, true, scale)
+                    if (onLongPress != null) {
+                        fired = false
+                        val r = Runnable {
+                            fired = true
+                            press(v, false, scale)
+                            onLongPress(v)
+                        }
+                        pending = r
+                        v.postDelayed(
+                            r,
+                            android.view.ViewConfiguration.getLongPressTimeout().toLong()
+                        )
+                    }
+                }
+
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    // 按框架的规则：手指移出这个 view（外扩一点容差）才算取消。
+                    // 不要拿「相对按下点的位移」判——手指按住时的微抖就会误取消，
+                    // 长按基本按不出来。
+                    if (pending != null && !insideWithSlop(v, ev.x, ev.y, slop)) {
+                        cancelPending(v)
+                    }
+                }
+
                 android.view.MotionEvent.ACTION_UP,
-                android.view.MotionEvent.ACTION_CANCEL -> press(v, false, scale)
+                android.view.MotionEvent.ACTION_CANCEL -> {
+                    cancelPending(v)
+                    press(v, false, scale)
+                }
             }
-            false
+            // 长按已经处理过就吃掉这一轮，避免抬手时又触发点击
+            fired && ev.actionMasked == android.view.MotionEvent.ACTION_UP
         }
     }
+
+    /** 触点是否还在 view 里（四周留 [slop] 容差），跟框架判长按/点击的口径一致。 */
+    private fun insideWithSlop(v: View, x: Float, y: Float, slop: Int): Boolean =
+        x >= -slop && y >= -slop && x < v.width + slop && y < v.height + slop
 
     fun animate(
         durationMs: Long,

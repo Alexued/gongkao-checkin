@@ -259,33 +259,38 @@ class TodayPage(host: MainActivity) : Page(host) {
 
         // 圆圈永远是「整条打卡/取消」；有步骤时点卡片改成展开清单，
         // 否则点一下就把所有步骤刷成完成，等于绕过了拆步骤的意义
-        check.tap(haptic = false) { onCheck(check, item) }
+        // 长按菜单跟点击共用一个 OnTouchListener（见 tap 的注释）。
+        // 装在 rowBody 和 check 上而不是外层 row：这两个是 clickable，
+        // 触摸被它们自己消费掉，外层根本收不到。
         val rowBody = row.findViewById<View>(R.id.taskRow)
+        val longPress: (View) -> Unit = { openTaskMenu(rowBody, item) }
+
+        check.tap(haptic = false, onLongPress = longPress) { onCheck(check, item) }
         if (subs.isEmpty()) {
-            rowBody.tap(haptic = false) { onCheck(check, item) }
+            rowBody.tap(haptic = false, onLongPress = longPress) { onCheck(check, item) }
         } else {
-            rowBody.tap(haptic = false) {
+            rowBody.tap(haptic = false, onLongPress = longPress) {
                 if (!expanded.remove(item.key)) expanded.add(item.key)
                 bindSubtasks(row, item, subs)
             }
         }
 
-        // 长按弹操作菜单：编辑 / 开始专注 / 调整顺序 / 删除。
-        // 菜单锚在这一行上，不跟手指位置——为了拿落点得自己装 OnTouchListener，
-        // 那会把 tap() 里 Motion.touchable 的按压反馈顶掉，不值得。
-        row.setOnLongClickListener { v ->
-            val def = Repo.taskById(item.taskId)
-            if (def == null) {
-                // 任务定义已删、只剩补做条目，没有可操作的对象
-                ctx.toast(ctx.getString(R.string.tag_orphan))
-            } else {
-                Motion.tick(v)
-                TaskMenu.show(host, def, v) { showManage() }
-            }
-            true // 吃掉事件，避免松手时又触发打卡
-        }
-
         if (firstBind) Motion.stagger(row, index)
+    }
+
+    /**
+     * 弹任务操作菜单。[anchor] 是菜单要盖住的那一行——用 rowBody 而不是外层 row：
+     * 展开步骤后外层会变高，锚外层会盖住整块。
+     */
+    private fun openTaskMenu(anchor: View, item: DayItem) {
+        val def = Repo.taskById(item.taskId)
+        if (def == null) {
+            // 任务定义已删、只剩补做条目，没有可操作的对象
+            ctx.toast(ctx.getString(R.string.tag_orphan))
+            return
+        }
+        Motion.tick(anchor)
+        TaskMenu.show(host, def, anchor) { showManage() }
     }
 
     private fun onCheck(check: CheckCircleView, item: DayItem) {
