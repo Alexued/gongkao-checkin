@@ -44,16 +44,19 @@ class SettingsActivity : ListScreen() {
     private fun modeSection() {
         sectionColored(getString(R.string.mode_section), R.color.violet)
         val mode = Repo.appMode()
-        row(
-            title = getString(R.string.mode_exam),
-            sub = getString(R.string.mode_exam_sub),
-            value = if (mode == AppMode.EXAM) "✓" else null
-        ) { switchMode(AppMode.EXAM) }
-        row(
-            title = getString(R.string.mode_general),
-            sub = getString(R.string.mode_general_sub),
-            value = if (mode == AppMode.GENERAL) "✓" else null
-        ) { switchMode(AppMode.GENERAL) }
+        // 二选一放同一张卡里，选中项的 ✓ 才读得出「这两个是一组、只能选一个」
+        group {
+            row(
+                title = getString(R.string.mode_exam),
+                sub = getString(R.string.mode_exam_sub),
+                value = if (mode == AppMode.EXAM) "✓" else null
+            ) { switchMode(AppMode.EXAM) }
+            row(
+                title = getString(R.string.mode_general),
+                sub = getString(R.string.mode_general_sub),
+                value = if (mode == AppMode.GENERAL) "✓" else null
+            ) { switchMode(AppMode.GENERAL) }
+        }
         hint(getString(R.string.mode_hint))
     }
 
@@ -74,16 +77,18 @@ class SettingsActivity : ListScreen() {
 
     private fun updateSection() {
         sectionColored(getString(R.string.update_title), R.color.rose)
-        row(
-            title = getString(R.string.update_github),
-            sub = getString(R.string.update_github_sub),
-            chevron = true
-        ) { com.gongkao.checkin.update.UpdateDialog.start(this, lan = false) }
-        row(
-            title = getString(R.string.update_lan),
-            sub = getString(R.string.update_lan_sub),
-            chevron = true
-        ) { com.gongkao.checkin.update.UpdateDialog.start(this, lan = true) }
+        group {
+            row(
+                title = getString(R.string.update_github),
+                sub = getString(R.string.update_github_sub),
+                chevron = true
+            ) { com.gongkao.checkin.update.UpdateDialog.start(this, lan = false) }
+            row(
+                title = getString(R.string.update_lan),
+                sub = getString(R.string.update_lan_sub),
+                chevron = true
+            ) { com.gongkao.checkin.update.UpdateDialog.start(this, lan = true) }
+        }
     }
 
     // ------------------------------------------------------------ 结束日
@@ -95,21 +100,23 @@ class SettingsActivity : ListScreen() {
             getString(R.string.setting_end_date_note)
         )
         val end = Repo.read { it.settings.endDate }
-        // 说明已经在分区标题下了，行里不再重复一遍
-        row(
-            title = end?.let { DateUtil.prettyStr(it) } ?: getString(R.string.setting_not_set),
-            value = if (end != null) getString(R.string.setting_clear) else null,
-            chevron = end == null
-        ) {
-            if (end != null) {
-                Repo.setEndDate(null)
-            } else {
-                pickEndDate()
+        group {
+            // 说明已经在分区标题下了，行里不再重复一遍
+            row(
+                title = end?.let { DateUtil.prettyStr(it) } ?: getString(R.string.setting_not_set),
+                value = if (end != null) getString(R.string.setting_clear) else null,
+                chevron = end == null
+            ) {
+                if (end != null) {
+                    Repo.setEndDate(null)
+                } else {
+                    pickEndDate()
+                }
             }
-        }
-        // 已设置时再给一行改日期的入口，避免右边「清除」把改期挡住
-        if (end != null) {
-            row(title = getString(R.string.pick_until_date), chevron = true) { pickEndDate() }
+            // 已设置时再给一行改日期的入口，避免右边「清除」把改期挡住
+            if (end != null) {
+                row(title = getString(R.string.pick_until_date), chevron = true) { pickEndDate() }
+            }
         }
     }
 
@@ -137,26 +144,32 @@ class SettingsActivity : ListScreen() {
         val pin = Repo.read { it.settings.syncPin }
         val ip = LanInfo.ip(this)
 
-        // 标题在分区标题里已经有了，这行只留开关本身
-        row(
-            title = getString(R.string.sync_switch),
-            value = getString(if (on) R.string.sync_on else R.string.sync_off),
-            chevron = true
-        ) { toggleSync(!on) }
+        group {
+            // 标题在分区标题里已经有了，这行只留开关本身
+            row(
+                title = getString(R.string.sync_switch),
+                value = getString(if (on) R.string.sync_on else R.string.sync_off),
+                chevron = true
+            ) { toggleSync(!on) }
 
-        if (on) {
-            val box = card()
-            kv(getString(R.string.sync_url), ip?.let { "http://$it:${LanInfo.port()}" }
-                ?: getString(R.string.sync_no_wifi), box)
-            kv(getString(R.string.sync_port), LanInfo.port().toString(), box)
-            kv(getString(R.string.sync_pin), pin, box)
-            if (ip != null) {
-                row(title = getString(R.string.sync_url), value = getString(R.string.copy)) {
-                    copy("http://$ip:${LanInfo.port()}")
-                }
-            }
-            row(title = getString(R.string.sync_pin), value = getString(R.string.sync_pin_new)) {
-                Repo.edit { st -> st.settings.syncPin = (1000..9999).random().toString() }
+            if (on) {
+                // 地址/访问码把「值」和「操作」并到同一行。原先是上面一张 kv 卡列出三个值、
+                // 下面再来两行「网页地址 复制」「访问码 换一个」，同屏出现两遍，是这页最乱的地方。
+                val url = ip?.let { "http://$it:${LanInfo.port()}" }
+                row(
+                    title = getString(R.string.sync_url),
+                    sub = url ?: getString(R.string.sync_no_wifi),
+                    value = if (url != null) getString(R.string.copy) else null
+                ) { if (url != null) copy(url) }
+                row(
+                    title = getString(R.string.sync_port),
+                    sub = LanInfo.port().toString()
+                )
+                row(
+                    title = getString(R.string.sync_pin),
+                    sub = pin,
+                    value = getString(R.string.sync_pin_new)
+                ) { Repo.edit { st -> st.settings.syncPin = (1000..9999).random().toString() } }
             }
         }
         warn(getString(R.string.sync_warn))
@@ -199,32 +212,34 @@ class SettingsActivity : ListScreen() {
         )
         val discoverable = Repo.read { it.settings.syncDiscoverable }
 
-        row(
-            title = getString(R.string.device_sync_discoverable),
-            sub = getString(R.string.device_sync_discoverable_sub),
-            value = getString(if (discoverable) R.string.sync_on else R.string.sync_off),
-            chevron = true
-        ) {
-            Repo.edit { st -> st.settings.syncDiscoverable = !discoverable }
-            syncServiceRefresh()
+        group {
+            row(
+                title = getString(R.string.device_sync_discoverable),
+                sub = getString(R.string.device_sync_discoverable_sub),
+                value = getString(if (discoverable) R.string.sync_on else R.string.sync_off),
+                chevron = true
+            ) {
+                Repo.edit { st -> st.settings.syncDiscoverable = !discoverable }
+                syncServiceRefresh()
+            }
+
+            // 扫描是个瞬时状态，只改这一行的副标题，不要整页 rebuild（会闪两遍错峰动画）
+            scanRow = row(
+                title = getString(R.string.device_sync_scan),
+                sub = if (scanning) getString(R.string.device_sync_scanning) else null,
+                chevron = true
+            ) { startScan() }
+
+            row(
+                title = getString(R.string.device_sync_show_qr),
+                chevron = true
+            ) { showMyQr() }
+
+            row(
+                title = getString(R.string.device_sync_scan_qr),
+                chevron = true
+            ) { scanQrLauncher.launch(android.content.Intent(this, com.gongkao.checkin.sync.QrScanActivity::class.java)) }
         }
-
-        // 扫描是个瞬时状态，只改这一行的副标题，不要整页 rebuild（会闪两遍错峰动画）
-        scanRow = row(
-            title = getString(R.string.device_sync_scan),
-            sub = if (scanning) getString(R.string.device_sync_scanning) else null,
-            chevron = true
-        ) { startScan() }
-
-        row(
-            title = getString(R.string.device_sync_show_qr),
-            chevron = true
-        ) { showMyQr() }
-
-        row(
-            title = getString(R.string.device_sync_scan_qr),
-            chevron = true
-        ) { scanQrLauncher.launch(android.content.Intent(this, com.gongkao.checkin.sync.QrScanActivity::class.java)) }
     }
 
     private val scanQrLauncher = registerForActivityResult(
@@ -390,26 +405,26 @@ class SettingsActivity : ListScreen() {
     private fun aboutSection() {
         sectionColored(getString(R.string.setting_about), R.color.ink_dim)
 
-        row(
-            title = getString(R.string.about_intro),
-            sub = getString(R.string.about_intro_sub),
-            chevron = true
-        ) { openIntroPage() }
-
-        // 版本号连点 5 下看更新日志，仿系统「开发者选项」那套
-        row(
-            title = getString(R.string.setting_version),
-            value = BuildConfig.VERSION_NAME
-        ) { tapVersion() }
-
-        val box = card()
         val taskCount = Repo.read { it.tasks.count { t -> !t.archived } }
         val dayCount = Repo.read { it.days.size }
-        kv(
-            getString(R.string.setting_data),
-            getString(R.string.setting_counts, taskCount, dayCount),
-            box
-        )
+        group {
+            row(
+                title = getString(R.string.about_intro),
+                sub = getString(R.string.about_intro_sub),
+                chevron = true
+            ) { openIntroPage() }
+
+            // 版本号连点 5 下看更新日志，仿系统「开发者选项」那套
+            row(
+                title = getString(R.string.setting_version),
+                value = BuildConfig.VERSION_NAME
+            ) { tapVersion() }
+
+            row(
+                title = getString(R.string.setting_data),
+                sub = getString(R.string.setting_counts, taskCount, dayCount)
+            )
+        }
     }
 
     private fun openIntroPage() {

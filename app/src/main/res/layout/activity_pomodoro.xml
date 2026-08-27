@@ -8,6 +8,7 @@
 
     <!-- 顶栏：返回 + 阶段名 + 历史记录 + 退出 -->
     <LinearLayout
+        android:id="@+id/pomoTopBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"

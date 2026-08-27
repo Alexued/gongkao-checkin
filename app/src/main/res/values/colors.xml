@@ -7,7 +7,10 @@
     <color name="ink_sub">#5C6780</color>
     <color name="ink_dim">#8C97AF</color>
     <color name="divider">#E4E8F1</color>
-    <!-- 玻璃浮层里的分隔线。必须半透明：浮层底本身是透的，实色线会显出一条硬边。 -->
+    <!--
+      半透明卡片上的分隔线（玻璃浮层、设置页分组卡）。必须半透明：
+      这些卡底本身是透的，实色线要么显出硬边、要么被背后颜色冲掉。
+    -->
     <color name="divider_glass">#1F000000</color>
 
     <color name="accent">#6C8CFF</color>

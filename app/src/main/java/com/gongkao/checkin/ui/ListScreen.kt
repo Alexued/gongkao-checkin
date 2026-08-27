@@ -68,10 +68,56 @@ abstract class ListScreen : AppCompatActivity() {
 
     protected fun rebuild() {
         content.removeAllViews()
+        groupBox = null
         build()
     }
 
     // ------------------------------------------------------------ 内容积木
+
+    /** 当前正在收集 row 的分组卡；为 null 时 row 各自独立成卡（原有行为）。 */
+    private var groupBox: LinearLayout? = null
+
+    /** row/kv 往哪儿塞：分组进行中就塞进分组卡，否则直接进 content。 */
+    private val sink: LinearLayout get() = groupBox ?: content
+
+    /**
+     * 把 [block] 里建的若干 row 收进**同一张卡**，行间用细线隔开。
+     *
+     * 给设置页这种一屏十几行的页面用：一行一张卡会碎成一堆浮块，
+     * 段落感只能靠色标硬撑。分组之后一个小节就是一块，扫一眼就知道边界在哪。
+     * 不改 [row] 的默认行为，因为另外那些历史记录页就该是一行一卡。
+     */
+    protected fun group(block: () -> Unit) {
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundResource(R.drawable.bg_card)
+            // 行的按压效果和分隔线都不能溢出圆角
+            clipToOutline = true
+            layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 8.dp }
+        }
+        content.addView(box)
+        Motion.stagger(box, content.childCount - 1)
+        groupBox = box
+        try {
+            block()
+        } finally {
+            // 异常也要还原，否则后续 row 会继续往这张卡里塞
+            groupBox = null
+        }
+    }
+
+    /**
+     * 分组卡内部的行分隔线。左边缩进，跟标题文字对齐，不顶到卡片边。
+     *
+     * 用半透明的 `divider_glass` 而不是实色 `divider`：玻璃主题下卡片本身是半透明的，
+     * 实色浅灰线会被背后的颜色冲掉、几乎看不见。
+     */
+    private fun groupDivider(box: LinearLayout) {
+        box.addView(View(this).apply {
+            setBackgroundColor(getColor(R.color.divider_glass))
+            layoutParams = LinearLayout.LayoutParams(-1, 1).apply { marginStart = 16.dp }
+        })
+    }
 
     /** 小节标题，section 之间自动留白。 */
     protected fun section(text: CharSequence): TextView {
@@ -146,7 +192,8 @@ abstract class ListScreen : AppCompatActivity() {
         chevron: Boolean = false,
         onClick: (() -> Unit)? = null
     ): View {
-        val row = content.inflateChild(R.layout.item_session)
+        val box = sink
+        val row = box.inflateChild(R.layout.item_session)
         row.findViewById<TextView>(R.id.sTitle).text = title
         row.findViewById<TextView>(R.id.sSub).apply {
             show(sub != null)
@@ -158,13 +205,23 @@ abstract class ListScreen : AppCompatActivity() {
         }
         row.findViewById<ImageView>(R.id.sChevron).show(chevron)
         if (onClick != null) row.tap { onClick() } else row.isClickable = false
-        content.addView(row)
-        Motion.stagger(row, content.childCount - 1)
+
+        if (box === content) {
+            content.addView(row)
+            Motion.stagger(row, content.childCount - 1)
+        } else {
+            // 分组内：卡背景和行间距交给分组卡，行自己只留内边距
+            row.background = null
+            (row.layoutParams as? LinearLayout.LayoutParams)?.bottomMargin = 0
+            if (box.childCount > 0) groupDivider(box)
+            box.addView(row)
+            // 整张分组卡已经一起入场，行再各自淡入会打架
+        }
         return row
     }
 
-    /** 键值对，用于详情页的汇总数字。 */
-    protected fun kv(key: CharSequence, value: CharSequence, parent: LinearLayout = content): View {
+    /** 键值对，用于详情页的汇总数字。不传 parent 时跟随当前分组。 */
+    protected fun kv(key: CharSequence, value: CharSequence, parent: LinearLayout = sink): View {
         val v = parent.inflateChild(R.layout.item_kv)
         v.findViewById<TextView>(R.id.k).text = key
         v.findViewById<TextView>(R.id.v).text = value
