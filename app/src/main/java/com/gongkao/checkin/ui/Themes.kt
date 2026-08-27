@@ -45,8 +45,19 @@ object Themes {
             root.getChildAt(i).background = null
         }
 
+        // 只按屏幕的 1/DOWNSCALE 布局，再用 scaleX/Y 放大铺满：GPU 的填充量降到 1/9。
+        // +1 是防整数除法留下 1px 缝。用 displayMetrics 而不是 root 尺寸，因为此刻还没布局。
+        val d = BackdropView.DOWNSCALE
+        val dm = activity.resources.displayMetrics
         val backdrop = BackdropView(activity).apply {
-            layoutParams = FrameLayout.LayoutParams(-1, -1)
+            layoutParams = FrameLayout.LayoutParams(
+                dm.widthPixels / d + 1,
+                dm.heightPixels / d + 1
+            )
+            pivotX = 0f
+            pivotY = 0f
+            scaleX = d.toFloat()
+            scaleY = d.toFloat()
             if (theme == AppTheme.BLUR) useBlurPreset() else useLiquidPreset()
         }
         root.addView(backdrop, 0)
