@@ -39,7 +39,6 @@ abstract class ListScreen : AppCompatActivity() {
         Repo.init(this)
         Themes.apply(this)
         setContentView(R.layout.activity_list)
-        Themes.installBackdrop(this)
 
         val topBar = findViewById<View>(R.id.topBar)
         topBar.padTopInset()

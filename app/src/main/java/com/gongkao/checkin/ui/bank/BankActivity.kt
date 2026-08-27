@@ -86,7 +86,6 @@ class BankActivity : AppCompatActivity() {
         }
         root.addView(celebration)
         setContentView(root)
-        Themes.installBackdrop(this)
 
         bind()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {

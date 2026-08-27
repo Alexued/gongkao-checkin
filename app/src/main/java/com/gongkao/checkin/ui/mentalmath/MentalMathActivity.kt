@@ -78,7 +78,6 @@ class MentalMathActivity : AppCompatActivity() {
         }
         root.addView(celebration)
         setContentView(root)
-        Themes.installBackdrop(this)
 
         bind()
         val pool = MentalMathData.byCategory(category)

@@ -83,7 +83,6 @@ class PercentActivity : AppCompatActivity() {
         }
         root.addView(celebration)
         setContentView(root)
-        Themes.installBackdrop(this)
 
         bind()
         queue = if (mode == "RANDOM") PercentData.entries.shuffled() else PercentData.entries

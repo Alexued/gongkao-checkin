@@ -9,8 +9,8 @@ import com.gongkao.checkin.R
  * 实现上分两层：
  * - **调色板**靠 `values` 与 `values-night`（[night] 决定用哪套），
  *   这样全项目 300 多处 `@color/...` 引用一个都不用改。
- * - **卡片质感**靠主题属性（`?attr/cardFill` 等）+ 各主题的 style 覆盖，
- *   shape drawable 里能直接引用 `?attr/`，所以只改几个 drawable 就够。
+ * - **页面底色和卡片质感**靠主题属性（`?attr/pageFill`、`?attr/cardFill` 等）+ 各主题的
+ *   style 覆盖，shape drawable 和布局里都能直接引用 `?attr/`。
  */
 enum class AppTheme(
     val id: String,
@@ -21,14 +21,11 @@ enum class AppTheme(
     LIGHT("light", false, R.style.Theme_Checkin),
     DARK("dark", true, R.style.Theme_Checkin_Dark),
 
-    /** 白面板 + 背后一层极淡的冷色呼吸光团（团大而糊） */
+    /** 纯白页面 + 白卡描边，浮层带真实窗口模糊（描边细） */
     BLUR("blur", false, R.style.Theme_Checkin_Blur),
 
-    /** 白面板 + 背后一层极淡的暖色呼吸光团（团聚拢、隐约有边） */
+    /** 同上，描边厚一点、浮层更透 */
     LIQUID("liquid", false, R.style.Theme_Checkin_Liquid);
-
-    /** 这套主题要不要在页面底层铺一张彩色背景（模糊/液态玻璃靠它出效果） */
-    val hasBackdrop: Boolean get() = this == BLUR || this == LIQUID
 
     /** 给用户看的名字 */
     val nameRes: Int

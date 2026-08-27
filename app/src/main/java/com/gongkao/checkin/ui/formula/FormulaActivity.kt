@@ -79,7 +79,6 @@ class FormulaActivity : AppCompatActivity() {
         }
         root.addView(celebration)
         setContentView(root)
-        Themes.installBackdrop(this)
 
         bind()
         val pool = FormulaData.byCategory(category)

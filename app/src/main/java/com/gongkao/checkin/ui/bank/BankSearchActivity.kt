@@ -47,7 +47,6 @@ class BankSearchActivity : AppCompatActivity() {
         Repo.init(this)
         Themes.apply(this)
         setContentView(R.layout.activity_bank_search)
-        Themes.installBackdrop(this)
         source = BankSources.byId(Repo.state.settings.bankSourceId)
 
         findViewById<View>(R.id.topBar).padTopInset()

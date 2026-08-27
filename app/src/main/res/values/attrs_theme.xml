@@ -4,7 +4,13 @@
   所以换主题只需要覆盖这几项，不用逐个改布局里的 @color 引用。
 -->
 <resources>
-    <!-- 卡片/面板底色（玻璃主题下是半透明的） -->
+    <!--
+      页面整体底色。页面根布局一律引用 ?attr/pageFill 而不是 @color/bg，
+      这样"页面底色"和"调色板里的 bg"能分开：玻璃主题要纯白页面，但调色板仍是亮色那套。
+    -->
+    <attr name="pageFill" format="color" />
+
+    <!-- 卡片/面板底色 -->
     <attr name="cardFill" format="color" />
     <!-- 卡片描边；不需要描边的主题设成 transparent -->
     <attr name="cardStroke" format="color" />

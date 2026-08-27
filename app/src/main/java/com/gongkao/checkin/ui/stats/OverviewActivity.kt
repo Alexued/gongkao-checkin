@@ -53,7 +53,6 @@ class OverviewActivity : AppCompatActivity() {
         Repo.init(this)
         Themes.apply(this)
         setContentView(R.layout.activity_overview)
-        Themes.installBackdrop(this)
 
         findViewById<View>(R.id.topBar).padTopInset()
         findViewById<TextView>(R.id.barTitle).text = getString(

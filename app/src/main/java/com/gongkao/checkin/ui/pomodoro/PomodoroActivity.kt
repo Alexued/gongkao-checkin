@@ -87,10 +87,7 @@ class PomodoroActivity : AppCompatActivity() {
         Repo.init(this)
         Themes.apply(this)
         setContentView(R.layout.activity_pomodoro)
-        Themes.installBackdrop(this)
 
-        // 按 id 取顶栏，不能用 content 的 getChildAt(0)：installBackdrop 会把彩色背景
-        // 插到 0 号位，那样内边距会加到背景图上，顶栏照旧压在状态栏下面（只在玻璃主题下发作）
         findViewById<android.view.View>(R.id.pomoTopBar).padTopInset()
 
         phaseText = findViewById(R.id.phaseText)

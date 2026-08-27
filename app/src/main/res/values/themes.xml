@@ -3,14 +3,16 @@
 
     <!--
       基础主题（＝「白色」）。调色板走 @color，暗色由 values-night 提供；
-      卡片质感走 ?attr/cardFill 这几项，各主题各自覆盖。
+      页面底色走 ?attr/pageFill、卡片质感走 ?attr/cardFill 这几项，各主题各自覆盖。
     -->
     <style name="Theme.Checkin" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/accent</item>
         <item name="colorPrimaryDark">@color/accent_deep</item>
         <item name="colorSecondary">@color/teal</item>
         <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="android:windowBackground">@color/bg</item>
+        <item name="pageFill">@color/bg</item>
+        <!-- 跟 pageFill 同源，避免 Activity 启动那一帧闪出不同的底色 -->
+        <item name="android:windowBackground">?attr/pageFill</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@color/surface</item>
         <item name="android:windowLightStatusBar">true</item>
@@ -39,16 +41,16 @@
     </style>
 
     <!--
-      高斯模糊：亮调色板 + **不透明白卡** + 底层极淡的冷色流动光团。
+      高斯模糊：**纯白页面 + 不透明白卡**，靠描边分出卡片轮廓。
 
-      卡片一律不透明（跟白色主题同一个 @color/surface）—— 半透明卡会把背景整片透上来，
-      看着就花。彩色只从卡片缝隙、页面边距那些地方漏一点，白面板本身干干净净。
-      跟液态玻璃的区别只剩背景色温（这套偏冷、团大而糊）和描边粗细。
+      页面和卡片同为 #FFFFFF，所以 cardStroke 是必需的（白主题那套「淡底 + 无描边白卡」
+      在纯白页面上会让卡片整个消失）。这套主题的「玻璃」体现在长按浮层的**真实窗口模糊**
+      （见 Popup.blurBehind），不在页面背景上——背景就是干净的白。
     -->
     <style name="Theme.Checkin.Blur" parent="Theme.Checkin">
+        <item name="pageFill">@android:color/white</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="cardFill">@color/surface</item>
-        <!-- 白卡压在淡色底上，描边得用淡灰才分得出边；用白反而看不见 -->
         <item name="cardStroke">@color/divider</item>
         <item name="cardStrokeWidth">1dp</item>
         <item name="softFill">@color/surface_alt</item>
@@ -57,9 +59,10 @@
     </style>
 
     <!--
-      液态玻璃：亮调色板 + **不透明白卡** + 底层极淡的暖色流动光团，描边比模糊那套厚一点。
+      液态玻璃：跟高斯模糊同构（纯白页面 + 白卡），描边厚一点、浮层更透。
     -->
     <style name="Theme.Checkin.Liquid" parent="Theme.Checkin">
+        <item name="pageFill">@android:color/white</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="cardFill">@color/surface</item>
         <item name="cardStroke">@color/divider</item>
