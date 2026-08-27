@@ -50,33 +50,45 @@ class BackdropView(ctx: Context) : View(ctx) {
     private val startAt = System.nanoTime()
 
     /**
-     * 高斯模糊：**大而糊**的光团，半径大、重叠多、动得慢，像光透过磨砂玻璃散开。
+     * 高斯模糊：**只用冷色**（蓝 / 紫 / 青），光团巨大且互相重叠，铺满整屏后
+     * 只剩缓慢流动的色雾，看不出单个团的边界。
      *
-     * alpha 给得比直觉高：卡片是半透明白的，压在浅底上几乎等于纯白，
-     * 底色不够浓的话透不上来，两个玻璃主题看着会一模一样（第一版就是这样）。
+     * 三条经验都是返工换来的：
+     * 1. **半径要大到互相重叠**（0.8 以上）。半径小的话只有某个角落有颜色、
+     *    其余大片是平的底色，等于没效果。
+     * 2. **中心 alpha 要给满**。卡片是半透明白的，压在浅底上几乎等于纯白，
+     *    底色不够浓根本透不上来。
+     * 3. **两套主题的色板必须不相交**。第一版两边都用同一组浅蓝紫 + 近白底色，
+     *    差 11 个色阶，肉眼完全分不出，被当成「偷懒没做」。
      */
     fun useBlurPreset() {
-        baseFrom = 0xFFEDF1FF.toInt()
-        baseTo = 0xFFE9F4F7.toInt()
+        baseFrom = 0xFFE4E9F8.toInt()
+        baseTo = 0xFFEAE6FA.toInt()
         blobs.clear()
-        blobs += Blob(0xB36C8CFF.toInt(), 0.66f, 0.18f, 0.16f, 0.16f, 0.10f, 21000, 13400, 0f)
-        blobs += Blob(0xA6B37BFF.toInt(), 0.62f, 0.82f, 0.34f, 0.13f, 0.12f, 26000, 17300, 1.1f)
-        blobs += Blob(0x9E35D0BA.toInt(), 0.58f, 0.26f, 0.78f, 0.15f, 0.09f, 23500, 15100, 2.3f)
-        blobs += Blob(0x8CFF8FA8.toInt(), 0.54f, 0.72f, 0.92f, 0.12f, 0.11f, 29000, 19700, 3.4f)
-        blobs += Blob(0x80FFC46B.toInt(), 0.46f, 0.50f, 0.52f, 0.18f, 0.14f, 33000, 21300, 4.6f)
+        blobs += Blob(0xFF7B93FF.toInt(), 0.95f, 0.20f, 0.18f, 0.26f, 0.18f, 15000, 9700, 0f)
+        blobs += Blob(0xFFA48CFF.toInt(), 0.88f, 0.84f, 0.32f, 0.24f, 0.20f, 18500, 12300, 1.1f)
+        blobs += Blob(0xFF6FA8FF.toInt(), 0.84f, 0.24f, 0.76f, 0.25f, 0.16f, 16800, 11100, 2.3f)
+        blobs += Blob(0xFFC0A6FF.toInt(), 0.80f, 0.78f, 0.90f, 0.22f, 0.19f, 21000, 13900, 3.4f)
+        blobs += Blob(0xFF8FB4FF.toInt(), 0.72f, 0.50f, 0.50f, 0.30f, 0.24f, 24000, 15700, 4.6f)
         rebuildShaders()
     }
 
-    /** 液态玻璃：**小而艳**的光团，半径小、色更浓、动得快，边界看得出来，偏「湿」。 */
+    /**
+     * 液态玻璃：**暖色主导**（粉 / 珊瑚 / 琥珀 / 品红），只留一团青做冷暖对比。
+     * 光团更小更艳、动得更快，能看出一团团的边界在互相挤压，像水彩在流。
+     *
+     * 跟高斯模糊**色系完全错开**是刻意的：两边都用「蓝紫在上、青绿在下」的时候，
+     * 就算数值上有差异，一眼看过去还是同一张图，用户直接说「一模一样」。
+     */
     fun useLiquidPreset() {
-        baseFrom = 0xFFE2EAFF.toInt()
-        baseTo = 0xFFDFF5F0.toInt()
+        baseFrom = 0xFFFFE9F0.toInt()
+        baseTo = 0xFFFFF0E2.toInt()
         blobs.clear()
-        blobs += Blob(0xE05B7CFF.toInt(), 0.44f, 0.16f, 0.14f, 0.19f, 0.13f, 15000, 9800, 0.4f)
-        blobs += Blob(0xD9C46BFF.toInt(), 0.40f, 0.86f, 0.30f, 0.16f, 0.15f, 18500, 12100, 1.7f)
-        blobs += Blob(0xD916CFB4.toInt(), 0.38f, 0.24f, 0.80f, 0.18f, 0.12f, 16800, 11200, 2.9f)
-        blobs += Blob(0xCCFF6B8B.toInt(), 0.34f, 0.78f, 0.94f, 0.15f, 0.14f, 21500, 14300, 4.1f)
-        blobs += Blob(0xB3FFB24D.toInt(), 0.30f, 0.52f, 0.50f, 0.21f, 0.17f, 24500, 16100, 5.2f)
+        blobs += Blob(0xFFFF6FA8.toInt(), 0.58f, 0.18f, 0.16f, 0.30f, 0.20f, 11000, 7300, 0.4f)
+        blobs += Blob(0xFFFF9A5B.toInt(), 0.54f, 0.84f, 0.30f, 0.27f, 0.22f, 13500, 8900, 1.7f)
+        blobs += Blob(0xFFE86BFF.toInt(), 0.52f, 0.22f, 0.78f, 0.28f, 0.18f, 12200, 8100, 2.9f)
+        blobs += Blob(0xFFFFC93C.toInt(), 0.48f, 0.80f, 0.92f, 0.26f, 0.21f, 15500, 10300, 4.1f)
+        blobs += Blob(0xFF35D0BA.toInt(), 0.44f, 0.50f, 0.50f, 0.32f, 0.26f, 17500, 11700, 5.2f)
         rebuildShaders()
     }
 
