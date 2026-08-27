@@ -136,7 +136,10 @@ class TodayPage(host: MainActivity) : Page(host) {
         if (s > 0) streakText.text = ctx.getString(R.string.today_streak, s)
 
         emptyText.show(items.isEmpty())
-        bindList(items)
+        // 拖动中不重建列表：每次换位都会写库并回调到这里，重建会把手指底下那一行
+        // 换绑到别的任务上（bindList 按下标绑），后面的拖动就全动错对象了。
+        // 松手时会补一次 refresh 把真实顺序刷出来。
+        if (!dragActive) bindList(items)
         firstBind = false
     }
 
@@ -211,59 +214,139 @@ class TodayPage(host: MainActivity) : Page(host) {
     /** 是否处于排序模式（顶栏那个按钮切换）。 */
     private var reordering = false
 
+    /** 有一行正在被拖。期间 [refresh] 不重建列表，见那边的注释。 */
+    private var dragActive = false
+
     /**
-     * 排序模式下的拖动。按住某一行上下移动，越过相邻行就换位并立刻写回顺序；
-     * 松手结束。只对当天条目生效——欠账是聚合出来的，没有独立顺序。
+     * 排序模式下的拖动。**按住**某一行才开始拖，之后上下移动，越过相邻行就换位并
+     * 立刻写回顺序；松手结束。只对当天条目生效——欠账是聚合出来的，没有独立顺序。
+     *
+     * 装在**外层 row** 上而不是内层 taskRow：taskRow 只占卡片上半部分，装它的话
+     * 卡片下缘按不动。前提是先把行内所有可点的后代静音（见 [muteDescendants]）——
+     * 它们是 clickable，不静音的话触摸被子 view 先吃掉，外层这个监听根本收不到。
+     *
+     * 换位判定拿「一格 = 行高」算，成立的前提是排序模式下所有行等高——
+     * 靠 [bindSubtasks] 在排序模式收起步骤清单来保证。
      */
     private fun wireDrag(row: View, item: DayItem) {
-        // 必须装在 rowBody（内层）上：它有 tap()、是 clickable，
-        // 装外层 row 的话触摸被它先吃掉，拖动收不到事件。
-        val target = row.findViewById<View>(R.id.taskRow)
         if (!reordering || item.kind == KIND_CARRY) {
-            target.setOnTouchListener(null)
+            row.setOnTouchListener(null)
             return
         }
-        var startY = 0f
+        // 长按才起拖：按下就抢手势的话排序模式下整页都滚不动了，
+        // 而且跟提示文案「按住任务上下拖动」不符。
+        val timeout = android.view.ViewConfiguration.getLongPressTimeout().toLong()
+        val slop = android.view.ViewConfiguration.get(row.context).scaledTouchSlop
+        var downY = 0f
+        var baseY = 0f
+        var lastY = 0f
         var dragging = false
-        target.setOnTouchListener { v, ev ->
+        var pending: Runnable? = null
+
+        fun stop(v: View) {
+            pending?.let { v.removeCallbacks(it) }
+            pending = null
+        }
+
+        // 已越过的邻居数（带符号，下正上负）。拖动中列表不重建，所以
+        // 「容器下标 ↔ 拖动开始时的那一行」是固定对应关系，靠这个数推该让位的是谁。
+        var crossed = 0
+        var myIndex = -1
+
+        row.setOnTouchListener { v, ev ->
+            lastY = ev.rawY
             when (ev.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
-                    startY = ev.rawY
-                    dragging = true
-                    // 不让外面的滚动容器把这次手势抢走
-                    row.parent?.requestDisallowInterceptTouchEvent(true)
-                    row.elevation = 12f.dp
-                    Motion.tick(v)
+                    downY = ev.rawY
+                    dragging = false
+                    crossed = 0
+                    val r = Runnable {
+                        dragging = true
+                        dragActive = true
+                        baseY = lastY
+                        // 拖起来了才不让外面的滚动容器抢手势
+                        v.parent?.requestDisallowInterceptTouchEvent(true)
+                        // 只抬 elevation，不要 bringToFront()：taskList 是 LinearLayout，
+                        // 子 view 顺序就是排版顺序，提到最前会让这行直接跳到列表末尾
+                        row.elevation = 12f.dp
+                        myIndex = taskList.indexOfChild(row)
+                        Motion.tick(v)
+                    }
+                    pending = r
+                    v.postDelayed(r, timeout)
                     true
                 }
 
                 MotionEvent.ACTION_MOVE -> {
-                    if (!dragging) return@setOnTouchListener false
-                    val dy = ev.rawY - startY
-                    row.translationY = dy
-                    // 位移过大半行就跟邻居换位，换完把基准点移过去
-                    val step = row.height.toFloat().coerceAtLeast(1f)
-                    if (kotlin.math.abs(dy) > step * 0.6f) {
-                        val moved = swapWithNeighbor(item, down = dy > 0)
-                        if (moved) {
-                            startY = ev.rawY
-                            row.translationY = 0f
-                        }
+                    if (!dragging) {
+                        // 长按还没到就先滑动 → 这是在滚列表，撤掉长按、把手势让回去
+                        if (kotlin.math.abs(ev.rawY - downY) > slop) stop(v)
+                        return@setOnTouchListener true
                     }
+                    // 拖着的这行一直跟手；每让过一个邻居，它的「归位点」就下移一格
+                    val dy = ev.rawY - baseY
+                    row.translationY = dy
+                    val h = row.height.toFloat().coerceAtLeast(1f)
+                    val rest = h * crossed
+                    val down = when {
+                        dy - rest > h * 0.6f -> true
+                        dy - rest < -h * 0.6f -> false
+                        else -> return@setOnTouchListener true
+                    }
+                    if (!swapWithNeighbor(item, down)) return@setOnTouchListener true
+                    // 让位的那一行：往回走时是把之前挪开的那个放回去，所以下标要分情况
+                    val idx = myIndex + when {
+                        down -> if (crossed < 0) crossed else crossed + 1
+                        else -> if (crossed > 0) crossed else crossed - 1
+                    }
+                    taskList.getChildAt(idx)?.let { n ->
+                        n.animate().translationY(n.translationY + if (down) -h else h)
+                            .setDuration(120).start()
+                    }
+                    crossed += if (down) 1 else -1
                     true
                 }
 
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    dragging = false
-                    row.elevation = 0f
-                    row.animate().translationY(0f).setDuration(140).start()
-                    row.parent?.requestDisallowInterceptTouchEvent(false)
+                    stop(v)
+                    if (dragging) {
+                        dragging = false
+                        dragActive = false
+                        row.elevation = 0f
+                        v.parent?.requestDisallowInterceptTouchEvent(false)
+                        // 顺序早就一步步写进库了，这里只要把拖动期间的位移全清掉，
+                        // 再重建一次列表，位置就跟真实顺序对上了
+                        for (i in 0 until taskList.childCount) {
+                            taskList.getChildAt(i).let { it.animate().cancel(); it.translationY = 0f }
+                        }
+                        refresh()
+                    }
                     true
                 }
 
                 else -> false
             }
         }
+    }
+
+    /**
+     * 把行内所有可点的后代静音，让触摸能落到外层的拖动监听上。
+     *
+     * 排序模式下不这么做就会出现「按住任务直接弹菜单」：条目数不变时 [bindList] 会
+     * 复用行 view，`check`/`btnMinus` 上次绑的 `tap(onLongPress = …)` 还在，它们是
+     * clickable，触摸落在圆圈上时先被子 view 消费，长按计时器照跑，弹出的是任务菜单。
+     *
+     * 只清监听和 clickable，不动 enabled/visibility——退出排序模式时 [bindRow] 会把
+     * 该装的 tap 全部重新装回去（步骤行是 [bindSubtasks] 每次重建的）。
+     */
+    private fun muteDescendants(view: View) {
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) muteDescendants(view.getChildAt(i))
+        }
+        view.setOnTouchListener(null)
+        view.setOnClickListener(null)
+        view.isClickable = false
+        view.isLongClickable = false
     }
 
     /** 跟上/下一个当天条目换位，返回是否真的换了。 */
@@ -280,7 +363,9 @@ class TodayPage(host: MainActivity) : Page(host) {
     /** 步骤清单：勾一条就联动主进度，勾满整条自动完成。 */
     private fun bindSubtasks(row: View, item: DayItem, subs: List<Subtask>) {
         val box = row.findViewById<LinearLayout>(R.id.subtaskBox)
-        val open = subs.isNotEmpty() && item.key in expanded
+        // 排序模式下一律收起：行高一致，拖动的换位判定才准（拿行高当一格）。
+        // expanded 本身不动，退出排序模式后原来展开的还是展开的。
+        val open = subs.isNotEmpty() && item.key in expanded && !reordering
         box.show(open)
         if (!open) {
             box.removeAllViews()
@@ -389,7 +474,6 @@ class TodayPage(host: MainActivity) : Page(host) {
 
         val minus = row.findViewById<TextView>(R.id.btnMinus)
         minus.show(item.progress > 0 && !item.done)
-        minus.tap { Repo.bump(Repo.today().date, item.key, -1) }
 
         // 圆圈永远是「整条打卡/取消」；有步骤时点卡片改成展开清单，
         // 否则点一下就把所有步骤刷成完成，等于绕过了拆步骤的意义
@@ -399,12 +483,15 @@ class TodayPage(host: MainActivity) : Page(host) {
         val rowBody = row.findViewById<View>(R.id.taskRow)
         val longPress: (View) -> Unit = { openTaskMenu(rowBody, item) }
 
-        // 排序模式下这一行只管拖：tap() 会重装 OnTouchListener，把拖动顶掉
-        val draggable = reordering && item.kind != KIND_CARRY
-        if (draggable) {
+        // 排序模式下这一行只管拖：先静音行内所有可点的后代（否则触摸被 check/btnMinus
+        // 先吃掉，长按弹出的是任务菜单而不是起拖），再把拖动装到外层 row 上。
+        // 必须排在 bindSubtasks 之后：步骤行是那边每次重建的，得连它们一起静音。
+        if (reordering && item.kind != KIND_CARRY) {
+            muteDescendants(row)
             wireDrag(row, item)
         } else {
             wireDrag(row, item) // 非排序模式：清掉可能残留的拖动监听
+            minus.tap { Repo.bump(Repo.today().date, item.key, -1) }
             check.tap(haptic = false, onLongPress = longPress) { onCheck(check, item) }
             if (subs.isEmpty()) {
                 rowBody.tap(haptic = false, onLongPress = longPress) { onCheck(check, item) }
