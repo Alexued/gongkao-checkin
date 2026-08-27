@@ -109,8 +109,8 @@ abstract class ListScreen : AppCompatActivity() {
     /**
      * 分组卡内部的行分隔线。左边缩进，跟标题文字对齐，不顶到卡片边。
      *
-     * 用半透明的 `divider_glass` 而不是实色 `divider`：玻璃主题下卡片本身是半透明的，
-     * 实色浅灰线会被背后的颜色冲掉、几乎看不见。
+     * 用半透明的 `divider_glass`（12% 黑）而不是实色 `divider`：四套主题的卡片底色各不相同
+     * （白/黑/两套玻璃），叠一层黑比固定的浅灰更稳 —— 浅灰线压在深色卡上会反过来变成亮线。
      */
     private fun groupDivider(box: LinearLayout) {
         box.addView(View(this).apply {

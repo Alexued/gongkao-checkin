@@ -21,10 +21,10 @@ enum class AppTheme(
     LIGHT("light", false, R.style.Theme_Checkin),
     DARK("dark", true, R.style.Theme_Checkin_Dark),
 
-    /** 亮底 + 大面积柔光，卡片半透、背后是缓慢流动的低饱和光团 */
+    /** 白面板 + 背后一层极淡的冷色呼吸光团（团大而糊） */
     BLUR("blur", false, R.style.Theme_Checkin_Blur),
 
-    /** 亮底 + 液态玻璃：更透、亮边高光、饱和渐变背景 */
+    /** 白面板 + 背后一层极淡的暖色呼吸光团（团聚拢、隐约有边） */
     LIQUID("liquid", false, R.style.Theme_Checkin_Liquid);
 
     /** 这套主题要不要在页面底层铺一张彩色背景（模糊/液态玻璃靠它出效果） */

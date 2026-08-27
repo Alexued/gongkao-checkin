@@ -39,33 +39,33 @@
     </style>
 
     <!--
-      高斯模糊：**亮**调色板 + 更厚的半透明白卡 + 底层缓慢流动的低饱和光团。
-      跟液态玻璃的区别在质感：这套卡更实、描边更淡，光团大而糊；
-      液态玻璃卡更透、描边更亮，光团小而饱和。
+      高斯模糊：亮调色板 + **不透明白卡** + 底层极淡的冷色流动光团。
+
+      卡片一律不透明（跟白色主题同一个 @color/surface）—— 半透明卡会把背景整片透上来，
+      看着就花。彩色只从卡片缝隙、页面边距那些地方漏一点，白面板本身干干净净。
+      跟液态玻璃的区别只剩背景色温（这套偏冷、团大而糊）和描边粗细。
     -->
     <style name="Theme.Checkin.Blur" parent="Theme.Checkin">
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <!-- 卡不能太实：白得越多，背后的光团越透不上来，两个玻璃主题就会看着一样 -->
-        <item name="cardFill">#A6FFFFFF</item>
-        <item name="cardStroke">#66FFFFFF</item>
+        <item name="cardFill">@color/surface</item>
+        <!-- 白卡压在淡色底上，描边得用淡灰才分得出边；用白反而看不见 -->
+        <item name="cardStroke">@color/divider</item>
         <item name="cardStrokeWidth">1dp</item>
-        <item name="softFill">#6BFFFFFF</item>
+        <item name="softFill">@color/surface_alt</item>
         <item name="glassFill">#D0FFFFFF</item>
         <item name="glassStroke">#80FFFFFF</item>
     </style>
 
     <!--
-      液态玻璃：亮调色板 + 更透的卡片 + 亮边高光 + 饱和渐变背景，
-      比高斯模糊更「湿」，边缘更明显。
+      液态玻璃：亮调色板 + **不透明白卡** + 底层极淡的暖色流动光团，描边比模糊那套厚一点。
     -->
     <style name="Theme.Checkin.Liquid" parent="Theme.Checkin">
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <!-- 比高斯模糊更透，光团的颜色和边界都要透上来 -->
-        <item name="cardFill">#7AFFFFFF</item>
-        <item name="cardStroke">#B3FFFFFF</item>
+        <item name="cardFill">@color/surface</item>
+        <item name="cardStroke">@color/divider</item>
         <item name="cardStrokeWidth">1.5dp</item>
-        <item name="softFill">#4DFFFFFF</item>
-        <!-- 液态玻璃最透，靠 1.5dp 亮边撑出「湿」的边缘 -->
+        <item name="softFill">@color/surface_alt</item>
+        <!-- 长按浮层背后被真实模糊过，这两项保持半透明才看得出模糊，跟卡片不一样 -->
         <item name="glassFill">#BFFFFFFF</item>
         <item name="glassStroke">#A6FFFFFF</item>
     </style>

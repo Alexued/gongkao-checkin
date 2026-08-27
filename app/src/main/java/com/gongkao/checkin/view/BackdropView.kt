@@ -14,10 +14,13 @@ import kotlin.math.sin
 /**
  * 玻璃主题铺在页面最底层的动态背景：几团光**像呼吸一样**慢慢胀缩，位置只轻微游走。
  *
- * 两套主题是同一种「团」，靠**渐变的软硬**和**呼吸的深浅**分开：
- * - [useBlurPreset]（高斯模糊）：团巨大、渐变一路化到透明、**没有边缘**，呼吸浅而慢 —— 一片会涨落的光雾。
- * - [useLiquidPreset]（液态玻璃）：团更聚拢、渐变中段是平的再快速收尾所以**看得见边**，
- *   边缘还有一圈随呼吸明暗的白色高光，呼吸深而快 —— 像几颗鼓胀的玻璃泡。
+ * **色都压得很淡**（团心 alpha 只有 8%~14%），底色本身就接近 `@color/bg`。
+ * 卡片是不透明白的，所以这层只在卡片缝隙、页面边距、顶栏底栏那些地方透出一点色晕 ——
+ * 要的是「白面板浮在一层会呼吸的淡色雾上」，不是一块花背景。改深任何一处都会立刻显脏。
+ *
+ * 两套主题是同一种「团」，靠**色温**、**渐变的软硬**和**呼吸的深浅**分开：
+ * - [useBlurPreset]（高斯模糊）：偏冷，团巨大、渐变一路化到透明、**没有边缘**，呼吸浅而慢。
+ * - [useLiquidPreset]（液态玻璃）：偏暖，团更聚拢、渐变中段是平的再快速收尾所以**隐约看得见边**，呼吸深而快。
  *
  * ## 性能（这台机器 120Hz，帧预算 8.3ms）
  * 瓶颈是**过度绘制**：几个大半径径向渐变叠起来相当于四五层全屏填充。三个措施：
@@ -57,10 +60,6 @@ class BackdropView(ctx: Context) : View(ctx) {
 
     private val orbs = ArrayList<Orb>(5)
 
-    /** 液态玻璃才有：沿团边缘的一圈白色高光，亮度随呼吸变。 */
-    private var rim = false
-    private val rimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
-
     /** 渐变色标。模糊是一路化开，液态中段平、末段陡，所以能看出边。 */
     private var stops = floatArrayOf(0f, 1f)
     private var edged = false
@@ -74,36 +73,42 @@ class BackdropView(ctx: Context) : View(ctx) {
 
     // ------------------------------------------------------------ 预设
 
-    /** 高斯模糊：冷色（蓝 / 紫），团大、无边、呼吸浅而慢。 */
+    /**
+     * 高斯模糊：冷色（蓝 / 紫），团大、无边、呼吸浅而慢。
+     *
+     * 团大所以中心能叠到三四层，单团 alpha 压到 8%~10%，叠完也就三成，是一层淡雾。
+     */
     fun useBlurPreset() {
-        baseFrom = 0xFFE4E9F8.toInt()
-        baseTo = 0xFFEAE6FA.toInt()
+        baseFrom = 0xFFF1F4FC.toInt()
+        baseTo = 0xFFF4F2FC.toInt()
         edged = false
-        rim = false
         stops = floatArrayOf(0f, 1f)
         orbs.clear()
-        orbs += Orb(0xFF7B93FF.toInt(), 0.78f, 0.22f, 0.20f, 0.13f, 7200, 0.035f, 23000, 0f)
-        orbs += Orb(0xFFA48CFF.toInt(), 0.72f, 0.80f, 0.34f, 0.11f, 8600, 0.030f, 27000, 1.1f)
-        orbs += Orb(0xFF6FA8FF.toInt(), 0.70f, 0.26f, 0.74f, 0.14f, 6400, 0.032f, 25000, 2.3f)
-        orbs += Orb(0xFFC0A6FF.toInt(), 0.66f, 0.78f, 0.88f, 0.12f, 9400, 0.028f, 29000, 3.4f)
-        orbs += Orb(0xFF8FB4FF.toInt(), 0.60f, 0.50f, 0.52f, 0.15f, 5600, 0.040f, 21000, 4.6f)
+        orbs += Orb(0x187B93FF, 0.78f, 0.22f, 0.20f, 0.13f, 7200, 0.035f, 23000, 0f)
+        orbs += Orb(0x16A48CFF, 0.72f, 0.80f, 0.34f, 0.11f, 8600, 0.030f, 27000, 1.1f)
+        orbs += Orb(0x186FA8FF, 0.70f, 0.26f, 0.74f, 0.14f, 6400, 0.032f, 25000, 2.3f)
+        orbs += Orb(0x15C0A6FF, 0.66f, 0.78f, 0.88f, 0.12f, 9400, 0.028f, 29000, 3.4f)
+        orbs += Orb(0x1A8FB4FF, 0.60f, 0.50f, 0.52f, 0.15f, 5600, 0.040f, 21000, 4.6f)
         rebuild()
     }
 
-    /** 液态玻璃：暖色为主 + 一团青，团聚拢、**有边**、边上有高光，呼吸深而快。 */
+    /**
+     * 液态玻璃：暖色为主 + 一团青，团聚拢、**隐约有边**，呼吸深而快。
+     *
+     * 团比模糊那套小，叠得少，所以单团 alpha 可以略高（11%~13%）才看得见。
+     */
     fun useLiquidPreset() {
-        baseFrom = 0xFFF6F9FF.toInt()
-        baseTo = 0xFFFFF2F6.toInt()
+        baseFrom = 0xFFF6F8FD.toInt()
+        baseTo = 0xFFFDF5F7.toInt()
         edged = true
-        rim = true
         // 中段几乎不衰减，0.82 之后才快速收到透明 —— 这是「看得见边」的关键
         stops = floatArrayOf(0f, 0.62f, 0.82f, 1f)
         orbs.clear()
-        orbs += Orb(0xFFFF7FB0.toInt(), 0.40f, 0.24f, 0.20f, 0.22f, 4200, 0.045f, 15000, 0.4f)
-        orbs += Orb(0xFFFFA96B.toInt(), 0.36f, 0.79f, 0.33f, 0.20f, 5000, 0.040f, 17500, 1.7f)
-        orbs += Orb(0xFFE07BFF.toInt(), 0.34f, 0.22f, 0.72f, 0.24f, 3800, 0.048f, 13500, 2.9f)
-        orbs += Orb(0xFFFFD05B.toInt(), 0.31f, 0.78f, 0.86f, 0.21f, 4600, 0.042f, 16500, 4.1f)
-        orbs += Orb(0xFF4FD8C4.toInt(), 0.28f, 0.52f, 0.50f, 0.25f, 3400, 0.052f, 12000, 5.2f)
+        orbs += Orb(0x22FF7FB0, 0.40f, 0.24f, 0.20f, 0.22f, 4200, 0.045f, 15000, 0.4f)
+        orbs += Orb(0x20FFA96B, 0.36f, 0.79f, 0.33f, 0.20f, 5000, 0.040f, 17500, 1.7f)
+        orbs += Orb(0x1EE07BFF, 0.34f, 0.22f, 0.72f, 0.24f, 3800, 0.048f, 13500, 2.9f)
+        orbs += Orb(0x22FFD05B, 0.31f, 0.78f, 0.86f, 0.21f, 4600, 0.042f, 16500, 4.1f)
+        orbs += Orb(0x1C4FD8C4, 0.28f, 0.52f, 0.50f, 0.25f, 3400, 0.052f, 12000, 5.2f)
         rebuild()
     }
 
@@ -130,7 +135,6 @@ class BackdropView(ctx: Context) : View(ctx) {
             o.shader = RadialGradient(0f, 0f, 1f, cols, stops, Shader.TileMode.CLAMP)
             o.paint.shader = o.shader
         }
-        rimPaint.strokeWidth = (width * 0.0055f).coerceAtLeast(1.5f)
     }
 
     // ------------------------------------------------------------ 绘制
@@ -154,13 +158,6 @@ class BackdropView(ctx: Context) : View(ctx) {
             o.matrix.postTranslate(x, y)
             o.shader?.setLocalMatrix(o.matrix)
             canvas.drawCircle(x, y, r, o.paint)
-
-            if (rim) {
-                // 吸气时亮、呼气时暗，玻璃泡的感觉主要来自这圈光
-                rimPaint.color = Color.WHITE
-                rimPaint.alpha = (70 + 90 * (breath * 0.5f + 0.5f)).toInt().coerceIn(0, 255)
-                canvas.drawCircle(x, y, r * 0.86f, rimPaint)
-            }
         }
 
         // 跟着 vsync 走，动起来才是匀的
