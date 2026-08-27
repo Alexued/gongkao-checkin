@@ -139,8 +139,13 @@ class SettingsActivity : ListScreen() {
     }
 
     // 拒绝也不用管：没这权限服务照跑，只是那条常驻通知进不了通知栏。
+    // 但**同意了必须再 start 一次**：申请权限时服务已经把通知发出去了，那一次还没权限、
+    // 被系统直接拦掉（dumpsys 里 numBlocked 涨、numPostedByApp 不动），拿到权限系统也不会补发。
+    // 不补这一下的话，第一次开「允许被发现」通知栏始终空着，得手动关一次再开才出来。
     private val requestNotify =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted && Repo.read { it.settings.syncDiscoverable }) SyncService.start(this)
+        }
 
     /** 开「允许被发现」时才要通知权限——13+ 上不申请的话那条前台服务通知不显示。 */
     private fun askNotifyPermission() {
