@@ -280,6 +280,7 @@
     <string name="theme_switched">已切换到%1$s</string>
     <string name="reorder_on">排序模式：按住任务上下拖动</string>
     <string name="reorder_off">已退出排序模式</string>
+    <string name="reorder_carry_hint">欠账不能调顺序，拖下面的当天任务</string>
     <string name="reorder_done">完成</string>
     <string name="countdown_none_general">长按统计页日历可标记重要日</string>
     <string name="countdown_left">距结束还有 %1$d 天</string>

@@ -218,8 +218,48 @@ class TodayPage(host: MainActivity) : Page(host) {
     private var dragActive = false
 
     /**
+     * 排序模式下按住欠账行的反馈。欠账是按任务聚合出来的，没有自己的顺序，拖不了；
+     * 但它排在列表最前面，静音之后要是什么都不做，用户按半天没反应会以为坏了，
+     * 所以给一句提示指向下面的当天任务。
+     */
+    private fun wireCarryHint(row: View) {
+        val timeout = android.view.ViewConfiguration.getLongPressTimeout().toLong()
+        val slop = android.view.ViewConfiguration.get(row.context).scaledTouchSlop
+        var downY = 0f
+        var pending: Runnable? = null
+        row.setOnTouchListener { v, ev ->
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    downY = ev.rawY
+                    val r = Runnable { ctx.toast(ctx.getString(R.string.reorder_carry_hint)) }
+                    pending = r
+                    v.postDelayed(r, timeout)
+                    true
+                }
+                // 滑动就当是在滚列表，把提示撤掉、手势让回滚动容器
+                MotionEvent.ACTION_MOVE -> {
+                    if (kotlin.math.abs(ev.rawY - downY) > slop) {
+                        pending?.let { v.removeCallbacks(it) }
+                        pending = null
+                    }
+                    true
+                }
+
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    pending?.let { v.removeCallbacks(it) }
+                    pending = null
+                    true
+                }
+
+                else -> false
+            }
+        }
+    }
+
+    /**
      * 排序模式下的拖动。**按住**某一行才开始拖，之后上下移动，越过相邻行就换位并
-     * 立刻写回顺序；松手结束。只对当天条目生效——欠账是聚合出来的，没有独立顺序。
+     * 立刻写回顺序；松手结束。只对当天条目生效——欠账是聚合出来的，没有独立顺序，
+     * 它走 [wireCarryHint]。
      *
      * 装在**外层 row** 上而不是内层 taskRow：taskRow 只占卡片上半部分，装它的话
      * 卡片下缘按不动。前提是先把行内所有可点的后代静音（见 [muteDescendants]）——
@@ -486,9 +526,12 @@ class TodayPage(host: MainActivity) : Page(host) {
         // 排序模式下这一行只管拖：先静音行内所有可点的后代（否则触摸被 check/btnMinus
         // 先吃掉，长按弹出的是任务菜单而不是起拖），再把拖动装到外层 row 上。
         // 必须排在 bindSubtasks 之后：步骤行是那边每次重建的，得连它们一起静音。
-        if (reordering && item.kind != KIND_CARRY) {
+        //
+        // 欠账行也要静音：它不能拖（没有独立顺序），但要是漏掉就还是会弹任务菜单——
+        // 欠账排在最前面，排序模式下手指第一个碰到的就是它。
+        if (reordering) {
             muteDescendants(row)
-            wireDrag(row, item)
+            if (item.kind == KIND_CARRY) wireCarryHint(row) else wireDrag(row, item)
         } else {
             wireDrag(row, item) // 非排序模式：清掉可能残留的拖动监听
             minus.tap { Repo.bump(Repo.today().date, item.key, -1) }
