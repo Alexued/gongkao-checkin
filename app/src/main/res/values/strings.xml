@@ -178,17 +178,14 @@
     <string name="menu_delete_confirm">删除「%1$s」？之前的打卡记录会保留。</string>
 
     <string name="setting_end_date_note">设了之后倒计时按它算，之后不再生成任务</string>
-    <string name="sync_note">电脑和手机连同一个 Wi-Fi，用浏览器打开就能看</string>
     <string name="device_sync_note">两台手机之间整份覆盖传输，需要对方确认</string>
     <string name="about_intro">软件介绍</string>
-    <string name="about_intro_sub">在浏览器里打开项目介绍页</string>
-    <string name="about_intro_fail">没有可用的浏览器</string>
+    <string name="about_intro_sub">这个应用能做什么</string>
     <string name="about_taps_left">再点 %1$d 下查看更新日志</string>
     <string name="changelog_title">更新日志</string>
     <string name="changelog_current">当前版本</string>
     <string name="stat_days_expand">展开 %1$d 天</string>
     <string name="stat_days_collapse">收起</string>
-    <string name="sync_switch">开启网页同步</string>
 
     <string name="bank_review_title">本轮复盘</string>
     <string name="bank_review_summary">成绩</string>
@@ -256,11 +253,7 @@
     <string name="setting_end_date_sub">用于倒计时，之后不再生成任务</string>
     <string name="setting_not_set">未设置</string>
     <string name="setting_clear">清除</string>
-    <string name="sync_title">局域网网页同步</string>
-    <string name="sync_sub">电脑与手机连同一个 Wi-Fi，浏览器打开下面地址即可</string>
-    <string name="sync_port">端口</string>
     <string name="sync_pin">访问码</string>
-    <string name="sync_warn">开启后同一局域网内的设备都能访问，务必保留访问码。</string>
     <string name="copy">复制</string>
     <string name="copied">已复制</string>
 
@@ -343,9 +336,6 @@
     <string name="detail_undone">未完成</string>
     <string name="sync_on">已开启</string>
     <string name="sync_off">已关闭</string>
-    <string name="sync_url">网页地址</string>
-    <string name="sync_copied">地址已复制</string>
-    <string name="sync_no_wifi">没连上 Wi-Fi，先连局域网</string>
     <string name="sync_pin_new">换一个</string>
     <string name="device_sync_title">设备直连同步</string>
     <string name="device_sync_discoverable">允许被发现</string>
@@ -369,6 +359,55 @@
     <string name="device_sync_no_wifi">没连上 Wi-Fi，先连局域网</string>
     <string name="device_sync_scan_qr">扫描对方的二维码</string>
     <string name="device_sync_show_qr">显示我的二维码</string>
+    <string name="device_sync_warn">开着「允许被发现」时，同一 Wi-Fi 下的设备能看到这台手机；覆盖数据仍需访问码。</string>
+    <!-- 软件介绍页。加功能时记得同步改这一组文案，见 IntroActivity 的注释。 -->
+    <string name="intro_lead_title">把备考拆成每天能完成的一件事</string>
+    <string name="intro_lead_body">打卡、计时、背诵、真题复盘都在一个应用里。数据只存在自己手机上，不用注册，不联网也能用。</string>
+    <string name="intro_lead_req">当前版本 %1$s · Android 8.0 及以上</string>
+
+    <string name="intro_sec_daily">每天</string>
+    <string name="intro_sec_daily_sub">打卡这件事，做到不用想</string>
+    <string name="intro_task_title">任务与步骤</string>
+    <string name="intro_task_body">可以只打一个勾，也可以设数量目标（20 题、1 篇），或者拆成几步逐条勾掉。</string>
+    <string name="intro_task_p1">拆了步骤的任务，勾完最后一步自动完成</string>
+    <string name="intro_task_p2">没做完的量第二天自动结转，显示欠了几天</string>
+    <string name="intro_task_p3">长按任务卡直接编辑、开始专注、调顺序或删除</string>
+    <string name="intro_overview_title">学习概览</string>
+    <string name="intro_overview_body">一张建议卡只说一件事：先补最早的欠账，还是先做没完成的那条。</string>
+    <string name="intro_overview_p1">当日事项、专注时长、复盘条数一屏看完</string>
+    <string name="intro_overview_p2">行测 / 申论 双轨进度，按任务标题自动分</string>
+    <string name="intro_stats_title">日历与统计</string>
+    <string name="intro_stats_body">热力图看哪天断了档，连续全勤和完成率都在同一屏。</string>
+    <string name="intro_stats_p1">长按某天标记考试日，首页显示倒计时</string>
+    <string name="intro_stats_p2">近两周完成率柱状图、最近 12 次计时对比</string>
+    <string name="intro_stats_p3">点某天看当天做过的全部记录</string>
+
+    <string name="intro_sec_practice">练习</string>
+    <string name="intro_sec_practice_sub">资料分析，做完知道为什么错</string>
+    <string name="intro_step_title">分步讲解</string>
+    <string name="intro_step_body">选完立即判对错，然后一步步展开讲解：每步划掉被排除的选项、高亮该看的数字，最后落到正确答案。</string>
+    <string name="intro_set_title">成套做题</string>
+    <string name="intro_set_body">自己定每次抽几题，左右滑动切上下题。答题卡看哪些做了哪些没做，点题号直接跳。</string>
+    <string name="intro_set_p1">做到一半退出可以存档，之后「继续做题」接着做</string>
+    <string name="intro_set_p2">每次做完都记一条，能回头看当时选了什么</string>
+    <string name="intro_recite_title">背诵与速算</string>
+    <string name="intro_recite_body">百化分、资料分析公式、18 种速算技巧，讲解回顾式：先自己想，再翻开对照，自评记住还是模糊。</string>
+    <string name="intro_timer_title">专注计时</string>
+    <string name="intro_timer_body">秒表分段打点，记录每道题用时。另有番茄钟，25 / 5 / 15 分钟，四轮后长休息。</string>
+
+    <string name="intro_sec_usage">两种用法</string>
+    <string name="intro_sec_usage_sub">不备考的时候，它就是个习惯打卡</string>
+    <string name="intro_mode_title">通用模式</string>
+    <string name="intro_mode_body">在设置里一键切换。界面措辞和统计口径跟着变，背诵训练收起来，但任务、打卡、计时、训练记录一条都不会动，切回考公模式原样都在。</string>
+    <string name="intro_sync_title">同步与备份</string>
+    <string name="intro_sync_body">两台手机之间直接传，不经过任何服务器。</string>
+    <string name="intro_sync_p1">同一个 Wi-Fi 下搜索附近设备，整份收发</string>
+    <string name="intro_sync_p2">用访问码或扫二维码确认，接收方要再确认一次才会覆盖</string>
+
+    <string name="intro_sec_data">关于数据</string>
+    <string name="intro_data_body">所有记录都写在手机本地。没有账号，没有埋点，没有广告，也没有任何一次把你的数据往外发的请求。同步只在你自己的局域网里发生，只有检查更新时才会访问 GitHub。</string>
+    <string name="intro_footer">考公打卡 · 个人项目，仓库尚未附 LICENSE，不视为已授予通用开源许可。</string>
+
     <string name="setting_about">关于</string>
     <string name="setting_version">版本</string>
     <string name="setting_data">数据</string>

@@ -1,11 +1,7 @@
 package com.gongkao.checkin.sync
 
 import android.content.Context
-import com.gongkao.checkin.data.DateUtil
-import com.gongkao.checkin.data.REPEAT_DAILY
-import com.gongkao.checkin.data.REPEAT_UNTIL
 import com.gongkao.checkin.data.Repo
-import com.gongkao.checkin.data.TaskDef
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -13,10 +9,11 @@ import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoHTTPD.Method
 
 /**
- * 局域网同步服务端。
+ * 局域网服务端。只剩两件事：**局域网更新**（报版本、供安装包）和
+ * **设备直连同步**（被发现、整份收发）。电脑端网页同步已移除。
  *
- * 安全说明：明文 HTTP，仅限局域网访问，用 4 位 PIN 做最低限度校验。
- * 同一 WiFi 下拿到 PIN 的人可以读写打卡数据，不要在公共 WiFi 下开启。
+ * 安全说明：明文 HTTP，仅限局域网访问，整份收发用 4 位 PIN 做最低限度校验。
+ * 同一 WiFi 下拿到 PIN 的人可以覆盖打卡数据，不要在公共 WiFi 下开「允许被发现」。
  */
 class WebServer(private val ctx: Context, port: Int) : NanoHTTPD("0.0.0.0", port) {
 
@@ -30,8 +27,6 @@ class WebServer(private val ctx: Context, port: Int) : NanoHTTPD("0.0.0.0", port
         val uri = session.uri ?: "/"
         return runCatching {
             when {
-                uri == "/" || uri == "/index.html" -> html(WebAssets.page())
-                uri == "/api/ping" -> json("""{"ok":true,"revision":${Repo.revision}}""")
                 // 局域网更新用：报版本 + 供包。不加 PIN —— 只是自己的安装包，
                 // 而且对端要靠这两个接口发现「谁的版本更新」。
                 uri == "/api/version" -> json(ApkServe.versionJson(ctx))
@@ -39,12 +34,6 @@ class WebServer(private val ctx: Context, port: Int) : NanoHTTPD("0.0.0.0", port
                 // 设备直连发现：不加 PIN，只有「允许被发现」开着才应答，
                 // 否则扫描方连一个「关闭」的应答都拿不到，等同于探测不到这台设备。
                 uri == "/api/discover" -> discover()
-                uri == "/api/state" -> guarded(session) { json(StateJson.build()) }
-                uri == "/api/day" -> guarded(session) {
-                    val d = session.parameters["date"]?.firstOrNull() ?: DateUtil.todayStr()
-                    json(StateJson.dayDetail(d))
-                }
-                uri == "/api/action" -> guarded(session) { action(session) }
                 // 设备直连整份覆盖同步：GET 导出本机数据，POST 用请求体整份覆盖本机数据。
                 uri == "/api/full" && session.method == Method.GET -> guarded(session) {
                     json(Repo.exportFull())
@@ -91,47 +80,6 @@ class WebServer(private val ctx: Context, port: Int) : NanoHTTPD("0.0.0.0", port
         return parsed
     }
 
-    private fun action(session: IHTTPSession): Response {
-        val body = readBody(session) ?: return json("""{"ok":false,"error":"缺少请求体"}""")
-        val what = body.get("action")?.asString ?: return json("""{"ok":false,"error":"缺少 action"}""")
-        Repo.ensureDays()
-        when (what) {
-            "bump" -> {
-                val key = body.get("key")?.asString ?: return bad("key")
-                val delta = body.get("delta")?.asInt ?: 1
-                val date = body.get("date")?.asString ?: DateUtil.todayStr()
-                Repo.bump(date, key, delta)
-            }
-            "addTask" -> {
-                val title = body.get("title")?.asString?.trim().orEmpty()
-                if (title.isEmpty()) return bad("title")
-                val repeat = body.get("repeat")?.asString ?: REPEAT_DAILY
-                val until = body.get("untilDate")?.takeIf { !it.isJsonNull }?.asString
-                val target = body.get("target")?.asInt ?: 1
-                if (repeat == REPEAT_UNTIL && until.isNullOrBlank()) return bad("untilDate")
-                Repo.upsertTask(
-                    TaskDef(
-                        title = title, repeat = repeat, untilDate = until,
-                        startDate = DateUtil.todayStr(), target = target.coerceAtLeast(1),
-                        colorIndex = Repo.read { it.tasks.size } % 6
-                    )
-                )
-            }
-            "deleteTask" -> {
-                val id = body.get("id")?.asString ?: return bad("id")
-                Repo.deleteTask(id)
-            }
-            "setEndDate" -> {
-                val d = body.get("date")?.takeIf { !it.isJsonNull }?.asString
-                Repo.setEndDate(d?.takeIf { it.isNotBlank() })
-            }
-            else -> return json("""{"ok":false,"error":"未知 action"}""")
-        }
-        return json("""{"ok":true,"revision":${Repo.revision}}""")
-    }
-
-    private fun bad(field: String) = json("""{"ok":false,"error":"缺少字段 $field"}""")
-
     /** 设备直连发现的应答：昵称 + 版本，供扫描方在列表里认出这台设备。 */
     private fun discover(): Response {
         val discoverable = Repo.read { it.settings.syncDiscoverable }
@@ -157,10 +105,6 @@ class WebServer(private val ctx: Context, port: Int) : NanoHTTPD("0.0.0.0", port
                 it.addHeader("Access-Control-Allow-Origin", "*")
                 it.addHeader("Cache-Control", "no-store")
             }
-
-    private fun html(body: String): Response =
-        newFixedLengthResponse(Response.Status.OK, "text/html; charset=utf-8", body)
-            .also { it.addHeader("Cache-Control", "no-store") }
 
     private fun notFound(): Response =
         newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain; charset=utf-8", "404")

@@ -11,8 +11,6 @@
     <attr name="cardStrokeWidth" format="dimension" />
     <!-- 次级面板（pill / 输入框）底色 -->
     <attr name="softFill" format="color" />
-    <!-- 页面底色之上那层彩色背景是否可见、用哪张 -->
-    <attr name="backdropDrawable" format="reference" />
 
     <!--
       浮层（长按菜单这类）的玻璃底。跟 cardFill 分开是因为浮层背后被真实模糊过，

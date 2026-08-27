@@ -259,8 +259,7 @@ data class PomodoroSession(
 data class Settings(
     /** 总结束日（考试日），用于倒计时，也停止生成之后的任务 */
     var endDate: String? = null,
-    var syncEnabled: Boolean = false,
-    /** 允许被局域网内其它设备发现（设备直连同步用，独立于网页同步开关） */
+    /** 允许被局域网内其它设备发现（设备直连同步用） */
     var syncDiscoverable: Boolean = false,
     var syncPort: Int = 8765,
     var syncPin: String = "",
@@ -271,8 +270,6 @@ data class Settings(
     var reviewSkillId: String = "builtin",
     /** 使用模式（AppMode.id）：exam=考公，general=通用 */
     var appMode: String = "exam",
-    /** 统计页「按天查看」是否展开（默认收起，14 条铺开太长） */
-    var statsDaysExpanded: Boolean = false,
     /** 复盘每次抽几题 */
     var bankBatchSize: Int = 10,
     /** 界面主题（AppTheme.id）：light / dark / blur / liquid */

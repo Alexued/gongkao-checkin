@@ -416,8 +416,6 @@ object Repo {
     }
     fun pomodoroSessions(): List<PomodoroSession> = read { it.pomodoroSessions.toList() }
 
-    fun setStatsDaysExpanded(on: Boolean) = edit { st -> st.settings.statsDaysExpanded = on }
-
     fun appTheme(): AppTheme = AppTheme.of(state.settings.themeId)
 
     fun setAppTheme(t: AppTheme) = edit { st -> st.settings.themeId = t.id }

@@ -1,15 +1,12 @@
 package com.gongkao.checkin.ui
 
 import android.app.Activity
-import android.graphics.RenderEffect
-import android.graphics.Shader
-import android.os.Build
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.ImageView
 import androidx.appcompat.app.AppCompatDelegate
 import com.gongkao.checkin.data.AppTheme
 import com.gongkao.checkin.data.Repo
+import com.gongkao.checkin.view.BackdropView
 
 /**
  * 主题的应用入口。每个 Activity 在 setContentView **之前** 调 [apply]。
@@ -18,9 +15,6 @@ import com.gongkao.checkin.data.Repo
  * 再套上该主题的 style（决定卡片质感那几个 ?attr）。
  */
 object Themes {
-
-    /** 模糊半径。太小看不出玻璃感，太大彩色光团会糊成一片灰。 */
-    private const val BLUR_RADIUS = 46f
 
     fun apply(activity: Activity) {
         val theme = Repo.appTheme()
@@ -36,15 +30,14 @@ object Themes {
      * 给页面铺底层彩色背景（只有模糊/液态玻璃主题需要）。
      * 在 setContentView **之后** 调，会把背景插到内容下面。
      *
-     * API 31+ 用 RenderEffect 做真高斯模糊；低版本就用 drawable 本身的柔和渐变，
-     * 观感弱一些但不会露出硬边。
+     * 用自绘的 [BackdropView] 而不是静态 drawable：光团要慢慢流动。
+     * 它自己会在窗口不可见时停掉重绘循环。
      */
     fun installBackdrop(activity: Activity) {
         val theme = Repo.appTheme()
         if (!theme.hasBackdrop) return
 
         val root = activity.findViewById<ViewGroup>(android.R.id.content) ?: return
-        val res = themeAttrDrawable(activity) ?: return
 
         // 页面根布局大多写死了 android:background="@color/bg"，不透明，会把底层背景整块盖住。
         // 玻璃主题下把它清掉，彩色底才透得上来。
@@ -52,28 +45,10 @@ object Themes {
             root.getChildAt(i).background = null
         }
 
-        val backdrop = ImageView(activity).apply {
-            setImageDrawable(res)
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            isClickable = false
+        val backdrop = BackdropView(activity).apply {
             layoutParams = FrameLayout.LayoutParams(-1, -1)
-            if (theme == AppTheme.BLUR && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                setRenderEffect(
-                    RenderEffect.createBlurEffect(BLUR_RADIUS, BLUR_RADIUS, Shader.TileMode.CLAMP)
-                )
-            }
+            if (theme == AppTheme.BLUR) useBlurPreset() else useLiquidPreset()
         }
         root.addView(backdrop, 0)
-    }
-
-    /** 取当前主题的 backdropDrawable；没配（白/黑主题）就返回 null。 */
-    private fun themeAttrDrawable(activity: Activity): android.graphics.drawable.Drawable? {
-        val attrs = intArrayOf(com.gongkao.checkin.R.attr.backdropDrawable)
-        val ta = activity.theme.obtainStyledAttributes(attrs)
-        return try {
-            ta.getDrawable(0)
-        } finally {
-            ta.recycle()
-        }
     }
 }

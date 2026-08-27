@@ -13,7 +13,7 @@ import com.gongkao.checkin.R
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.ui.MainActivity
 
-/** 常驻前台服务，保证锁屏/切后台后局域网同步不断。 */
+/** 常驻前台服务，保证锁屏/切后台后仍能被局域网内其它设备发现。 */
 class SyncService : android.app.Service() {
 
     private var server: WebServer? = null
@@ -56,7 +56,7 @@ class SyncService : android.app.Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         return NotificationCompat.Builder(this, CHANNEL)
-            .setContentTitle("电脑端同步已开启")
+            .setContentTitle("允许被附近设备发现")
             .setContentText(url)
             .setSmallIcon(R.drawable.ic_today)
             .setOngoing(true)

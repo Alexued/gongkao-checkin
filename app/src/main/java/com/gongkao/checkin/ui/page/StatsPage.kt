@@ -39,7 +39,10 @@ class StatsPage(host: MainActivity) : Page(host) {
     private lateinit var dayHeader: View
     private lateinit var dayToggle: TextView
 
-    /** 按天列表是否展开，持久化在 Settings 里。 */
+    /**
+     * 按天列表是否展开。**只存在内存里、不持久化** —— 每次进 app 都从收起开始，
+     * 14 条铺开太长，不该把上次的展开状态带到下一次。
+     */
     private var daysExpanded = false
     private var dayCount = 0
 
@@ -70,7 +73,6 @@ class StatsPage(host: MainActivity) : Page(host) {
         dayToggle = v.findViewById(R.id.dayToggle)
         dayHeader.tap {
             daysExpanded = !daysExpanded
-            Repo.setStatsDaysExpanded(daysExpanded)
             paintDayList()
         }
     }
@@ -98,7 +100,6 @@ class StatsPage(host: MainActivity) : Page(host) {
 
         val recent = dates.take(14)
         dayCount = recent.size
-        daysExpanded = Repo.read { it.settings.statsDaysExpanded }
         bindDays(recent)
         paintDayList()
 

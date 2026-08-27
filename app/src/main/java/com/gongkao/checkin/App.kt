@@ -9,8 +9,7 @@ class App : Application() {
         super.onCreate()
         instance = this
         Repo.init(this)
-        val st = Repo.read { it.settings }
-        if (st.syncEnabled || st.syncDiscoverable) {
+        if (Repo.read { it.settings.syncDiscoverable }) {
             runCatching { SyncService.start(this) }
         }
     }

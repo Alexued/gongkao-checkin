@@ -1,7 +1,5 @@
 package com.gongkao.checkin.ui
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.gongkao.checkin.BuildConfig
@@ -17,7 +15,7 @@ import com.gongkao.checkin.sync.LanInfo
 import com.gongkao.checkin.sync.SyncService
 import java.time.LocalDate
 
-/** 设置：总结束日 + 局域网网页同步 + 关于。 */
+/** 设置：使用模式 + 总结束日 + 设备直连同步 + 更新 + 关于。 */
 class SettingsActivity : ListScreen() {
 
     override fun title(): CharSequence = getString(R.string.settings)
@@ -29,7 +27,6 @@ class SettingsActivity : ListScreen() {
     override fun build() {
         modeSection()
         endDateSection()
-        syncSection()
         deviceSyncSection()
         updateSection()
         aboutSection()
@@ -132,64 +129,9 @@ class SettingsActivity : ListScreen() {
         )
     }
 
-    // ------------------------------------------------------------ 局域网同步
-
-    private fun syncSection() {
-        sectionColored(
-            getString(R.string.sync_title),
-            R.color.teal,
-            getString(R.string.sync_note)
-        )
-        val on = Repo.read { it.settings.syncEnabled }
-        val pin = Repo.read { it.settings.syncPin }
-        val ip = LanInfo.ip(this)
-
-        group {
-            // 标题在分区标题里已经有了，这行只留开关本身
-            row(
-                title = getString(R.string.sync_switch),
-                value = getString(if (on) R.string.sync_on else R.string.sync_off),
-                chevron = true
-            ) { toggleSync(!on) }
-
-            if (on) {
-                // 地址/访问码把「值」和「操作」并到同一行。原先是上面一张 kv 卡列出三个值、
-                // 下面再来两行「网页地址 复制」「访问码 换一个」，同屏出现两遍，是这页最乱的地方。
-                val url = ip?.let { "http://$it:${LanInfo.port()}" }
-                row(
-                    title = getString(R.string.sync_url),
-                    sub = url ?: getString(R.string.sync_no_wifi),
-                    value = if (url != null) getString(R.string.copy) else null
-                ) { if (url != null) copy(url) }
-                row(
-                    title = getString(R.string.sync_port),
-                    sub = LanInfo.port().toString()
-                )
-                row(
-                    title = getString(R.string.sync_pin),
-                    sub = pin,
-                    value = getString(R.string.sync_pin_new)
-                ) { Repo.edit { st -> st.settings.syncPin = (1000..9999).random().toString() } }
-            }
-        }
-        warn(getString(R.string.sync_warn))
-    }
-
-    private fun toggleSync(on: Boolean) {
-        Repo.edit { st -> st.settings.syncEnabled = on }
-        syncServiceRefresh()
-    }
-
-    /** 网页同步、设备直连发现共用同一个前台服务；任意一个开着就要常驻。 */
+    /** 只有「允许被发现」用得到这个前台服务了（电脑端网页同步已移除）。 */
     private fun syncServiceRefresh() {
-        val st = Repo.read { it.settings }
-        if (st.syncEnabled || st.syncDiscoverable) SyncService.start(this) else SyncService.stop(this)
-    }
-
-    private fun copy(text: String) {
-        val cm = getSystemService(ClipboardManager::class.java)
-        cm?.setPrimaryClip(ClipData.newPlainText("url", text))
-        toast(getString(R.string.sync_copied))
+        if (Repo.read { it.settings.syncDiscoverable }) SyncService.start(this) else SyncService.stop(this)
     }
 
     // ------------------------------------------------------------ 设备直连同步
@@ -239,7 +181,16 @@ class SettingsActivity : ListScreen() {
                 title = getString(R.string.device_sync_scan_qr),
                 chevron = true
             ) { scanQrLauncher.launch(android.content.Intent(this, com.gongkao.checkin.sync.QrScanActivity::class.java)) }
+
+            // 访问码必须能看到：对方发/收时要手输**本机**的这个码（不扫码的话）。
+            // 原先它挂在已删掉的「电脑端网页同步」一节里，不搬过来直连就只剩扫码一条路。
+            row(
+                title = getString(R.string.sync_pin),
+                sub = Repo.read { it.settings.syncPin },
+                value = getString(R.string.sync_pin_new)
+            ) { Repo.edit { st -> st.settings.syncPin = (1000..9999).random().toString() } }
         }
+        warn(getString(R.string.device_sync_warn))
     }
 
     private val scanQrLauncher = registerForActivityResult(
@@ -412,7 +363,7 @@ class SettingsActivity : ListScreen() {
                 title = getString(R.string.about_intro),
                 sub = getString(R.string.about_intro_sub),
                 chevron = true
-            ) { openIntroPage() }
+            ) { open<IntroActivity>() }
 
             // 版本号连点 5 下看更新日志，仿系统「开发者选项」那套
             row(
@@ -425,17 +376,6 @@ class SettingsActivity : ListScreen() {
                 sub = getString(R.string.setting_counts, taskCount, dayCount)
             )
         }
-    }
-
-    private fun openIntroPage() {
-        runCatching {
-            startActivity(
-                android.content.Intent(
-                    android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse(INTRO_URL)
-                )
-            )
-        }.onFailure { toast(getString(R.string.about_intro_fail)) }
     }
 
     // ------------------------------------------------------------ 连点看更新日志
@@ -468,6 +408,5 @@ class SettingsActivity : ListScreen() {
         const val TAPS_NEEDED = 5
         // 2.5 秒：1.5 秒对正常手速偏紧，容易点到一半被清零
         const val TAP_WINDOW_MS = 2500L
-        const val INTRO_URL = "https://alexued.github.io/gongkao-checkin/"
     }
 }

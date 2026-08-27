@@ -23,7 +23,6 @@
         <item name="cardStroke">@color/transparent</item>
         <item name="cardStrokeWidth">0dp</item>
         <item name="softFill">@color/surface_alt</item>
-        <item name="backdropDrawable">@null</item>
         <!-- 白主题的浮层：留一点透，背后模糊才看得见；描边用亮白提玻璃边 -->
         <item name="glassFill">#E8FFFFFF</item>
         <item name="glassStroke">#59FFFFFF</item>
@@ -40,21 +39,19 @@
     </style>
 
     <!--
-      高斯模糊：暗调色板 + 半透明卡片 + 底层一张被模糊的彩色背景。
-      卡片描边压得很淡，靠透明度和背景的明暗变化区分层级。
+      高斯模糊：**亮**调色板 + 更厚的半透明白卡 + 底层缓慢流动的低饱和光团。
+      跟液态玻璃的区别在质感：这套卡更实、描边更淡，光团大而糊；
+      液态玻璃卡更透、描边更亮，光团小而饱和。
     -->
     <style name="Theme.Checkin.Blur" parent="Theme.Checkin">
-        <item name="android:windowBackground">@color/bg</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="cardFill">#B2161A21</item>
-        <item name="cardStroke">#26FFFFFF</item>
+        <!-- 卡不能太实：85% 白压在浅底上等于纯白，背后的光团就完全看不见了 -->
+        <item name="cardFill">#B8FFFFFF</item>
+        <item name="cardStroke">#59FFFFFF</item>
         <item name="cardStrokeWidth">1dp</item>
-        <item name="softFill">#59222A36</item>
-        <item name="backdropDrawable">@drawable/bg_backdrop_blur</item>
-        <item name="glassFill">#B8121620</item>
-        <item name="glassStroke">#40FFFFFF</item>
+        <item name="softFill">#7AFFFFFF</item>
+        <item name="glassFill">#D9FFFFFF</item>
+        <item name="glassStroke">#73FFFFFF</item>
     </style>
 
     <!--
@@ -63,11 +60,11 @@
     -->
     <style name="Theme.Checkin.Liquid" parent="Theme.Checkin">
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="cardFill">#A6FFFFFF</item>
-        <item name="cardStroke">#8CFFFFFF</item>
+        <!-- 比高斯模糊更透，光团的颜色和边界都要透上来 -->
+        <item name="cardFill">#8CFFFFFF</item>
+        <item name="cardStroke">#A6FFFFFF</item>
         <item name="cardStrokeWidth">1.5dp</item>
-        <item name="softFill">#66FFFFFF</item>
-        <item name="backdropDrawable">@drawable/bg_backdrop_liquid</item>
+        <item name="softFill">#59FFFFFF</item>
         <!-- 液态玻璃最透，靠 1.5dp 亮边撑出「湿」的边缘 -->
         <item name="glassFill">#BFFFFFFF</item>
         <item name="glassStroke">#A6FFFFFF</item>

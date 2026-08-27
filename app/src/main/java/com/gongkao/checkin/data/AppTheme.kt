@@ -21,8 +21,8 @@ enum class AppTheme(
     LIGHT("light", false, R.style.Theme_Checkin),
     DARK("dark", true, R.style.Theme_Checkin_Dark),
 
-    /** 暗底 + 大面积模糊玻璃，卡片半透、背后有一层被模糊的彩色底 */
-    BLUR("blur", true, R.style.Theme_Checkin_Blur),
+    /** 亮底 + 大面积柔光，卡片半透、背后是缓慢流动的低饱和光团 */
+    BLUR("blur", false, R.style.Theme_Checkin_Blur),
 
     /** 亮底 + 液态玻璃：更透、亮边高光、饱和渐变背景 */
     LIQUID("liquid", false, R.style.Theme_Checkin_Liquid);

@@ -21,7 +21,7 @@ android {
          * 否则本地 1.1.0 算出 2、CI 的 1.1.0 算出 10100，
          * 更新弹层就会出现「发现新版本 v1.1.0 / 当前 v1.1.0」这种自相矛盾的提示。
          */
-        val vName = System.getenv("VERSION_NAME") ?: "1.2.0"
+        val vName = System.getenv("VERSION_NAME") ?: "1.3.0"
         val parts = vName.split('.').map { it.toIntOrNull() ?: 0 }
         versionName = vName
         versionCode = System.getenv("VERSION_CODE")?.toIntOrNull()
