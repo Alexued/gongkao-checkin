@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  浮层玻璃底（长按菜单）。比 bg_card 更透、描边更亮，配合窗口的背后模糊
+  才有毛玻璃观感；模糊不可用时这层半透明底本身就是降级效果。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="?attr/glassFill" />
+    <corners android:radius="24dp" />
+    <stroke
+        android:width="1dp"
+        android:color="?attr/glassStroke" />
+</shape>

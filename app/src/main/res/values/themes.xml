@@ -24,6 +24,9 @@
         <item name="cardStrokeWidth">0dp</item>
         <item name="softFill">@color/surface_alt</item>
         <item name="backdropDrawable">@null</item>
+        <!-- 白主题的浮层：留一点透，背后模糊才看得见；描边用亮白提玻璃边 -->
+        <item name="glassFill">#E8FFFFFF</item>
+        <item name="glassStroke">#59FFFFFF</item>
     </style>
 
     <!-- 黑色：跟白色同结构，调色板由 values-night 换掉 -->
@@ -32,6 +35,8 @@
         <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
         <item name="cardStroke">@color/divider</item>
         <item name="cardStrokeWidth">1dp</item>
+        <item name="glassFill">#D9141821</item>
+        <item name="glassStroke">#33FFFFFF</item>
     </style>
 
     <!--
@@ -48,6 +53,8 @@
         <item name="cardStrokeWidth">1dp</item>
         <item name="softFill">#59222A36</item>
         <item name="backdropDrawable">@drawable/bg_backdrop_blur</item>
+        <item name="glassFill">#B8121620</item>
+        <item name="glassStroke">#40FFFFFF</item>
     </style>
 
     <!--
@@ -61,6 +68,9 @@
         <item name="cardStrokeWidth">1.5dp</item>
         <item name="softFill">#66FFFFFF</item>
         <item name="backdropDrawable">@drawable/bg_backdrop_liquid</item>
+        <!-- 液态玻璃最透，靠 1.5dp 亮边撑出「湿」的边缘 -->
+        <item name="glassFill">#BFFFFFFF</item>
+        <item name="glassStroke">#A6FFFFFF</item>
     </style>
 
     <!--
@@ -113,12 +123,15 @@
 
     <style name="TaskMenuItem">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_height">50dp</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:paddingHorizontal">16dp</item>
         <item name="android:textColor">@color/ink</item>
         <item name="android:textSize">14.5sp</item>
         <item name="android:background">?android:attr/selectableItemBackground</item>
+        <!-- 图标统一 20dp、跟文字留 14dp；tint 走调色板，换主题自动跟着变 -->
+        <item name="android:drawablePadding">14dp</item>
+        <item name="android:drawableTint">@color/ink_sub</item>
     </style>
 
     <style name="TabItem">

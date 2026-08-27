@@ -14,8 +14,9 @@
         android:id="@+id/menuCard"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_card"
-        android:elevation="16dp"
+        android:background="@drawable/bg_glass_menu"
+        android:clipToOutline="true"
+        android:elevation="24dp"
         android:orientation="vertical"
         android:paddingTop="6dp"
         android:paddingBottom="6dp">
@@ -54,26 +55,40 @@
             android:layout_height="1dp"
             android:layout_marginHorizontal="16dp"
             android:layout_marginBottom="4dp"
-            android:background="@color/divider" />
+            android:background="@color/divider_glass" />
 
         <TextView
             android:id="@+id/menuEdit"
             style="@style/TaskMenuItem"
+            android:drawableStart="@drawable/ic_edit"
             android:text="@string/menu_edit" />
 
         <TextView
             android:id="@+id/menuFocus"
             style="@style/TaskMenuItem"
+            android:drawableStart="@drawable/ic_timer"
             android:text="@string/menu_focus" />
 
         <TextView
             android:id="@+id/menuReorder"
             style="@style/TaskMenuItem"
+            android:drawableStart="@drawable/ic_reorder"
             android:text="@string/menu_reorder" />
+
+        <!-- 删除单独一组：上面留一道线隔开，图标和文字都用警示色 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"
+            android:background="@color/divider_glass" />
 
         <TextView
             android:id="@+id/menuDelete"
             style="@style/TaskMenuItem"
+            android:drawableStart="@drawable/ic_trash"
+            android:drawableTint="@color/rose"
             android:text="@string/menu_delete"
             android:textColor="@color/rose" />
     </LinearLayout>

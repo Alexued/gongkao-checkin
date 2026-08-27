@@ -4,7 +4,6 @@ import android.app.Activity
 import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -76,16 +75,5 @@ object Themes {
         } finally {
             ta.recycle()
         }
-    }
-
-    /**
-     * 给某个 view 加实时背景模糊（Android 12+）。用于长按菜单这类浮层。
-     * 低版本静默跳过——调用方的半透明底色本身就是降级方案。
-     */
-    fun blurBehind(view: View, radius: Float = 26f) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
-        view.setRenderEffect(
-            RenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP)
-        )
     }
 }

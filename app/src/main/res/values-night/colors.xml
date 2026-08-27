@@ -11,6 +11,8 @@
     <color name="ink_sub">#9AA5B6</color>
     <color name="ink_dim">#6B7688</color>
     <color name="divider">#242A34</color>
+    <!-- 暗卡上的浮层分隔线反过来用浅色（见 values/colors.xml 的说明） -->
+    <color name="divider_glass">#26FFFFFF</color>
     <color name="accent">#8AA3FF</color>
     <color name="accent_deep">#6C8CFF</color>
     <color name="teal">#4EDCC7</color>

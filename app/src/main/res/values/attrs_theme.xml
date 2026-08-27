@@ -13,4 +13,11 @@
     <attr name="softFill" format="color" />
     <!-- 页面底色之上那层彩色背景是否可见、用哪张 -->
     <attr name="backdropDrawable" format="reference" />
+
+    <!--
+      浮层（长按菜单这类）的玻璃底。跟 cardFill 分开是因为浮层背后被真实模糊过，
+      要比普通卡片更透才看得出模糊，描边也要更亮才压得住背后花掉的画面。
+    -->
+    <attr name="glassFill" format="color" />
+    <attr name="glassStroke" format="color" />
 </resources>

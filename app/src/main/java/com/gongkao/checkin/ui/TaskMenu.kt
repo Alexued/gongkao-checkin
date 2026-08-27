@@ -33,6 +33,9 @@ object TaskMenu {
             .setBackgroundColor(Ui.taskColor(host, task.colorIndex))
 
         val d = Popup.dialog(host, v)
+        // 背后模糊 + 半透明玻璃卡；模糊没生效（低版本/省电模式）就把遮罩加浓兜底，
+        // 否则一张半透明卡飘在完全清晰的页面上会更糊涂
+        val blurred = Popup.blurBehind(d)
         // anchor 传 null：菜单已经盖在行上，缩放原点取卡片中心正好等于行中心
         Popup.wireDismiss(d, scrim, card)
 
@@ -68,7 +71,10 @@ object TaskMenu {
         card.post { place(card, anchor) }
         // Popup.dialog() 只是建窗口，不会自己显示——漏了这句弹层永远不出现且不报错
         d.show()
-        Popup.enter(scrim, card)
+        Popup.enter(
+            scrim, card,
+            scrimAlpha = if (blurred) Popup.SCRIM_GLASS else Popup.SCRIM_SOLID
+        )
     }
 
     /**

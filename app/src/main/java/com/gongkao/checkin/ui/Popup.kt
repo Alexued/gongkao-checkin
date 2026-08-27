@@ -2,6 +2,8 @@ package com.gongkao.checkin.ui
 
 import android.app.Dialog
 import android.content.Context
+import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -20,6 +22,17 @@ object Popup {
     private const val SCRIM_IN = 180L
     private const val CARD_IN = 340L
     private const val OUT = 200L
+
+    /** 默认遮罩浓度。背后有真实模糊时用 [SCRIM_GLASS]，否则模糊会被压死看不出来。 */
+    const val SCRIM_SOLID = 0.42f
+    const val SCRIM_GLASS = 0.2f
+
+    /**
+     * 窗口背后模糊半径，**单位是像素**（不要再乘 density —— 按 dp 折算成 88px
+     * 会把整页糊成一片色块，连卡片轮廓都没了，反而看不出是"背后有东西"）。
+     * 取值跟页面 backdrop 的 46px 一个量级。
+     */
+    private const val WINDOW_BLUR = 40f
 
     /**
      * 建一个铺满屏幕、背景全透明、不带系统动画的 Dialog。
@@ -44,13 +57,33 @@ object Popup {
     }
 
     /**
+     * 给弹层窗口开启「背后模糊」，返回是否真的生效。
+     *
+     * 用窗口级的 [WindowManager.LayoutParams.setBlurBehindRadius] 而不是给 view 设
+     * `RenderEffect` —— 后者模糊的是 view 自己（连里面的文字一起糊掉），
+     * 而我们要糊的是浮层背后的页面。
+     *
+     * 返回 false 的情况（低版本、省电模式、开发者选项关掉了窗口模糊）由调用方
+     * 用更浓的遮罩兜底，不然浮层会飘在完全清晰的页面上。
+     */
+    fun blurBehind(d: Dialog, radius: Float = WINDOW_BLUR): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+        val w = d.window ?: return false
+        val wm = w.windowManager ?: return false
+        if (!wm.isCrossWindowBlurEnabled) return false
+        w.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+        w.attributes = w.attributes.apply { blurBehindRadius = radius.toInt() }
+        return true
+    }
+
+    /**
      * 进场。[anchor] 给了就从它的屏幕位置展开（"从哪来"），
      * 没给就从卡片自身中心展开。
      */
-    fun enter(scrim: View, card: View, anchor: View? = null) {
+    fun enter(scrim: View, card: View, anchor: View? = null, scrimAlpha: Float = SCRIM_SOLID) {
         scrim.setBackgroundColor(transparentBlack(0f))
         Motion.animate(SCRIM_IN, Motion.EXIT) { f ->
-            scrim.setBackgroundColor(transparentBlack(0.42f * f))
+            scrim.setBackgroundColor(transparentBlack(scrimAlpha * f))
         }
 
         card.alpha = 0f
@@ -68,8 +101,11 @@ object Popup {
     /** 退场：缩回锚点（"就从哪回"），动画结束才真正 dismiss。 */
     fun exit(scrim: View, card: View, anchor: View? = null, onEnd: () -> Unit) {
         applyPivot(card, anchor)
+        // 从遮罩当前浓度淡出，而不是写死的峰值：各弹层浓度不同（玻璃浮层更淡），
+        // 而且中途打断进场时也能接着当前状态往回走，不会先跳一下
+        val from = ((scrim.background as? ColorDrawable)?.color?.ushr(24) ?: 0) / 255f
         Motion.animate(OUT, Motion.EXIT) { f ->
-            scrim.setBackgroundColor(transparentBlack(0.42f * (1f - f)))
+            scrim.setBackgroundColor(transparentBlack(from * (1f - f)))
         }
         card.animate().cancel()
         card.animate().alpha(0f).scaleX(0.86f).scaleY(0.86f)
