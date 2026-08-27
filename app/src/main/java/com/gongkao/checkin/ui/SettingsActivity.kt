@@ -1,7 +1,11 @@
 package com.gongkao.checkin.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import com.gongkao.checkin.BuildConfig
 import com.gongkao.checkin.R
 import android.view.View
@@ -134,6 +138,18 @@ class SettingsActivity : ListScreen() {
         if (Repo.read { it.settings.syncDiscoverable }) SyncService.start(this) else SyncService.stop(this)
     }
 
+    // 拒绝也不用管：没这权限服务照跑，只是那条常驻通知进不了通知栏。
+    private val requestNotify =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
+
+    /** 开「允许被发现」时才要通知权限——13+ 上不申请的话那条前台服务通知不显示。 */
+    private fun askNotifyPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val granted = checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        if (!granted) requestNotify.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+
     // ------------------------------------------------------------ 设备直连同步
 
     private var scanning = false
@@ -162,6 +178,7 @@ class SettingsActivity : ListScreen() {
                 chevron = true
             ) {
                 Repo.edit { st -> st.settings.syncDiscoverable = !discoverable }
+                if (!discoverable) askNotifyPermission()
                 syncServiceRefresh()
             }
 
