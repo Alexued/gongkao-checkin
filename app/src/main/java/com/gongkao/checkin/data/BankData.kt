@@ -92,8 +92,12 @@ class BankTable {
 data class HeadCell(val text: String, val rowSpan: Int = 1, val colSpan: Int = 1)
 
 /**
- * 一个题库来源。[hasSteps] 决定练习页怎么讲解：
- * 精选那 65 题带 `anim` 分步数据，陪陪刷那批只有一段 `solution` 纯文本。
+ * 一个题库来源。
+ *
+ * [hasSteps] 只表示「这个来源整体上有没有分步讲解」，**代码里没人读它**——
+ * 练习页是按每道题自己的 `anim` 是否为空来分流的（见 `BankQuestionView.explainNext`）。
+ * 真题库正在逐题补 `anim`（陈怀安讲法），所以 PEIPEI 现在是部分题有、部分题没有，
+ * 这个布尔值已经表达不了实情，留着只当「哪个来源是原生带讲解的」的标记。
  */
 data class BankSource(
     val id: String,
