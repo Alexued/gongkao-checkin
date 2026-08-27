@@ -24,7 +24,7 @@ class SyncService : android.app.Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIF_ID, buildNotification(LanInfo.url(this)))
+        startForeground(NOTIF_ID, buildNotification(discoverLabel()))
         if (server == null) {
             val port = Repo.read { it.settings.syncPort }
             server = runCatching { WebServer(applicationContext, port).also { it.startUp() } }
@@ -47,17 +47,23 @@ class SyncService : android.app.Service() {
 
     private fun updateNotification() {
         val nm = getSystemService(NotificationManager::class.java)
-        nm.notify(NOTIF_ID, buildNotification(LanInfo.url(this)))
+        nm.notify(NOTIF_ID, buildNotification(discoverLabel()))
     }
 
-    private fun buildNotification(url: String): Notification {
+    /** 显示昵称而非 `http://ip:port`：网页同步已移除，那个地址是 404，但用户会真去浏览器打开。 */
+    private fun discoverLabel(): String {
+        val ip = LanInfo.ip(this) ?: return "未连接局域网"
+        return "${Repo.read { it.settings.nickname }} · $ip"
+    }
+
+    private fun buildNotification(text: String): Notification {
         val pi = PendingIntent.getActivity(
             this, 0, Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
         return NotificationCompat.Builder(this, CHANNEL)
             .setContentTitle("允许被附近设备发现")
-            .setContentText(url)
+            .setContentText(text)
             .setSmallIcon(R.drawable.ic_today)
             .setOngoing(true)
             .setContentIntent(pi)
@@ -68,9 +74,9 @@ class SyncService : android.app.Service() {
     private fun createChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val nm = getSystemService(NotificationManager::class.java)
-        if (nm.getNotificationChannel(CHANNEL) != null) return
+        // 不要 early-return「渠道已存在」：那样旧装机上的渠道名永远停在改名前。创建本身是幂等的。
         nm.createNotificationChannel(
-            NotificationChannel(CHANNEL, "局域网同步", NotificationManager.IMPORTANCE_LOW).apply {
+            NotificationChannel(CHANNEL, "设备直连同步", NotificationManager.IMPORTANCE_LOW).apply {
                 setShowBadge(false)
             }
         )

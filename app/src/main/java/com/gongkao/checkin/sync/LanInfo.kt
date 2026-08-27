@@ -35,9 +35,4 @@ object LanInfo {
     }.getOrNull()
 
     fun port(): Int = Repo.read { it.settings.syncPort }
-
-    fun url(ctx: Context): String {
-        val host = ip(ctx) ?: return "未连接局域网"
-        return "http://$host:${port()}"
-    }
 }
