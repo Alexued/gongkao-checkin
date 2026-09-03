@@ -98,6 +98,9 @@
             android:name=".ui.pet.FeedActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.pet.InventoryActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.stats.DayDetailActivity"
             android:screenOrientation="portrait" />
         <activity
