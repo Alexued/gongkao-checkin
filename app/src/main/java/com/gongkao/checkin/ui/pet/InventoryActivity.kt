@@ -129,13 +129,27 @@ class InventoryActivity : AppCompatActivity() {
 
             h.itemView.tap {
                 // 根据物品类型播放对应动画
-                val animName = when {
-                    item.id == "walk" -> "walk"
-                    item.id == "run" -> "run"
-                    item.id == "celebrate" -> "celebrate"
-                    item.id == "think" -> "think"
-                    item.id in listOf("apple", "banana", "orange", "grape", "watermelon",
-                                       "cake", "cookie", "candy", "icecream", "pizza") -> "eating"
+                val animName = when (item.id) {
+                    // 动作类 - 直接映射
+                    "walk" -> "walk"
+                    "run" -> "run"
+                    "celebrate" -> "celebrate"
+                    "think" -> "think"
+
+                    // 食物类 - 吃东西动画
+                    "apple", "banana", "orange", "grape", "watermelon",
+                    "cake", "cookie", "candy", "icecream", "pizza" -> "eating"
+
+                    // 其他动作类
+                    "jump", "rope", "climb", "dance" -> "happy"
+                    "read", "write" -> "think"
+
+                    // 状态类
+                    "sleep", "wash", "bath", "brush" -> "idle"
+                    "exercise", "meditate" -> "think"
+                    "music", "paint", "cook", "game" -> "happy"
+
+                    // 默认开心动画
                     else -> "happy"
                 }
 
@@ -144,7 +158,7 @@ class InventoryActivity : AppCompatActivity() {
                 intent.putExtra("animation", animName)
                 sendBroadcast(intent)
 
-                toast("${item.name} 使用中")
+                toast("使用 ${item.name}")
             }
         }
 

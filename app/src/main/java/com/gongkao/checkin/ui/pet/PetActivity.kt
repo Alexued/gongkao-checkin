@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.BroadcastReceiver
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
@@ -94,7 +95,11 @@ class PetActivity : AppCompatActivity() {
 
         // 注册广播接收器
         val filter = IntentFilter("com.gongkao.checkin.PET_ANIMATION")
-        registerReceiver(animationReceiver, filter, RECEIVER_NOT_EXPORTED)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(animationReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(animationReceiver, filter)
+        }
 
         refresh()
     }
