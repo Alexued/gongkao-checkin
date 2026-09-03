@@ -2,6 +2,8 @@ package com.gongkao.checkin.ui.pet
 
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.BroadcastReceiver
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
@@ -20,6 +22,13 @@ import com.gongkao.checkin.view.PetView
 class PetActivity : AppCompatActivity() {
 
     private val onChange = { refresh() }
+
+    private val animationReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val animName = intent?.getStringExtra("animation") ?: return
+            findViewById<PetView>(R.id.petView)?.playAnimation(animName)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,12 +91,18 @@ class PetActivity : AppCompatActivity() {
         }
 
         Repo.addListener(onChange)
+
+        // 注册广播接收器
+        val filter = IntentFilter("com.gongkao.checkin.PET_ANIMATION")
+        registerReceiver(animationReceiver, filter, RECEIVER_NOT_EXPORTED)
+
         refresh()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         Repo.removeListener(onChange)
+        unregisterReceiver(animationReceiver)
     }
 
     private fun refresh() {

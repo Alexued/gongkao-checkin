@@ -19,6 +19,7 @@ import com.gongkao.checkin.data.ShopItem
 import com.gongkao.checkin.ui.edgeToEdge
 import com.gongkao.checkin.ui.padTopInset
 import com.gongkao.checkin.ui.tap
+import com.gongkao.checkin.ui.toast
 
 data class InventoryCategoryDisplay(
     val category: String,
@@ -125,6 +126,26 @@ class InventoryActivity : AppCompatActivity() {
             h.icon.text = item.icon
             h.name.text = item.name
             h.count.text = "x$count"
+
+            h.itemView.tap {
+                // 根据物品类型播放对应动画
+                val animName = when {
+                    item.id == "walk" -> "walk"
+                    item.id == "run" -> "run"
+                    item.id == "celebrate" -> "celebrate"
+                    item.id == "think" -> "think"
+                    item.id in listOf("apple", "banana", "orange", "grape", "watermelon",
+                                       "cake", "cookie", "candy", "icecream", "pizza") -> "eating"
+                    else -> "happy"
+                }
+
+                // 通过广播通知 PetActivity 播放动画
+                val intent = Intent("com.gongkao.checkin.PET_ANIMATION")
+                intent.putExtra("animation", animName)
+                sendBroadcast(intent)
+
+                toast("${item.name} 使用中")
+            }
         }
 
         override fun getItemCount() = items.size

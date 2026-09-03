@@ -62,7 +62,14 @@ class PetView @JvmOverloads constructor(
 
     fun playAnimation(name: String) {
         currentAnimation = name
+        animationFrame = 0
         invalidate()
+
+        // 动画持续 2 秒后恢复待机
+        postDelayed({
+            currentAnimation = "idle"
+            invalidate()
+        }, 2000)
     }
 
     private fun startAnimation() {
