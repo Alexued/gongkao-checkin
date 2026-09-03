@@ -7,6 +7,7 @@
 
     <!-- 顶栏 -->
     <LinearLayout
+        android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -56,7 +57,7 @@
             android:paddingBottom="20dp">
 
             <!-- 宠物显示区 -->
-            <com.gongkao.checkin.ui.pet.PetView
+            <com.gongkao.checkin.view.PetView
                 android:id="@+id/petView"
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
@@ -80,6 +81,117 @@
                 android:textColor="@color/ink"
                 android:textColorHint="@color/ink_dim"
                 android:textSize="16sp" />
+
+            <!-- 装备显示 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_card"
+                android:elevation="2dp"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="当前装扮"
+                    android:textColor="@color/ink"
+                    android:textSize="15sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="动作"
+                        android:textColor="@color/ink_sub"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/equippedAction"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="站立"
+                        android:textColor="@color/ink"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="眼睛"
+                        android:textColor="@color/ink_sub"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/equippedEyes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="默认"
+                        android:textColor="@color/ink"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="装饰"
+                        android:textColor="@color/ink_sub"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/equippedAccessory"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="无"
+                        android:textColor="@color/ink"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="背景"
+                        android:textColor="@color/ink_sub"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/equippedBackground"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="默认"
+                        android:textColor="@color/ink"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
 
             <!-- 统计信息 -->
             <LinearLayout
@@ -181,7 +293,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginEnd="6dp"
                     android:background="@drawable/bg_btn_primary"
                     android:elevation="2dp"
                     android:gravity="center"
@@ -196,12 +308,27 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginHorizontal="6dp"
                     android:background="@drawable/bg_btn_primary"
                     android:elevation="2dp"
                     android:gravity="center"
                     android:padding="16dp"
                     android:text="🍎 喂养"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/btnInventory"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_btn_primary"
+                    android:elevation="2dp"
+                    android:gravity="center"
+                    android:padding="16dp"
+                    android:text="📦 仓库"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
                     android:fontFamily="sans-serif-medium" />

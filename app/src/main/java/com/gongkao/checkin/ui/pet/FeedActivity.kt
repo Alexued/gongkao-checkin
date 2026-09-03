@@ -16,6 +16,7 @@ import com.gongkao.checkin.data.PetShop
 import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.data.ShopItem
 import com.gongkao.checkin.ui.edgeToEdge
+import com.gongkao.checkin.ui.padTopInset
 import com.gongkao.checkin.ui.tap
 import com.gongkao.checkin.ui.toast
 
@@ -28,6 +29,7 @@ class FeedActivity : AppCompatActivity() {
         setContentView(R.layout.activity_feed)
         edgeToEdge()
 
+        findViewById<View>(R.id.topBar).padTopInset()
         findViewById<ImageView>(R.id.btnBack).tap { finish() }
 
         val recycler = findViewById<RecyclerView>(R.id.recycler)
@@ -44,9 +46,10 @@ class FeedActivity : AppCompatActivity() {
 
     private fun refresh() {
         val petData = Repo.petData()
-        val ownedFood = PetShop.foods.filter { petData.foodInventory[it.id] ?: 0 > 0 }
+        val allFoods = PetShop.foods
+        val ownedFood = allFoods.filter { petData.foodInventory[it.id] ?: 0 > 0 }
 
-        findViewById<RecyclerView>(R.id.recycler).adapter = FoodAdapter(ownedFood)
+        findViewById<RecyclerView>(R.id.recycler).adapter = FoodAdapter(if (ownedFood.isEmpty()) allFoods else ownedFood)
     }
 
     inner class FoodAdapter(private val items: List<ShopItem>) :
@@ -68,12 +71,17 @@ class FeedActivity : AppCompatActivity() {
             val item = items[pos]
             val petData = Repo.petData()
             val count = petData.foodInventory[item.id] ?: 0
+            val owned = count > 0
 
             h.icon.text = item.icon
             h.name.text = item.name
-            h.count.text = "剩余 $count"
+            h.count.text = if (owned) "剩余 $count" else "未拥有"
 
             h.itemView.tap {
+                if (!owned) {
+                    toast("需要先在商店购买")
+                    return@tap
+                }
                 if (Repo.feedPet(item.id)) {
                     toast("喂养成功")
                     refresh()

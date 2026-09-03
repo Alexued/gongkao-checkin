@@ -531,6 +531,13 @@ object Repo {
 
     fun setPetName(name: String) = edit { it.petData.name = name }
 
+    fun setPetStars(count: Int) = edit { st ->
+        st.petData.stars = count
+        if (count > st.petData.totalEarned) {
+            st.petData.totalEarned = count
+        }
+    }
+
     fun addPetStars(count: Int) = edit { st ->
         st.petData.stars += count
         st.petData.totalEarned += count

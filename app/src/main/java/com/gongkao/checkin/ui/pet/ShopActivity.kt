@@ -18,6 +18,7 @@ import com.gongkao.checkin.data.Repo
 import com.gongkao.checkin.data.ShopItem
 import com.gongkao.checkin.ui.AppDialog
 import com.gongkao.checkin.ui.edgeToEdge
+import com.gongkao.checkin.ui.padTopInset
 import com.gongkao.checkin.ui.tap
 import com.gongkao.checkin.ui.toast
 
@@ -36,6 +37,7 @@ class ShopActivity : AppCompatActivity() {
         setContentView(R.layout.activity_shop)
         edgeToEdge()
 
+        findViewById<View>(R.id.topBar).padTopInset()
         findViewById<ImageView>(R.id.btnBack).tap { finish() }
 
         val categories = PetShop.allCategories().map { (cat, pair) ->
@@ -122,6 +124,11 @@ class ShopActivity : AppCompatActivity() {
                 h.status.text = "⭐ ${item.cost}"
                 h.status.setTextColor(getColor(R.color.ink_sub))
                 h.itemView.tap {
+                    val currentStars = Repo.petData().stars
+                    if (currentStars < item.cost) {
+                        toast("星星不足，还需要 ${item.cost - currentStars} 颗星星")
+                        return@tap
+                    }
                     AppDialog.show(
                         ctx = this@ShopActivity,
                         title = "购买物品",
@@ -130,7 +137,8 @@ class ShopActivity : AppCompatActivity() {
                         negative = "取消"
                     ) {
                         if (Repo.unlockPetItem(category, item.id, item.cost)) {
-                            toast("解锁成功")
+                            toast("购买成功！")
+                            refresh()
                         } else {
                             toast("星星不足")
                         }

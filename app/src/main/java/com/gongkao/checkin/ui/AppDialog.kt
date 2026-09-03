@@ -76,4 +76,59 @@ object AppDialog {
         positive = ctx.getString(R.string.got_it),
         onPositive = onClose
     )
+
+    /**
+     * 带输入框的弹层，用于单行文本输入。
+     *
+     * @param title 标题
+     * @param message 说明文字，可为空
+     * @param inputHint 输入框提示文字
+     * @param inputPrefill 输入框预填内容
+     * @param positive 确认按钮文案
+     * @param negative 取消按钮文案，可为空
+     * @param onConfirm 确认回调，传入用户输入的文本
+     */
+    fun showInput(
+        ctx: Context,
+        title: CharSequence,
+        message: CharSequence? = null,
+        inputHint: CharSequence = "",
+        inputPrefill: CharSequence = "",
+        positive: CharSequence,
+        negative: CharSequence? = null,
+        onConfirm: (String) -> Unit
+    ) {
+        val v = ctx.inflate(R.layout.dialog_input, null)
+        val scrim = v.findViewById<View>(R.id.dialogScrim)
+        val card = v.findViewById<View>(R.id.dialogCard)
+        val titleView = v.findViewById<TextView>(R.id.dialogTitle)
+        val messageView = v.findViewById<TextView>(R.id.dialogMessage)
+        val inputView = v.findViewById<android.widget.EditText>(R.id.dialogInput)
+        val btnPositive = v.findViewById<TextView>(R.id.dialogPositive)
+        val btnNegative = v.findViewById<TextView>(R.id.dialogNegative)
+
+        titleView.text = title
+        messageView.show(!message.isNullOrBlank())
+        messageView.text = message ?: ""
+
+        inputView.hint = inputHint
+        inputView.setText(inputPrefill)
+        inputView.setSelection(inputPrefill.length)
+
+        btnPositive.text = positive
+        btnNegative.show(!negative.isNullOrBlank())
+        btnNegative.text = negative ?: ""
+
+        val d = Popup.dialog(ctx, v)
+        Popup.wireDismiss(d, scrim, card, null)
+
+        btnPositive.tap {
+            Popup.close(d)
+            onConfirm(inputView.text.toString())
+        }
+        btnNegative.tap { Popup.close(d) }
+
+        d.show()
+        Popup.enter(scrim, card, null)
+    }
 }

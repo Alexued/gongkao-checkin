@@ -30,19 +30,19 @@
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:fontFamily="sans-serif-medium"
-            android:text="商店"
+            android:text="我的仓库"
             android:textColor="@color/ink"
             android:textSize="20sp" />
-
-        <TextView
-            android:id="@+id/starCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="⭐ 0"
-            android:textColor="@color/accent"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif-medium" />
     </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginBottom="12dp"
+        android:text="查看已购买的物品"
+        android:textColor="@color/ink_sub"
+        android:textSize="14sp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler"
