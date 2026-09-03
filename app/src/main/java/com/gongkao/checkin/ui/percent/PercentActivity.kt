@@ -276,6 +276,13 @@ class PercentActivity : AppCompatActivity() {
             items = items.toMutableList()
         )
         Repo.addPercentSession(session)
+
+        // 答对题目奖励星星
+        val correctCount = session.correctCount()
+        if (correctCount > 0) {
+            Repo.addPetStars(correctCount)
+        }
+
         Motion.springTo(progressBar, DynamicAnimation.SCALE_X, 1f)
         showResult(session)
     }

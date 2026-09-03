@@ -461,6 +461,7 @@ object Repo {
         var mentalMathSessions: MutableList<MentalMathSession> = mutableListOf()
         var pomodoroSessions: MutableList<PomodoroSession> = mutableListOf()
         var bankSessions: MutableList<BankSession> = mutableListOf()
+        var petData: PetData? = null
     }
 
     /** 供「发送我的记录」使用：把本机全部打卡数据序列化成 JSON。 */
@@ -475,6 +476,7 @@ object Repo {
         f.mentalMathSessions = st.mentalMathSessions
         f.pomodoroSessions = st.pomodoroSessions
         f.bankSessions = st.bankSessions
+        f.petData = st.petData
         gson.toJson(f)
     }
 
@@ -491,6 +493,7 @@ object Repo {
             st.mentalMathSessions = parsed.mentalMathSessions
             st.pomodoroSessions = parsed.pomodoroSessions ?: mutableListOf()
             st.bankSessions = parsed.bankSessions ?: mutableListOf()
+            st.petData = parsed.petData ?: PetData()
             // 强制下次 ensureDays() 从头重建欠账链条，避免沿用本机旧的 lastRolledDate 导致漏滚
             st.lastRolledDate = null
         }
@@ -521,4 +524,42 @@ object Repo {
     }
 
     fun daysLeft(): Long? = globalEnd?.let { DateUtil.daysBetween(DateUtil.today(), it) }
+
+    // ---------------------------------------------------------------- 宠物系统
+
+    fun petData(): PetData = read { it.petData }
+
+    fun setPetName(name: String) = edit { it.petData.name = name }
+
+    fun addPetStars(count: Int) = edit { st ->
+        st.petData.stars += count
+        st.petData.totalEarned += count
+    }
+
+    fun unlockPetItem(category: String, itemId: String, cost: Int): Boolean = edit { st ->
+        if (st.petData.stars < cost) return@edit false
+        val list = st.petData.unlocked[category] ?: return@edit false
+        if (itemId in list) return@edit false
+        st.petData.stars -= cost
+        list.add(itemId)
+        // 如果是食物，添加到库存
+        if (category == "foods") {
+            st.petData.foodInventory[itemId] = (st.petData.foodInventory[itemId] ?: 0) + 1
+        }
+        true
+    }
+
+    fun equipPetItem(slot: String, itemId: String) = edit { st ->
+        st.petData.equipped[slot] = itemId
+    }
+
+    fun feedPet(foodId: String): Boolean = edit { st ->
+        val count = st.petData.foodInventory[foodId] ?: 0
+        if (count > 0) {
+            st.petData.foodInventory[foodId] = count - 1
+            true
+        } else {
+            false
+        }
+    }
 }

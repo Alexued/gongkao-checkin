@@ -79,6 +79,9 @@ class TimerPage(host: MainActivity) : Page(host) {
         v.findViewById<LinearLayout>(R.id.btnHistory).tap {
             ctx.startActivity(android.content.Intent(ctx, TimerHistoryActivity::class.java))
         }
+        v.findViewById<LinearLayout>(R.id.btnPet).tap {
+            ctx.startActivity(android.content.Intent(ctx, com.gongkao.checkin.ui.pet.PetActivity::class.java))
+        }
         v.findViewById<LinearLayout>(R.id.btnPomodoro).tap {
             ctx.open<PomodoroActivity>()
         }

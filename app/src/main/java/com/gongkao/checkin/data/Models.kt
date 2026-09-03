@@ -256,6 +256,32 @@ data class PomodoroSession(
     var completed: Boolean = true
 )
 
+/** 宠物数据 */
+data class PetData(
+    var name: String = "仓鼠宝宝",
+    var stars: Int = 0,
+    var totalEarned: Int = 0,
+    var unlocked: MutableMap<String, MutableList<String>> = mutableMapOf(
+        "actions" to mutableListOf(),
+        "outfits" to mutableListOf(),
+        "foods" to mutableListOf(),
+        "backgrounds" to mutableListOf(),
+        "states" to mutableListOf(),
+        "accessories" to mutableListOf(),
+        "vehicles" to mutableListOf()
+    ),
+    var equipped: MutableMap<String, String> = mutableMapOf(
+        "action" to "",
+        "outfit" to "",
+        "background" to "",
+        "state" to "",
+        "accessory" to "",
+        "vehicle" to ""
+    ),
+    /** 食物库存：foodId → 数量 */
+    var foodInventory: MutableMap<String, Int> = mutableMapOf()
+)
+
 data class Settings(
     /** 总结束日（考试日），用于倒计时，也停止生成之后的任务 */
     var endDate: String? = null,
@@ -292,4 +318,6 @@ class AppState {
     /** 没做完的复盘存档，null 表示没有；「继续做题」按钮按它显隐 */
     var bankProgress: BankProgress? = null
     var lastRolledDate: String? = null
+    /** 宠物数据 */
+    var petData: PetData = PetData()
 }

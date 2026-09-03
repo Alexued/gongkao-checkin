@@ -240,6 +240,13 @@ class FormulaActivity : AppCompatActivity() {
             items = items.toMutableList()
         )
         Repo.addFormulaSession(session)
+
+        // 答对题目奖励星星
+        val knownCount = session.knownCount()
+        if (knownCount > 0) {
+            Repo.addPetStars(knownCount)
+        }
+
         Motion.springTo(progressBar, DynamicAnimation.SCALE_X, 1f)
         showResult(session, now)
     }

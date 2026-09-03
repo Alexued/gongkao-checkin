@@ -166,6 +166,14 @@ class PomodoroActivity : AppCompatActivity() {
         saveSession(completed = true)
         alert()
         toast(if (phaseKind == POMODORO_WORK) R.string.pomodoro_done_work else R.string.pomodoro_done_break)
+
+        // 完成专注阶段时奖励星星
+        if (phaseKind == POMODORO_WORK) {
+            val minutes = (totalMs / 60000).toInt()
+            val stars = (minutes / 5).coerceAtLeast(1) // 每 5 分钟 1 颗星
+            Repo.addPetStars(stars)
+        }
+
         advance()
     }
 
